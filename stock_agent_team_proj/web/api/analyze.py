@@ -2,17 +2,17 @@
 股票分析接口
 POST /api/analyze - 执行股票分析
 """
+import os
+import sys
 from typing import Optional
-from datetime import datetime
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+# 添加项目根目录到路径
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from stock_agent_team.main import StockAgentTeam
+from main import StockAgentTeam
 
 router = APIRouter()
 

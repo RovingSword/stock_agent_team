@@ -385,3 +385,111 @@
 2026-04-15 16:30:36,450 - agent.leader - INFO - 技术分析员 分析完成，评分: 5.9
 2026-04-15 16:30:36,456 - agent.leader - INFO - 分析完成 - 决策: buy, 评分: 7.09
 2026-04-15 16:30:36,456 - StockAgentTeam - INFO - 开始复盘: weekly
+2026-04-15 17:04:43,299 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-15 17:04:43,299 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-15 17:04:43,299 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-15 17:04:43,299 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-15 17:04:44,319 - data_fetcher - WARNING - 无法获取 SZ300750 的真实K线数据，使用模拟数据
+2026-04-15 17:04:44,321 - data_fetcher - INFO - ⚠️ 使用模拟数据生成技术指标（SZ300750），数据仅供参考，不具实际参考价值
+2026-04-15 17:10:47,068 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-15 17:10:47,069 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-15 17:10:47,069 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-15 17:10:47,069 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-15 17:10:48,490 - data_fetcher - WARNING - 无法获取 SZ300750 的真实K线数据，使用模拟数据
+2026-04-15 17:10:48,490 - data_fetcher - INFO - ⚠️ 使用模拟数据生成技术指标（SZ300750），数据仅供参考，不具实际参考价值
+2026-04-15 17:29:14,428 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-15 17:29:14,479 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-15 17:29:14,482 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-15 17:29:14,482 - StockAgentTeam - INFO - 开始分析: 宁德时代(300750)
+2026-04-15 17:29:14,482 - agent.leader - INFO - 开始分析 宁德时代(300750)
+2026-04-15 17:29:14,482 - agent.technical - INFO - 开始分析 宁德时代(300750)
+2026-04-15 17:29:14,482 - agent.intelligence - INFO - 开始分析 宁德时代(300750)
+2026-04-15 17:29:14,482 - agent.risk - INFO - 开始分析 宁德时代(300750)
+2026-04-15 17:29:14,483 - agent.fundamental - INFO - 开始分析 宁德时代(300750)
+2026-04-15 17:29:14,584 - data_fetcher - INFO - ✅ 新浪财经K线获取成功 (300750), 共 60 条
+2026-04-15 17:29:15,430 - agent.risk - INFO - 分析完成，评分: 9.0
+2026-04-15 17:29:15,430 - agent.leader - INFO - 风控官 分析完成，评分: 9.0
+2026-04-15 17:29:15,926 - agent.intelligence - INFO - 分析完成，评分: 6.8
+2026-04-15 17:29:15,926 - agent.leader - INFO - 情报员 分析完成，评分: 6.8
+2026-04-15 17:29:16,500 - agent.technical - INFO - 分析完成，评分: 6.1
+2026-04-15 17:29:16,500 - agent.leader - INFO - 技术分析员 分析完成，评分: 6.1
+2026-04-15 17:29:17,837 - data_fetcher - WARNING - 无法获取 300750 的真实估值数据，使用默认值
+2026-04-15 17:29:17,840 - agent.fundamental - INFO - 分析完成，评分: 7.5
+2026-04-15 17:29:17,840 - agent.leader - INFO - 基本面分析师 分析完成，评分: 7.5
+2026-04-15 17:29:17,847 - agent.leader - INFO - 分析完成 - 决策: buy, 评分: 7.08
+2026-04-15 17:29:17,847 - StockAgentTeam - INFO - 开始复盘: weekly
+2026-04-15 18:07:29,424 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-15 18:07:29,463 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-15 18:07:29,466 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-15 18:07:29,467 - StockAgentTeam - INFO - 开始分析: 宁德时代(300750)
+2026-04-15 18:07:29,467 - agent.leader - INFO - 开始分析 宁德时代(300750)
+2026-04-15 18:07:29,467 - agent.technical - INFO - 开始分析 宁德时代(300750)
+2026-04-15 18:07:29,467 - agent.intelligence - INFO - 开始分析 宁德时代(300750)
+2026-04-15 18:07:29,467 - agent.risk - INFO - 开始分析 宁德时代(300750)
+2026-04-15 18:07:29,468 - agent.fundamental - INFO - 开始分析 宁德时代(300750)
+2026-04-15 18:07:29,560 - data_fetcher - INFO - ✅ 新浪财经K线获取成功 (300750), 共 60 条
+2026-04-15 18:07:30,703 - agent.risk - INFO - 分析完成，评分: 8.9
+2026-04-15 18:07:30,703 - agent.leader - INFO - 风控官 分析完成，评分: 8.9
+2026-04-15 18:07:30,779 - agent.intelligence - INFO - 分析完成，评分: 6.8
+2026-04-15 18:07:30,779 - agent.leader - INFO - 情报员 分析完成，评分: 6.8
+2026-04-15 18:07:30,899 - agent.technical - INFO - 分析完成，评分: 6.1
+2026-04-15 18:07:30,899 - agent.leader - INFO - 技术分析员 分析完成，评分: 6.1
+2026-04-15 18:07:33,741 - data_fetcher - WARNING - 无法获取 300750 的真实估值数据，使用默认值
+2026-04-15 18:07:33,749 - agent.fundamental - INFO - 分析完成，评分: 7.5
+2026-04-15 18:07:33,750 - agent.leader - INFO - 基本面分析师 分析完成，评分: 7.5
+2026-04-15 18:07:33,760 - agent.leader - INFO - 分析完成 - 决策: buy, 评分: 7.05
+2026-04-15 18:07:33,761 - StockAgentTeam - INFO - 开始复盘: weekly
+2026-04-15 18:10:42,665 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-15 18:10:42,692 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-15 18:20:50,641 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-15 18:20:50,676 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-15 18:46:50,838 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-15 18:46:50,839 - StockAgentTeam - INFO - 开始分析: 金风科技(002202)
+2026-04-15 18:46:50,840 - agent.leader - INFO - 开始分析 金风科技(002202)
+2026-04-15 18:46:50,847 - agent.technical - INFO - 开始分析 金风科技(002202)
+2026-04-15 18:46:50,847 - agent.risk - INFO - 开始分析 金风科技(002202)
+2026-04-15 18:46:50,847 - agent.intelligence - INFO - 开始分析 金风科技(002202)
+2026-04-15 18:46:50,861 - agent.fundamental - INFO - 开始分析 金风科技(002202)
+2026-04-15 18:46:51,163 - data_fetcher - INFO - ✅ 新浪财经K线获取成功 (002202), 共 60 条
+2026-04-15 18:46:51,975 - agent.risk - INFO - 分析完成，评分: 8.9
+2026-04-15 18:46:51,975 - agent.leader - INFO - 风控官 分析完成，评分: 8.9
+2026-04-15 18:46:52,238 - agent.technical - INFO - 分析完成，评分: 5.2
+2026-04-15 18:46:52,239 - agent.leader - INFO - 技术分析员 分析完成，评分: 5.2
+2026-04-15 18:46:52,675 - agent.intelligence - INFO - 分析完成，评分: 6.4
+2026-04-15 18:46:52,675 - agent.leader - INFO - 情报员 分析完成，评分: 6.4
+2026-04-15 18:46:54,459 - data_fetcher - WARNING - 无法获取 002202 的真实估值数据，使用默认值
+2026-04-15 18:46:54,461 - agent.fundamental - INFO - 分析完成，评分: 7.5
+2026-04-15 18:46:54,461 - agent.leader - INFO - 基本面分析师 分析完成，评分: 7.5
+2026-04-15 18:46:54,465 - agent.leader - INFO - 分析完成 - 决策: watch, 评分: 6.65
+2026-04-15 18:47:46,160 - StockAgentTeam - INFO - 开始分析: 603083(603083)
+2026-04-15 18:47:46,161 - agent.leader - INFO - 开始分析 603083(603083)
+2026-04-15 18:47:46,162 - agent.technical - INFO - 开始分析 603083(603083)
+2026-04-15 18:47:46,167 - agent.intelligence - INFO - 开始分析 603083(603083)
+2026-04-15 18:47:46,171 - agent.risk - INFO - 开始分析 603083(603083)
+2026-04-15 18:47:46,172 - agent.fundamental - INFO - 开始分析 603083(603083)
+2026-04-15 18:47:46,181 - agent.risk - INFO - 分析完成，评分: 8.9
+2026-04-15 18:47:46,181 - agent.leader - INFO - 风控官 分析完成，评分: 8.9
+2026-04-15 18:47:46,297 - data_fetcher - INFO - ✅ 新浪财经K线获取成功 (603083), 共 60 条
+2026-04-15 18:47:46,472 - agent.intelligence - INFO - 分析完成，评分: 6.3
+2026-04-15 18:47:46,472 - agent.leader - INFO - 情报员 分析完成，评分: 6.3
+2026-04-15 18:47:47,020 - agent.technical - INFO - 分析完成，评分: 6.4
+2026-04-15 18:47:47,021 - agent.leader - INFO - 技术分析员 分析完成，评分: 6.4
+2026-04-15 18:47:49,461 - data_fetcher - WARNING - 无法获取 603083 的真实估值数据，使用默认值
+2026-04-15 18:47:49,463 - agent.fundamental - INFO - 分析完成，评分: 7.5
+2026-04-15 18:47:49,463 - agent.leader - INFO - 基本面分析师 分析完成，评分: 7.5
+2026-04-15 18:47:49,468 - agent.leader - INFO - 分析完成 - 决策: buy, 评分: 7.03
+2026-04-15 18:48:04,774 - StockAgentTeam - INFO - 开始分析: 002202(002202)
+2026-04-15 18:48:04,778 - agent.leader - INFO - 开始分析 002202(002202)
+2026-04-15 18:48:04,780 - agent.technical - INFO - 开始分析 002202(002202)
+2026-04-15 18:48:04,781 - agent.intelligence - INFO - 开始分析 002202(002202)
+2026-04-15 18:48:04,781 - agent.risk - INFO - 开始分析 002202(002202)
+2026-04-15 18:48:04,789 - agent.fundamental - INFO - 开始分析 002202(002202)
+2026-04-15 18:48:04,797 - agent.risk - INFO - 分析完成，评分: 8.9
+2026-04-15 18:48:04,797 - agent.leader - INFO - 风控官 分析完成，评分: 8.9
+2026-04-15 18:48:04,800 - agent.intelligence - INFO - 分析完成，评分: 6.4
+2026-04-15 18:48:04,800 - agent.leader - INFO - 情报员 分析完成，评分: 6.4
+2026-04-15 18:48:04,890 - agent.fundamental - INFO - 分析完成，评分: 7.5
+2026-04-15 18:48:04,890 - agent.leader - INFO - 基本面分析师 分析完成，评分: 7.5
+2026-04-15 18:48:05,426 - agent.technical - INFO - 分析完成，评分: 5.2
+2026-04-15 18:48:05,426 - agent.leader - INFO - 技术分析员 分析完成，评分: 5.2
+2026-04-15 18:48:05,431 - agent.leader - INFO - 分析完成 - 决策: watch, 评分: 6.65

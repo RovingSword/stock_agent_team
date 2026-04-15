@@ -10,10 +10,21 @@ from typing import Dict, Any, List, Optional
 
 import numpy as np
 import pandas as pd
+import requests
 
 from utils.logger import get_logger
 
 logger = get_logger('data_fetcher')
+
+# 新浪/腾讯 API 请求头
+SINA_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Referer": "https://finance.sina.com.cn/",
+}
+TENCENT_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+    "Referer": "https://gu.qq.com/",
+}
 
 # 安装线程异常钩子，抑制 efinance 内部 multitasking 线程的未捕获异常
 _original_excepthook = threading.excepthook
@@ -134,7 +145,12 @@ class DataFetcher:
         cache_key = f"daily_kline_{code}_{days}"
         
         def fetch():
-            # 优先尝试 efinance（更稳定）
+            # 优先尝试新浪财经（东方财富API可能被反爬限制）
+            df = self._get_kline_sina(code, days)
+            if df is not None and not df.empty:
+                return df
+
+            # 备选 efinance
             if 'efinance' in self.data_sources:
                 df = self._get_kline_efinance(code, days)
                 if df is not None and not df.empty:
@@ -248,6 +264,62 @@ class DataFetcher:
             logger.debug(f"akshare K线获取失败: {e}")
             return None
     
+    def _get_kline_sina(self, code: str, days: int) -> Optional[pd.DataFrame]:
+        """使用新浪财经 API 获取K线数据"""
+        try:
+            # 判断市场：沪市(60/68开头)用sh，深市(00/30开头)用sz，北交所(8/4开头)用bj
+            if code.startswith(('60', '68')):
+                symbol = f"sh{code}"
+            elif code.startswith(('00', '30')):
+                symbol = f"sz{code}"
+            else:
+                symbol = f"bj{code}"
+
+            url = "https://money.finance.sina.com.cn/quotes_service/api/json_v2.php/CN_MarketData.getKLineData"
+            params = {
+                "symbol": symbol,
+                "scale": "240",  # 日K
+                "ma": "no",
+                "datalen": str(days * 2),  # 多取一些数据
+            }
+
+            resp = requests.get(url, params=params, headers=SINA_HEADERS, timeout=15)
+            if resp.status_code != 200 or not resp.text or resp.text == "null":
+                return None
+
+            data = resp.json()
+            if not data or not isinstance(data, list):
+                return None
+
+            # 转换为 DataFrame
+            df = pd.DataFrame(data)
+
+            # 标准化列名
+            col_map = {
+                'day': 'date',
+                'open': 'open',
+                'high': 'high',
+                'low': 'low',
+                'close': 'close',
+                'volume': 'volume',
+            }
+            df = df.rename(columns=col_map)
+
+            # 数值转换
+            for col in ['open', 'high', 'low', 'close', 'volume']:
+                if col in df.columns:
+                    df[col] = pd.to_numeric(df[col], errors='coerce')
+
+            # 按日期排序并取最近N天
+            df = df.sort_values('date').tail(days)
+
+            logger.info(f"✅ 新浪财经K线获取成功 ({code}), 共 {len(df)} 条")
+            return df
+
+        except Exception as e:
+            logger.debug(f"新浪财经K线获取失败: {e}")
+            return None
+
     def get_weekly_kline(self, stock_code: str, weeks: int = 26) -> Optional[pd.DataFrame]:
         """
         获取周K线数据 - 用于中期趋势判断
@@ -256,7 +328,12 @@ class DataFetcher:
         cache_key = f"weekly_kline_{code}_{weeks}"
         
         def fetch():
-            # 尝试 efinance
+            # 优先尝试新浪财经
+            df = self._get_weekly_kline_sina(code, weeks)
+            if df is not None and not df.empty:
+                return df
+
+            # 备选 efinance
             if 'efinance' in self.data_sources:
                 try:
                     df = self.ef.stock.get_quote_history(
@@ -274,7 +351,7 @@ class DataFetcher:
                 except Exception as e:
                     logger.debug(f"efinance 周K获取失败: {e}")
             
-            # 尝试 akshare
+            # 备选 akshare
             if 'akshare' in self.data_sources:
                 try:
                     df = self.ak.stock_zh_a_hist(
@@ -293,6 +370,49 @@ class DataFetcher:
         
         return self._get_with_cache(cache_key, fetch)
     
+    def _get_weekly_kline_sina(self, code: str, weeks: int) -> Optional[pd.DataFrame]:
+        """使用新浪财经 API 获取周K线数据"""
+        try:
+            # 判断市场
+            if code.startswith(('60', '68')):
+                symbol = f"sh{code}"
+            elif code.startswith(('00', '30')):
+                symbol = f"sz{code}"
+            else:
+                symbol = f"bj{code}"
+
+            url = "https://money.finance.sina.com.cn/quotes_service/api/json_v2.php/CN_MarketData.getKLineData"
+            params = {
+                "symbol": symbol,
+                "scale": "1440",  # 周K（分钟数）
+                "ma": "no",
+                "datalen": str(weeks * 2),
+            }
+
+            resp = requests.get(url, params=params, headers=SINA_HEADERS, timeout=15)
+            if resp.status_code != 200 or not resp.text or resp.text == "null":
+                return None
+
+            data = resp.json()
+            if not data or not isinstance(data, list):
+                return None
+
+            df = pd.DataFrame(data)
+            col_map = {'day': 'date', 'open': 'open', 'high': 'high', 'low': 'low', 'close': 'close', 'volume': 'volume'}
+            df = df.rename(columns=col_map)
+
+            for col in ['open', 'high', 'low', 'close', 'volume']:
+                if col in df.columns:
+                    df[col] = pd.to_numeric(df[col], errors='coerce')
+
+            df = df.sort_values('date').tail(weeks)
+            logger.info(f"✅ 新浪财经周K线获取成功 ({code}), 共 {len(df)} 条")
+            return df
+
+        except Exception as e:
+            logger.debug(f"新浪财经周K线获取失败: {e}")
+            return None
+
     # ============================================================
     # 技术指标计算
     # ============================================================

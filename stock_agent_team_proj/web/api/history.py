@@ -2,17 +2,18 @@
 历史记录查询接口
 GET /api/history - 获取历史分析记录
 """
-from typing import List, Optional
+import os
+import sys
 from datetime import datetime, timedelta
+from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+# 添加项目根目录到路径
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from stock_agent_team.storage.database import Database
+from storage.database import Database
 
 router = APIRouter()
 

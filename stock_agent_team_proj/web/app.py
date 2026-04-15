@@ -2,19 +2,19 @@
 Web应用主文件
 中短线波段 Agent Team 系统 Web界面
 """
-import sys
 import os
+import sys
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 
 # 添加项目根目录到路径
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from stock_agent_team.storage.database import Database
+from storage.database import Database
 
 
 @asynccontextmanager
@@ -50,7 +50,7 @@ if os.path.exists(static_path):
     app.mount("/static", StaticFiles(directory=static_path), name="static")
 
 # 注册API路由
-from stock_agent_team.web.api import analyze, history, config
+from web.api import analyze, history, config
 
 app.include_router(analyze.router, prefix="/api", tags=["股票分析"])
 app.include_router(history.router, prefix="/api", tags=["历史记录"])

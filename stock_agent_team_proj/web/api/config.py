@@ -2,16 +2,18 @@
 配置管理接口
 GET /api/config - 获取权重配置
 """
+import os
+import sys
 from typing import Dict
+
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+# 添加项目根目录到路径
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from stock_agent_team.storage.database import Database
-from stock_agent_team import config as app_config
+from storage.database import Database
+import config as app_config
 
 router = APIRouter()
 
