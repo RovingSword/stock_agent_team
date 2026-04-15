@@ -1,0 +1,72 @@
+# LLM 配置
+llm:
+  # 默认使用的 provider
+  default_provider: "openai_compatible"
+  
+  # 超时设置
+  timeout: 120
+  max_retries: 3
+  
+  # 各模型提供商配置
+  providers:
+    openai_compatible:
+      api_key: "sk-mgzorsYLeEFnIJHrK2B1LQurNOn5VCj3nrSAtXymUGToTzcb"
+      base_url: "https://www.dmxapi.cn/v1"
+      model: "deepseek-v3.1-thinking"
+      temperature: 0.7
+      max_tokens: 2000
+      
+    qwen:
+      api_key_env: "QWEN_API_KEY"
+      base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+      model: "qwen-plus"
+      temperature: 0.7
+      max_tokens: 2000
+      
+    zhipu:
+      api_key_env: "ZHIPU_API_KEY"
+      base_url: "https://open.bigmodel.cn/api/paas/v4"
+      model: "glm-4"
+      temperature: 0.7
+      max_tokens: 2000
+      
+    moonshot:
+      api_key_env: "MOONSHOT_API_KEY"
+      base_url: "https://api.moonshot.cn/v1"
+      model: "moonshot-v1-8k"
+      temperature: 0.7
+      max_tokens: 2000
+      
+    openai:
+      api_key_env: "OPENAI_API_KEY"
+      base_url: "https://api.openai.com/v1"
+      model: "gpt-4"
+      temperature: 0.7
+      max_tokens: 2000
+
+# Agent 配置
+agents:
+  leader:
+    provider: "deepseek"
+    temperature: 0.5  # 决策需要更稳定
+    
+  technical:
+    provider: "deepseek"
+    temperature: 0.7
+    
+  intelligence:
+    provider: "deepseek"
+    temperature: 0.7
+    
+  risk:
+    provider: "deepseek"
+    temperature: 0.3  # 风控需要更保守
+    
+  fundamental:
+    provider: "deepseek"
+    temperature: 0.7
+
+# 讨论配置
+discussion:
+  max_rounds: 3  # 最多讨论轮数
+  enable_debate: true  # 是否允许辩论
