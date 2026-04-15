@@ -1,0 +1,65 @@
+# =============================================================================
+# Docker 构建忽略文件
+# =============================================================================
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python 缓存
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# 虚拟环境
+venv/
+env/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# 测试
+.tox/
+.coverage
+htmlcov/
+.pytest_cache/
+*.cover
+
+# 文档
+*.md
+docs/
+
+# Docker 相关（避免递归）
+deploy/Dockerfile
+deploy/.dockerignore
+deploy/docker-compose*.yml
+
+# 本地数据（不要打包进镜像）
+data/
+!data/.gitkeep
+
+# 日志
+logs/
+*.log
+
+# 环境变量
+.env
+.env.local
+
+# 临时文件
+*.tmp
+*.bak
+*.swp
+.DS_Store

@@ -1,0 +1,131 @@
+# =============================================================================
+# Stock Agent Team - Docker Compose
+# 一键启动配置文件
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # ============================================================
+  # 股票 Agent 主服务
+  # ============================================================
+  stock-agent:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    container_name: stock_agent_team
+    restart: unless-stopped
+    
+    # 环境变量
+    environment:
+      - TZ=Asia/Shanghai
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+    
+    # 卷挂载 - 持久化数据和配置
+    volumes:
+      # 挂载数据目录（数据库、日志、报告）
+      - ../data:/app/data
+      # 挂载配置目录（可选）
+      - ../config:/app/config:ro
+      # 挂载日志到宿主机便于查看
+      - stock_logs:/var/log/stock_agent_team
+    
+    # 工作目录
+    working_dir: /app
+    
+    # 健康检查
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sqlite3; sqlite3.connect('/app/data/database.db')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    
+    # 网络配置
+    networks:
+      - stock_network
+    
+    # 资源限制（根据服务器配置调整）
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # ============================================================
+  # 定时任务调度器（可选）
+  # ============================================================
+  stock-scheduler:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    container_name: stock_scheduler
+    restart: unless-stopped
+    command: ["python", "scheduler.py"]
+    
+    environment:
+      - TZ=Asia/Shanghai
+      - PYTHONUNBUFFERED=1
+    
+    volumes:
+      - ../data:/app/data
+      - ../config:/app/config:ro
+    
+    depends_on:
+      stock-agent:
+        condition: service_healthy
+    
+    networks:
+      - stock_network
+    
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+
+  # ============================================================
+  # 监控服务（可选）
+  # ============================================================
+  stock-monitor:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    container_name: stock_monitor
+    restart: unless-stopped
+    command: ["python", "monitor.py"]
+    
+    environment:
+      - TZ=Asia/Shanghai
+    
+    volumes:
+      - ../data:/app/data
+    
+    networks:
+      - stock_network
+    
+    # 仅当需要持续监控时启用
+    profiles:
+      - monitoring
+
+# =============================================================================
+# 网络配置
+# =============================================================================
+networks:
+  stock_network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.0.0/16
+
+# =============================================================================
+# 卷配置
+# =============================================================================
+volumes:
+  stock_logs:
+    driver: local

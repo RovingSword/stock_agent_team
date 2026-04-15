@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>股票Agent分析系统</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">📊</span>
+                <h1>股票Agent分析系统</h1>
+            </div>
+            <div class="subtitle">中短线波段交易智能分析</div>
+        </header>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 搜索区域 -->
+            <section class="search-section">
+                <div class="search-box">
+                    <div class="input-group">
+                        <label for="stockCode">股票代码</label>
+                        <input type="text" id="stockCode" placeholder="如: 300750" maxlength="10">
+                    </div>
+                    <div class="input-group">
+                        <label for="stockName">股票名称 <span class="optional">(可选)</span></label>
+                        <input type="text" id="stockName" placeholder="如: 宁德时代">
+                    </div>
+                    <button id="analyzeBtn" class="btn-primary">
+                        <span class="btn-icon">🔍</span>
+                        开始分析
+                    </button>
+                </div>
+            </section>
+
+            <!-- 加载状态 -->
+            <div id="loadingSection" class="loading-section hidden">
+                <div class="loading-spinner"></div>
+                <p>Agent团队正在分析中，请稍候...</p>
+            </div>
+
+            <!-- 结果展示区 -->
+            <section id="resultSection" class="result-section hidden">
+                <!-- 股票信息卡片 -->
+                <div class="stock-info-card">
+                    <div class="stock-header">
+                        <h2 id="stockTitle">--(--)</h2>
+                        <span id="actionBadge" class="action-badge">--</span>
+                    </div>
+                    <div class="score-display">
+                        <div class="main-score">
+                            <div class="score-value" id="compositeScore">0.0</div>
+                            <div class="score-label">综合评分</div>
+                        </div>
+                        <div class="confidence">
+                            <span class="confidence-label">置信度:</span>
+                            <span id="confidenceText" class="confidence-value">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Agent评分卡片 -->
+                <div class="agent-cards">
+                    <div class="agent-card" id="techCard">
+                        <div class="agent-icon">📈</div>
+                        <div class="agent-name">技术分析员</div>
+                        <div class="agent-score" id="techScore">0.0</div>
+                        <div class="agent-weight">权重: <span id="techWeight">35%</span></div>
+                        <div class="agent-comment" id="techComment">--</div>
+                    </div>
+                    <div class="agent-card" id="intelCard">
+                        <div class="agent-icon">📡</div>
+                        <div class="agent-name">情报员</div>
+                        <div class="agent-score" id="intelScore">0.0</div>
+                        <div class="agent-weight">权重: <span id="intelWeight">30%</span></div>
+                        <div class="agent-comment" id="intelComment">--</div>
+                    </div>
+                    <div class="agent-card" id="riskCard">
+                        <div class="agent-icon">🛡️</div>
+                        <div class="agent-name">风控官</div>
+                        <div class="agent-score" id="riskScore">0.0</div>
+                        <div class="agent-weight">权重: <span id="riskWeight">20%</span></div>
+                        <div class="agent-comment" id="riskComment">--</div>
+                    </div>
+                    <div class="agent-card" id="fundCard">
+                        <div class="agent-icon">📋</div>
+                        <div class="agent-name">基本面分析师</div>
+                        <div class="agent-score" id="fundScore">0.0</div>
+                        <div class="agent-weight">权重: <span id="fundWeight">15%</span></div>
+                        <div class="agent-comment" id="fundComment">--</div>
+                    </div>
+                </div>
+
+                <!-- 交易建议 -->
+                <div class="execution-section">
+                    <h3>📌 交易建议</h3>
+                    <div class="execution-grid">
+                        <div class="execution-item">
+                            <span class="execution-label">入场区间</span>
+                            <span class="execution-value" id="entryZone">--</span>
+                        </div>
+                        <div class="execution-item">
+                            <span class="execution-label">止损位</span>
+                            <span class="execution-value risk" id="stopLoss">--</span>
+                        </div>
+                        <div class="execution-item">
+                            <span class="execution-label">第一止盈</span>
+                            <span class="execution-value profit" id="takeProfit1">--</span>
+                        </div>
+                        <div class="execution-item">
+                            <span class="execution-label">第二止盈</span>
+                            <span class="execution-value profit" id="takeProfit2">--</span>
+                        </div>
+                        <div class="execution-item">
+                            <span class="execution-label">建议仓位</span>
+                            <span class="execution-value" id="positionSize">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 理由与风险 -->
+                <div class="rationale-section">
+                    <div class="rationale-card buy-reasons">
+                        <h4>✅ 买入理由</h4>
+                        <ul id="buyReasons">
+                            <li>--</li>
+                        </ul>
+                    </div>
+                    <div class="rationale-card risk-warnings">
+                        <h4>⚠️ 风险提示</h4>
+                        <ul id="riskWarnings">
+                            <li>--</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 错误提示 -->
+            <div id="errorSection" class="error-section hidden">
+                <div class="error-icon">❌</div>
+                <p id="errorMessage">发生错误</p>
+            </div>
+
+            <!-- 历史记录 -->
+            <section class="history-section">
+                <div class="section-header">
+                    <h3>📜 历史分析记录</h3>
+                    <button id="refreshHistory" class="btn-small">🔄 刷新</button>
+                </div>
+                <div class="history-table-container">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>股票代码</th>
+                                <th>股票名称</th>
+                                <th>分析日期</th>
+                                <th>综合评分</th>
+                                <th>状态</th>
+                                <th>收益率</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <tr class="empty-row">
+                                <td colspan="6">暂无历史记录</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+
+        <!-- 页脚 -->
+        <footer class="footer">
+            <p>股票Agent分析系统 v1.0 | 中短线波段交易智能分析</p>
+        </footer>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
