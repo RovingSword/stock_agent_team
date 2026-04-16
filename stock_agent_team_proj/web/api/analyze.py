@@ -19,6 +19,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 
 from main import StockAgentTeam
 from agents.llm import create_team, AgentReport
+from utils.data_fetcher import data_fetcher
 
 router = APIRouter()
 
@@ -70,9 +71,15 @@ def _build_llm_agent_prompt(
     stock_code: str,
     stock_name: str,
     current_price: Any,
-    role_data: Dict[str, Any]
+    raw_data: Dict[str, Any],
+    rule_reference: Dict[str, Any],
 ) -> str:
-    key_points = role_data.get("key_points") or role_data.get("risk_points") or []
+    missing_fields = [
+        field_name
+        for field_name, value in raw_data.items()
+        if value in (None, {}, [])
+    ]
+    missing_text = "无" if not missing_fields else ", ".join(missing_fields)
 
     return f"""你是 {agent_name}，负责{role_name}。
 
@@ -83,10 +90,15 @@ def _build_llm_agent_prompt(
 - 股票名称: {stock_name}
 - 当前价格: {current_price}
 
-规则引擎提供的参考信息：
-- 参考评分: {role_data.get('score', 5)}
-- 参考评价: {role_data.get('comment', '')}
-- 参考要点: {', '.join(key_points[:3]) if key_points else '暂无'}
+真实原始数据（以下字段为空表示当前未获取到真实数据）：
+{json.dumps(raw_data, ensure_ascii=False, indent=2)}
+
+关键缺失字段：{missing_text}
+
+规则引擎参考（仅供参考，不可当作原始事实）：
+{json.dumps(rule_reference, ensure_ascii=False, indent=2)}
+
+请优先依据真实原始数据分析；如果关键数据缺失，请在结论中明确说明“数据不足”。
 
 请输出 JSON：
 {{
@@ -97,6 +109,128 @@ def _build_llm_agent_prompt(
   "risks": ["风险1", "风险2"],
   "opportunities": ["机会1", "机会2"]
 }}"""
+
+
+def _as_dict(payload: Any) -> Dict[str, Any]:
+    return payload if isinstance(payload, dict) else {}
+
+
+def _as_list(payload: Any) -> List[Any]:
+    return payload if isinstance(payload, list) else []
+
+
+def _resolve_current_price(full_data: Dict[str, Any], fallback_execution: Dict[str, Any]) -> Any:
+    quote_price = _as_dict(full_data.get("quote")).get("current_price")
+    if quote_price not in (None, ""):
+        return quote_price
+
+    technical_price = _as_dict(full_data.get("technical")).get("current_price")
+    if technical_price not in (None, ""):
+        return technical_price
+
+    return fallback_execution.get("current_price")
+
+
+def _build_role_payloads(
+    stock_code: str,
+    full_data: Dict[str, Any],
+    current_price: Any,
+) -> Dict[str, Dict[str, Any]]:
+    technical = _as_dict(full_data.get("technical"))
+    quote = _as_dict(full_data.get("quote"))
+    fund_flow = _as_dict(full_data.get("fund_flow"))
+    north_bound = _as_dict(full_data.get("north_bound"))
+    market = _as_dict(full_data.get("market"))
+    financial = _as_dict(full_data.get("financial"))
+    valuation = _as_dict(full_data.get("valuation"))
+    news = _as_list(full_data.get("news"))
+
+    return {
+        "technical": {
+            "quote": quote,
+            "technical": technical,
+            "current_price": current_price,
+        },
+        "intelligence": {
+            "quote": quote,
+            "fund_flow": fund_flow,
+            "north_bound": north_bound,
+            "market": market,
+            "news": news,
+            "current_price": current_price,
+        },
+        "risk": {
+            "quote": quote,
+            "market": market,
+            "technical": {
+                "current_price": technical.get("current_price"),
+                "change_pct": technical.get("change_pct"),
+                "support_levels": technical.get("support_levels"),
+                "resistance_levels": technical.get("resistance_levels"),
+            },
+            "financial": financial,
+            "valuation": valuation,
+            "current_price": current_price,
+        },
+        "fundamental": {
+            "quote": quote,
+            "financial": financial,
+            "valuation": valuation,
+            "current_price": current_price,
+            "stock_code": stock_code,
+        },
+    }
+
+
+def _build_rule_reference(rule_decision) -> Dict[str, Dict[str, Any]]:
+    score_breakdown = getattr(rule_decision, "score_breakdown", {}) or {}
+    execution = getattr(rule_decision, "execution", {}) or {}
+
+    def get_reference(role: str) -> Dict[str, Any]:
+        role_reference = score_breakdown.get(role, {}) or {}
+        return {
+            "score": role_reference.get("score", 5),
+            "comment": role_reference.get("comment", ""),
+            "key_points": role_reference.get("key_points", []),
+            "risk_points": role_reference.get("risk_points", []),
+        }
+
+    references = {
+        "technical": get_reference("technical"),
+        "intelligence": get_reference("intelligence"),
+        "risk": get_reference("risk"),
+        "fundamental": get_reference("fundamental"),
+    }
+
+    for role_reference in references.values():
+        role_reference["execution"] = {
+            "entry_zone": execution.get("entry_zone", []),
+            "stop_loss": execution.get("stop_loss", 0),
+            "take_profit_1": execution.get("take_profit_1", 0),
+            "take_profit_2": execution.get("take_profit_2", 0),
+            "position_size": execution.get("position_size", 0),
+        }
+
+    return references
+
+
+def _build_llm_analysis_data(stock_code: str, rule_decision) -> Dict[str, Any]:
+    execution = getattr(rule_decision, "execution", {}) or {}
+    full_data = data_fetcher.get_full_data(stock_code) or {}
+    if "news" not in full_data:
+        full_data["news"] = data_fetcher.get_news(stock_code, limit=5) or []
+
+    current_price = _resolve_current_price(full_data, execution)
+    role_payloads = _build_role_payloads(stock_code, full_data, current_price)
+    rule_reference = _build_rule_reference(rule_decision)
+
+    return {
+        "stock_code": stock_code,
+        "current_price": current_price,
+        "full_data": full_data,
+        "role_payloads": role_payloads,
+        "rule_reference": rule_reference,
+    }
 
 
 def _serialize_agent_report(report: AgentReport, icon: str, round_number: int) -> Dict[str, Any]:
@@ -423,42 +557,20 @@ async def generate_sse_events(stock_code: str, stock_name: str):
             user_request="中短线波段交易分析"
         )
         
-        # 构建分析数据
-        score_breakdown = rule_decision.score_breakdown or {}
-        analysis_data = {
-            "stock_code": stock_code,
-            "stock_name": stock_name,
-            "current_price": rule_decision.execution.get("current_price", 0),
-            "market_context": "震荡偏多",
-            "technical": {
-                "score": score_breakdown.get("technical", {}).get("score", 5),
-                "comment": score_breakdown.get("technical", {}).get("comment", ""),
-                "key_points": score_breakdown.get("technical", {}).get("key_points", [])
-            },
-            "intelligence": {
-                "score": score_breakdown.get("intelligence", {}).get("score", 5),
-                "comment": score_breakdown.get("intelligence", {}).get("comment", ""),
-                "key_points": score_breakdown.get("intelligence", {}).get("key_points", [])
-            },
-            "risk": {
-                "score": score_breakdown.get("risk", {}).get("score", 5),
-                "comment": score_breakdown.get("risk", {}).get("comment", ""),
-                "risk_points": score_breakdown.get("risk", {}).get("risk_points", [])
-            },
-            "fundamental": {
-                "score": score_breakdown.get("fundamental", {}).get("score", 5),
-                "comment": score_breakdown.get("fundamental", {}).get("comment", ""),
-                "key_points": score_breakdown.get("fundamental", {}).get("key_points", [])
-            }
-        }
+        # 构建 LLM 使用的真实原始数据与规则引擎参考
+        analysis_data = _build_llm_analysis_data(stock_code, rule_decision)
         
         # 发送规则引擎分析完成事件
-        yield f"event: rule_analysis\ndata: {json.dumps({'status': 'complete', 'data': {
-            'stock_code': stock_code,
-            'stock_name': stock_name,
-            'composite_score': rule_decision.composite_score,
-            'final_action': rule_decision.final_action
-        }})}\n\n"
+        rule_analysis_payload = {
+            "status": "complete",
+            "data": {
+                "stock_code": stock_code,
+                "stock_name": stock_name,
+                "composite_score": rule_decision.composite_score,
+                "final_action": rule_decision.final_action,
+            },
+        }
+        yield f"event: rule_analysis\ndata: {json.dumps(rule_analysis_payload)}\n\n"
         
         await asyncio.sleep(0.5)
         
@@ -484,12 +596,13 @@ async def generate_sse_events(stock_code: str, stock_name: str):
                 
             # 发送Agent开始分析事件
             config = agent_configs.get(role, {})
-            yield f"event: agent_start\ndata: {json.dumps({
+            agent_start_payload = {
                 'round': 1,
                 'agent_name': config.get('name', role),
                 'agent_role': role,
                 'icon': config.get('icon', '🤖')
-            })}\n\n"
+            }
+            yield f"event: agent_start\ndata: {json.dumps(agent_start_payload)}\n\n"
             
             # 更新讨论状态
             agent_display_name = config.get('name', role)
@@ -499,14 +612,16 @@ async def generate_sse_events(stock_code: str, stock_name: str):
             await asyncio.sleep(0.3)  # 模拟思考时间
             
             # 准备分析提示词
-            role_data = analysis_data.get(role, {})
+            raw_data = analysis_data["role_payloads"].get(role, {})
+            rule_reference = analysis_data["rule_reference"].get(role, {})
             prompt = _build_llm_agent_prompt(
                 agent_name=agent.name,
                 role_name=agent_configs.get(role, {}).get('name', role),
                 stock_code=stock_code,
                 stock_name=stock_name,
                 current_price=analysis_data.get('current_price', 'N/A'),
-                role_data=role_data,
+                raw_data=raw_data,
+                rule_reference=rule_reference,
             )
             
             try:
@@ -526,7 +641,7 @@ async def generate_sse_events(stock_code: str, stock_name: str):
                         'agent_name': config.get('name', role),
                         'agent_role': role,
                         'icon': config.get('icon', '🤖'),
-                        'score': role_data.get('score', 0.0),
+                        'score': rule_reference.get('score', 0.0),
                         'confidence': 0.5,
                         'summary': analysis_text[:100] if len(analysis_text) > 100 else analysis_text,
                         'analysis': analysis_text,
@@ -541,10 +656,11 @@ async def generate_sse_events(stock_code: str, stock_name: str):
                 
             except Exception as e:
                 # 发送错误事件
-                yield f"event: error\ndata: {json.dumps({
+                error_payload = {
                     'agent': config.get('name', role),
                     'error': str(e)
-                })}\n\n"
+                }
+                yield f"event: error\ndata: {json.dumps(error_payload)}\n\n"
         
         await asyncio.sleep(0.5)
         
@@ -613,10 +729,11 @@ async def generate_sse_events(stock_code: str, stock_name: str):
                         await asyncio.sleep(0.3)
                         
                     except Exception as e:
-                        yield f"event: error\ndata: {json.dumps({
+                        error_payload = {
                             'agent': report['agent_name'],
                             'error': str(e)
-                        })}\n\n"
+                        }
+                        yield f"event: error\ndata: {json.dumps(error_payload)}\n\n"
                         
             except Exception as e:
                 yield f"event: error\ndata: {json.dumps({'error': f'Leader讨论失败: {str(e)}'})}\n\n"

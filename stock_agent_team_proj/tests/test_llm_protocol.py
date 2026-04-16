@@ -187,3 +187,232 @@ class TestLLMStreamingPayload(unittest.IsolatedAsyncioTestCase):
     async def _async_noop(*args, **kwargs):
         return None
 
+
+class TestLLMRawDataAssembly(unittest.IsolatedAsyncioTestCase):
+    async def test_generate_sse_events_builds_role_prompts_from_real_raw_data(self):
+        class CapturingAgent:
+            def __init__(self, name, role):
+                self.name = name
+                self.role = role
+                self.prompts = []
+
+            def analyze(self, prompt):
+                self.prompts.append(prompt)
+                return AgentReport(
+                    agent_name=self.name,
+                    agent_role=self.role,
+                    score=7.0,
+                    confidence=0.8,
+                    summary=f"{self.role} 分析完成",
+                    analysis="已基于真实数据完成分析。",
+                )
+
+        class CapturingLeader(CapturingAgent):
+            def __init__(self):
+                super().__init__("👔 队长", "leader")
+
+            def analyze(self, prompt):
+                self.prompts.append(prompt)
+                return AgentReport(
+                    agent_name=self.name,
+                    agent_role=self.role,
+                    score=7.8,
+                    confidence=0.88,
+                    summary="建议观望",
+                    analysis="等待更清晰的入场信号。",
+                    metadata={"decision": "watch", "action": "观望"},
+                )
+
+        fake_team = {
+            "technical": CapturingAgent("技术分析员", "technical"),
+            "intelligence": CapturingAgent("情报员", "intelligence"),
+            "risk": CapturingAgent("风控官", "risk"),
+            "fundamental": CapturingAgent("基本面分析员", "fundamental"),
+            "leader": CapturingLeader(),
+        }
+
+        fake_rule_decision = SimpleNamespace(
+            score_breakdown={
+                "technical": {"score": 6.1},
+                "intelligence": {"score": 6.0},
+                "risk": {"score": 8.0},
+                "fundamental": {"score": 7.5},
+            },
+            execution={
+                "entry_zone": [120.0, 122.0],
+                "stop_loss": 116.0,
+                "take_profit_1": 128.0,
+                "take_profit_2": 132.0,
+                "position_size": 0.3,
+            },
+            rationale={
+                "buy_reasons": ["趋势改善"],
+                "risk_warnings": ["注意回撤"],
+            },
+            confidence="medium",
+            composite_score=6.7,
+            final_action="watch",
+        )
+
+        full_data = {
+            "technical": {
+                "current_price": 320.5,
+                "ma5": 318.2,
+                "macd": {"dif": 1.2, "dea": 0.8},
+            },
+            "fund_flow": {
+                "fund_flows": [{"date": "2026-04-16", "net_inflow": 12345678}],
+            },
+            "north_bound": {
+                "total_flow_5d": 560000000,
+                "positive_days": 4,
+            },
+            "market": {
+                "market_trend": "震荡偏强",
+                "limit_up": 82,
+                "limit_down": 7,
+            },
+            "financial": {
+                "revenue_growth": 0.22,
+                "profit_growth": 0.31,
+            },
+            "valuation": {
+                "pe_ttm": 18.6,
+                "pb": 2.9,
+            },
+            "quote": {
+                "current_price": 321.09,
+                "change_pct": 2.56,
+            },
+            "news": [
+                {"title": "宁德时代获大单", "date": "2026-04-16"},
+            ],
+        }
+
+        with patch("web.api.analyze.create_team", return_value=fake_team), \
+             patch("web.api.analyze.get_llm_config", return_value={
+                 "provider": "mock",
+                 "api_key": "",
+                 "base_url": "",
+                 "model": "mock",
+             }), \
+             patch("web.api.analyze.get_team", return_value=SimpleNamespace(
+                 analyze=lambda **kwargs: fake_rule_decision
+             )), \
+             patch("web.api.analyze.data_fetcher.get_full_data", return_value=full_data), \
+             patch("web.api.analyze.asyncio.sleep", new=self._async_noop):
+            async for _ in generate_sse_events("300750", "宁德时代"):
+                pass
+
+        technical_prompt = fake_team["technical"].prompts[0]
+        intelligence_prompt = fake_team["intelligence"].prompts[0]
+        risk_prompt = fake_team["risk"].prompts[0]
+        fundamental_prompt = fake_team["fundamental"].prompts[0]
+
+        self.assertIn("当前价格: 321.09", technical_prompt)
+        self.assertIn("真实原始数据", technical_prompt)
+        self.assertIn("ma5", technical_prompt)
+
+        self.assertIn("真实原始数据", intelligence_prompt)
+        self.assertIn("fund_flows", intelligence_prompt)
+        self.assertIn("宁德时代获大单", intelligence_prompt)
+
+        self.assertIn("真实原始数据", risk_prompt)
+        self.assertIn("market_trend", risk_prompt)
+        self.assertIn("震荡偏强", risk_prompt)
+
+        self.assertIn("真实原始数据", fundamental_prompt)
+        self.assertIn("pe_ttm", fundamental_prompt)
+        self.assertIn("18.6", fundamental_prompt)
+
+    async def test_generate_sse_events_falls_back_to_technical_price_and_marks_missing_data(self):
+        class CapturingAgent:
+            def __init__(self, name, role):
+                self.name = name
+                self.role = role
+                self.prompts = []
+
+            def analyze(self, prompt):
+                self.prompts.append(prompt)
+                return AgentReport(
+                    agent_name=self.name,
+                    agent_role=self.role,
+                    score=6.5,
+                    confidence=0.75,
+                    summary=f"{self.role} 分析完成",
+                    analysis="已识别到数据缺口。",
+                )
+
+        class CapturingLeader(CapturingAgent):
+            def __init__(self):
+                super().__init__("👔 队长", "leader")
+
+            def analyze(self, prompt):
+                self.prompts.append(prompt)
+                return AgentReport(
+                    agent_name=self.name,
+                    agent_role=self.role,
+                    score=6.9,
+                    confidence=0.8,
+                    summary="建议观望",
+                    analysis="数据不完整，建议继续观察。",
+                    metadata={"decision": "watch", "action": "观望"},
+                )
+
+        fake_team = {
+            "technical": CapturingAgent("技术分析员", "technical"),
+            "intelligence": CapturingAgent("情报员", "intelligence"),
+            "risk": CapturingAgent("风控官", "risk"),
+            "fundamental": CapturingAgent("基本面分析员", "fundamental"),
+            "leader": CapturingLeader(),
+        }
+
+        fake_rule_decision = SimpleNamespace(
+            score_breakdown={},
+            execution={},
+            rationale={"buy_reasons": [], "risk_warnings": []},
+            confidence="low",
+            composite_score=5.0,
+            final_action="watch",
+        )
+
+        full_data = {
+            "technical": {
+                "current_price": 298.76,
+                "ma5": 297.1,
+            },
+            "fund_flow": None,
+            "north_bound": None,
+            "market": {},
+            "financial": None,
+            "valuation": None,
+            "quote": None,
+            "news": [],
+        }
+
+        with patch("web.api.analyze.create_team", return_value=fake_team), \
+             patch("web.api.analyze.get_llm_config", return_value={
+                 "provider": "mock",
+                 "api_key": "",
+                 "base_url": "",
+                 "model": "mock",
+             }), \
+             patch("web.api.analyze.get_team", return_value=SimpleNamespace(
+                 analyze=lambda **kwargs: fake_rule_decision
+             )), \
+             patch("web.api.analyze.data_fetcher.get_full_data", return_value=full_data), \
+             patch("web.api.analyze.asyncio.sleep", new=self._async_noop):
+            async for _ in generate_sse_events("300750", "宁德时代"):
+                pass
+
+        technical_prompt = fake_team["technical"].prompts[0]
+        intelligence_prompt = fake_team["intelligence"].prompts[0]
+
+        self.assertIn("当前价格: 298.76", technical_prompt)
+        self.assertIn("缺失", intelligence_prompt)
+        self.assertIn("规则引擎参考", intelligence_prompt)
+
+    @staticmethod
+    async def _async_noop(*args, **kwargs):
+        return None
+

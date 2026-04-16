@@ -128,6 +128,34 @@ class DataFetcher:
             self._cache_time[key] = now
         
         return result
+
+    @staticmethod
+    def _pick_first_available(row, *field_names, default=None):
+        """按候选字段顺序取值，兼容外部接口字段变更"""
+        for field_name in field_names:
+            if hasattr(row, "get"):
+                value = row.get(field_name, None)
+            else:
+                value = None
+            if value is not None and pd.notna(value):
+                return value
+        return default
+
+    @staticmethod
+    def _safe_float(value, default=0.0, scale=1.0) -> float:
+        """安全转换数值"""
+        if value is None or (isinstance(value, str) and not value.strip()):
+            return default
+        try:
+            if pd.isna(value):
+                return default
+        except Exception:
+            pass
+
+        try:
+            return float(value) * scale
+        except (TypeError, ValueError):
+            return default
     
     # ============================================================
     # K线数据 - 多数据源
@@ -192,6 +220,118 @@ class DataFetcher:
             return None
 
         return result_holder['result']
+
+    def _get_efinance_base_info(self, code: str):
+        """获取 efinance 基本信息，安全调用失败时回退直连"""
+        if 'efinance' not in self.data_sources or self.ef is None:
+            return None
+
+        try:
+            df = self._call_efinance_safely(
+                self.ef.stock.get_base_info, [code]
+            )
+            if df is not None and not getattr(df, 'empty', True):
+                return df
+        except Exception as e:
+            logger.debug(f"efinance 基本信息安全调用失败: {e}")
+
+        try:
+            df = self.ef.stock.get_base_info([code])
+            if df is not None and not getattr(df, 'empty', True):
+                logger.debug(f"efinance 基本信息直连重试成功: {code}")
+                return df
+        except Exception as e:
+            logger.debug(f"efinance 基本信息直连失败: {e}")
+
+        return None
+
+    def _get_akshare_financial_summary(self, code: str) -> Optional[Dict[str, Any]]:
+        """使用 akshare 的结构化同花顺财务摘要"""
+        if 'akshare' not in self.data_sources or self.ak is None:
+            return None
+
+        summary_func = getattr(self.ak, 'stock_financial_abstract_new_ths', None)
+        if summary_func is None:
+            return None
+
+        try:
+            df = summary_func(symbol=code)
+            if df is None or df.empty:
+                return None
+
+            latest_date = str(df.iloc[0]['report_date'])
+            latest_df = df[df['report_date'].astype(str) == latest_date]
+            metric_map = {
+                row['metric_name']: row.get('value')
+                for _, row in latest_df.iterrows()
+            }
+
+            return {
+                'revenue': self._safe_float(metric_map.get('operating_income_total')),
+                'revenue_growth': self._safe_float(
+                    metric_map.get('calculate_operating_income_total_yoy_growth_ratio'),
+                    scale=0.01,
+                ),
+                'net_profit': self._safe_float(metric_map.get('parent_holder_net_profit')),
+                'profit_growth': self._safe_float(
+                    metric_map.get('calculate_parent_holder_net_profit_yoy_growth_ratio'),
+                    scale=0.01,
+                ),
+                'gross_margin': self._safe_float(metric_map.get('sale_gross_margin'), scale=0.01),
+                'net_margin': self._safe_float(metric_map.get('sale_net_interest_ratio'), scale=0.01),
+                'roe': self._safe_float(metric_map.get('index_full_diluted_roe'), scale=0.01),
+                'data_source': 'akshare_ths',
+            }
+        except Exception as e:
+            logger.debug(f"akshare 同花顺财务摘要获取失败: {e}")
+            return None
+
+    def _get_akshare_baidu_valuation(self, code: str) -> Optional[Dict[str, Any]]:
+        """使用 akshare 百度估值接口获取 PE/PB/市值"""
+        if 'akshare' not in self.data_sources or self.ak is None:
+            return None
+
+        valuation_func = getattr(self.ak, 'stock_zh_valuation_baidu', None)
+        if valuation_func is None:
+            return None
+
+        try:
+            pe_df = valuation_func(symbol=code, indicator='市盈率(TTM)', period='近一年')
+            pb_df = valuation_func(symbol=code, indicator='市净率', period='近一年')
+            market_cap_df = valuation_func(symbol=code, indicator='总市值', period='近一年')
+
+            if pe_df is None or pe_df.empty or pb_df is None or pb_df.empty:
+                return None
+
+            pe_series = pe_df['value'].dropna()
+            pb_series = pb_df['value'].dropna()
+            if pe_series.empty or pb_series.empty:
+                return None
+
+            pe_ttm = self._safe_float(pe_series.iloc[-1])
+            pb = self._safe_float(pb_series.iloc[-1])
+            pe_percentile = 0.5
+            if pe_ttm > 0 and not pe_series.empty:
+                pe_percentile = float((pe_series < pe_ttm).sum() / len(pe_series))
+
+            market_cap = 0.0
+            if market_cap_df is not None and not market_cap_df.empty:
+                market_cap_series = market_cap_df['value'].dropna()
+                if not market_cap_series.empty:
+                    market_cap = self._safe_float(market_cap_series.iloc[-1]) * 100000000
+
+            return {
+                'pe_ttm': round(pe_ttm, 2),
+                'pb': round(pb, 2),
+                'industry_pe': 25,
+                'pe_percentile': round(pe_percentile, 2),
+                'market_cap': market_cap,
+                'circulating_market_cap': 0,
+                'data_source': 'akshare_baidu',
+            }
+        except Exception as e:
+            logger.debug(f"akshare 百度估值获取失败: {e}")
+            return None
 
     def _get_kline_efinance(self, code: str, days: int) -> Optional[pd.DataFrame]:
         """使用 efinance 获取K线"""
@@ -569,9 +709,7 @@ class DataFetcher:
             # 尝试 efinance
             if 'efinance' in self.data_sources:
                 try:
-                    df = self._call_efinance_safely(
-                        self.ef.stock.get_base_info, [code]
-                    )
+                    df = self._get_efinance_base_info(code)
                     if df is not None and not df.empty:
                         row = df.iloc[0]
                         return {
@@ -780,17 +918,59 @@ class DataFetcher:
                     if df is not None and not df.empty:
                         latest = df.iloc[0]
                         return {
-                            'revenue': float(latest.get('营业收入', 0)) if pd.notna(latest.get('营业收入')) else 0,
-                            'revenue_growth': float(latest.get('营业收入同比增长率', 0)) / 100 if pd.notna(latest.get('营业收入同比增长率')) else 0,
-                            'net_profit': float(latest.get('净利润', 0)) if pd.notna(latest.get('净利润')) else 0,
-                            'profit_growth': float(latest.get('净利润同比增长率', 0)) / 100 if pd.notna(latest.get('净利润同比增长率')) else 0,
-                            'gross_margin': float(latest.get('销售毛利率', 0)) / 100 if pd.notna(latest.get('销售毛利率')) else 0,
-                            'net_margin': float(latest.get('销售净利率', 0)) / 100 if pd.notna(latest.get('销售净利率')) else 0,
-                            'roe': float(latest.get('净资产收益率', 0)) / 100 if pd.notna(latest.get('净资产收益率')) else 0,
+                            'revenue': self._safe_float(latest.get('营业收入', 0)),
+                            'revenue_growth': self._safe_float(latest.get('营业收入同比增长率', 0), scale=0.01),
+                            'net_profit': self._safe_float(latest.get('净利润', 0)),
+                            'profit_growth': self._safe_float(latest.get('净利润同比增长率', 0), scale=0.01),
+                            'gross_margin': self._safe_float(latest.get('销售毛利率', 0), scale=0.01),
+                            'net_margin': self._safe_float(latest.get('销售净利率', 0), scale=0.01),
+                            'roe': self._safe_float(latest.get('净资产收益率', 0), scale=0.01),
+                            'data_source': 'akshare',
                         }
                 except Exception as e:
                     logger.debug(f"财务数据获取失败: {e}")
-            
+
+            akshare_summary = self._get_akshare_financial_summary(code)
+            if akshare_summary is not None:
+                return akshare_summary
+
+            if 'efinance' in self.data_sources:
+                try:
+                    df = self._get_efinance_base_info(code)
+                    if df is not None and not df.empty:
+                        row = df.iloc[0]
+                        return {
+                            'revenue': self._safe_float(
+                                self._pick_first_available(row, '营业总收入', '营业收入', '营收')
+                            ),
+                            'revenue_growth': self._safe_float(
+                                self._pick_first_available(row, '营收同比', '营业收入同比增长率', '营业总收入同比增长率'),
+                                scale=0.01,
+                            ),
+                            'net_profit': self._safe_float(
+                                self._pick_first_available(row, '净利润', '归母净利润')
+                            ),
+                            'profit_growth': self._safe_float(
+                                self._pick_first_available(row, '净利润同比', '净利润同比增长率', '归母净利润同比增长率'),
+                                scale=0.01,
+                            ),
+                            'gross_margin': self._safe_float(
+                                self._pick_first_available(row, '毛利率', '销售毛利率'),
+                                scale=0.01,
+                            ),
+                            'net_margin': self._safe_float(
+                                self._pick_first_available(row, '净利率', '销售净利率'),
+                                scale=0.01,
+                            ),
+                            'roe': self._safe_float(
+                                self._pick_first_available(row, 'ROE', '净资产收益率'),
+                                scale=0.01,
+                            ),
+                            'data_source': 'efinance',
+                        }
+                except Exception as e:
+                    logger.debug(f"efinance 财务数据获取失败: {e}")
+
             return None
         
         return self._get_with_cache(cache_key, fetch)
@@ -805,11 +985,19 @@ class DataFetcher:
             if 'akshare' in self.data_sources:
                 try:
                     # 获取个股信息（含PE、PB等）
-                    df = self.ak.stock_a_indicator_lg(symbol=code)
+                    indicator_func = getattr(self.ak, 'stock_a_indicator_lg', None)
+                    if indicator_func is not None:
+                        df = indicator_func(symbol=code)
+                    else:
+                        df = None
                     if df is not None and not df.empty:
                         latest = df.iloc[-1]
-                        pe_ttm = float(latest.get('pe_ttm', 0)) if pd.notna(latest.get('pe_ttm')) else 0
-                        pb = float(latest.get('pb', 0)) if pd.notna(latest.get('pb')) else 0
+                        pe_ttm = self._safe_float(
+                            self._pick_first_available(latest, 'pe_ttm', '市盈率TTM', '市盈率')
+                        )
+                        pb = self._safe_float(
+                            self._pick_first_available(latest, 'pb', '市净率')
+                        )
         
                         # 获取行业PE作为参考
                         industry_pe = 25  # 默认值
@@ -853,24 +1041,35 @@ class DataFetcher:
                             pass
 
                         return result
+                    logger.debug("akshare 估值数据接口不可用或返回空数据")
                 except Exception as e:
                     logger.debug(f"akshare 估值数据获取失败: {e}")
+
+            akshare_baidu_result = self._get_akshare_baidu_valuation(code)
+            if akshare_baidu_result is not None:
+                return akshare_baidu_result
 
             # 备选：efinance 获取基本信息
             if 'efinance' in self.data_sources:
                 try:
-                    df = self._call_efinance_safely(
-                        self.ef.stock.get_base_info, [code]
-                    )
+                    df = self._get_efinance_base_info(code)
                     if df is not None and not df.empty:
                         row = df.iloc[0]
                         return {
-                            'pe_ttm': float(row.get('市盈率-动态', 0)) if pd.notna(row.get('市盈率-动态')) else 0,
-                            'pb': float(row.get('市净率', 0)) if pd.notna(row.get('市净率')) else 0,
+                            'pe_ttm': self._safe_float(
+                                self._pick_first_available(row, '市盈率-动态', '市盈率(动)', '市盈率')
+                            ),
+                            'pb': self._safe_float(
+                                self._pick_first_available(row, '市净率', 'PB')
+                            ),
                             'industry_pe': 25,
                             'pe_percentile': 0.5,
-                            'market_cap': float(row.get('总市值', 0)) if pd.notna(row.get('总市值')) else 0,
-                            'circulating_market_cap': float(row.get('流通市值', 0)) if pd.notna(row.get('流通市值')) else 0,
+                            'market_cap': self._safe_float(
+                                self._pick_first_available(row, '总市值')
+                            ),
+                            'circulating_market_cap': self._safe_float(
+                                self._pick_first_available(row, '流通市值')
+                            ),
                             'data_source': 'efinance',
                         }
                 except Exception as e:
