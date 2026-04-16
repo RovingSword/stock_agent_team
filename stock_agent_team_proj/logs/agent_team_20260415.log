@@ -1,0 +1,22 @@
+2026-04-15 23:54:46,504 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-15 23:54:46,545 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-15 23:54:46,557 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-15 23:54:46,557 - StockAgentTeam - INFO - 开始分析: 宁德时代(300750)
+2026-04-15 23:54:46,557 - agent.leader - INFO - 开始分析 宁德时代(300750)
+2026-04-15 23:54:46,558 - agent.technical - INFO - 开始分析 宁德时代(300750)
+2026-04-15 23:54:46,558 - agent.intelligence - INFO - 开始分析 宁德时代(300750)
+2026-04-15 23:54:46,558 - agent.risk - INFO - 开始分析 宁德时代(300750)
+2026-04-15 23:54:46,558 - agent.fundamental - INFO - 开始分析 宁德时代(300750)
+2026-04-15 23:54:46,714 - data_fetcher - INFO - ✅ 新浪财经K线获取成功 (300750), 共 60 条
+2026-04-15 23:54:46,884 - agent.fundamental - INFO - 分析完成，评分: 8.0
+2026-04-15 23:54:46,884 - agent.leader - INFO - 基本面分析师 分析完成，评分: 8.0
+2026-04-15 23:54:47,004 - agent.technical - INFO - 分析完成，评分: 6.1
+2026-04-15 23:54:47,004 - agent.leader - INFO - 技术分析员 分析完成，评分: 6.1
+2026-04-15 23:54:47,776 - agent.risk - INFO - 分析完成，评分: 8.9
+2026-04-15 23:54:47,776 - agent.leader - INFO - 风控官 分析完成，评分: 8.9
+2026-04-15 23:54:48,309 - agent.intelligence - INFO - 分析完成，评分: 6.8
+2026-04-15 23:54:48,309 - agent.leader - INFO - 情报员 分析完成，评分: 6.8
+2026-04-15 23:54:48,317 - agent.leader - INFO - 分析完成 - 决策: buy, 评分: 7.12
+2026-04-15 23:54:48,317 - StockAgentTeam - INFO - 开始复盘: weekly
+2026-04-15 23:58:28,798 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-15 23:58:28,832 - data_fetcher - INFO - efinance 数据源已加载

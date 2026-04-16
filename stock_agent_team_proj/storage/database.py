@@ -1,14 +1,14 @@
 """
 数据库操作模块
 """
-import sqlite3
 import json
+import os
+import sqlite3
+from contextlib import contextmanager
 from datetime import datetime
 from typing import Optional, Dict, Any, List
-from contextlib import contextmanager
-import os
 
-from config import DATABASE_PATH, DATA_DIR
+from config import DATABASE_PATH
 
 
 class Database:
@@ -19,12 +19,21 @@ class Database:
         self._ensure_db_exists()
     
     def _ensure_db_exists(self):
-        """确保数据库存在"""
+        """确保数据库存在且表结构已初始化"""
         os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
         
-        # 检查数据库是否已存在
+        # 检查数据库是否已存在且包含表结构
         if os.path.exists(self.db_path):
-            return
+            # 文件存在但可能是空数据库，需要检查是否有表
+            try:
+                conn = sqlite3.connect(self.db_path)
+                cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
+                tables = [r[0] for r in cursor.fetchall()]
+                conn.close()
+                if tables:
+                    return  # 数据库已有表结构，无需重新初始化
+            except Exception:
+                pass  # 数据库损坏，重新初始化
         
         # 读取并执行schema
         schema_path = os.path.join(os.path.dirname(__file__), 'schema.sql')
