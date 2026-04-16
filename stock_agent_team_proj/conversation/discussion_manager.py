@@ -2,7 +2,8 @@
 多轮讨论管理器 - 实现 Agent 团队的多轮讨论流程
 """
 import asyncio
-from typing import List, Optional, Dict, Any, Callable
+import inspect
+from typing import List, Optional, Dict, Any, Callable, Union
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 
@@ -17,22 +18,18 @@ from .prompts import (
     ROUND_INSTRUCTIONS
 )
 
+# 尝试导入实际的 LLM Agent 基类
+try:
+    from agents.llm.base_llm_agent import BaseLLMAgent as RealLLMAgent
+    from agents.llm.models import StockAnalysisContext
+    HAS_REAL_AGENT = True
+except ImportError:
+    HAS_REAL_AGENT = False
+    RealLLMAgent = None
+    StockAnalysisContext = None
 
-class BaseLLMAgent:
-    """基础 LLM Agent 接口"""
-    
-    def __init__(self, name: str, role: AgentRole, role_description: str):
-        self.name = name
-        self.role = role
-        self.role_description = role_description
-    
-    async def analyze(self, prompt: str) -> str:
-        """执行分析"""
-        raise NotImplementedError
-    
-    def generate_report(self, stock_info: dict, data: dict) -> AgentReport:
-        """生成分析报告"""
-        raise NotImplementedError
+# 类型别名，用于类型注解
+BaseLLMAgent = RealLLMAgent if RealLLMAgent else object
 
 
 class DiscussionManager:
@@ -137,25 +134,46 @@ class DiscussionManager:
     
     async def _agent_analyze(
         self, 
-        agent: BaseLLMAgent, 
+        agent, 
         stock_code: str, 
         stock_name: str,
         data: dict
     ) -> AgentReport:
-        """单个 Agent 执行分析"""
+        """单个 Agent 执行分析（兼容同步/异步 Agent）"""
         # 准备提示词
         prompt = self._prepare_initial_prompt(agent, stock_code, stock_name, data)
         
         if self.llm_callable:
             # 使用提供的 LLM 调用接口
             response = await self.llm_callable(prompt)
-        else:
-            # 默认实现：调用 agent 的 analyze 方法
-            response = await agent.analyze(prompt)
+            return self._parse_report(agent, response)
         
-        # 解析响应生成报告
-        report = self._parse_report(agent, response)
-        return report
+        # 检查 agent.analyze 方法
+        analyze_method = getattr(agent, 'analyze', None)
+        if analyze_method is None:
+            raise ValueError(f"Agent {agent.name} 没有 analyze 方法")
+        
+        # 判断是异步方法还是同步方法
+        is_async = inspect.iscoroutinefunction(analyze_method)
+        
+        if is_async:
+            # 异步方法，直接 await
+            result = await analyze_method(prompt)
+        else:
+            # 同步方法，用 run_in_executor 包装
+            loop = asyncio.get_event_loop()
+            result = await loop.run_in_executor(self._executor, lambda: analyze_method(prompt))
+        
+        # 根据返回类型处理
+        if isinstance(result, AgentReport):
+            # 直接返回 AgentReport 对象
+            return result
+        elif isinstance(result, str):
+            # 字符串响应，需要解析
+            return self._parse_report(agent, result)
+        else:
+            # 其他类型，尝试解析
+            return self._parse_report(agent, str(result))
     
     def _prepare_initial_prompt(
         self, 
@@ -212,7 +230,16 @@ class DiscussionManager:
         ))
         
         # 收集各 Agent 对讨论的回应
-        reports_dict = {r.agent_role: r for r in round1.agent_reports}
+        # 创建支持字符串和枚举两种 key 的字典
+        reports_dict = {}
+        for r in round1.agent_reports:
+            # 使用枚举作为 key
+            reports_dict[r.agent_role] = r
+            # 同时添加字符串版本的 key（兼容实际 Agent 的 role 属性）
+            if hasattr(r.agent_role, 'value'):
+                reports_dict[r.agent_role.value] = r
+            else:
+                reports_dict[str(r.agent_role)] = r
         
         # 进行多轮问答（最多 2 轮）
         current_messages = [
@@ -318,19 +345,40 @@ class DiscussionManager:
     # ==================== 辅助方法 ====================
     
     async def _call_leader(self, prompt: str) -> str:
-        """调用 Leader Agent"""
+        """调用 Leader Agent（兼容同步/异步）"""
         if self.llm_callable:
             return await self.llm_callable(prompt)
-        return await self.leader.analyze(prompt)
+        
+        # 检查 leader 的 analyze 方法
+        analyze_method = getattr(self.leader, 'analyze', None)
+        if analyze_method is None:
+            raise ValueError("Leader 没有 analyze 方法")
+        
+        # 判断是异步还是同步
+        is_async = inspect.iscoroutinefunction(analyze_method)
+        
+        if is_async:
+            result = await analyze_method(prompt)
+        else:
+            loop = asyncio.get_event_loop()
+            result = await loop.run_in_executor(
+                self._executor, 
+                lambda: analyze_method(prompt)
+            )
+        
+        # 如果返回的是 AgentReport，提取 analysis 字段
+        if isinstance(result, AgentReport):
+            return result.analysis
+        return str(result)
     
     async def _agent_discuss(
         self, 
-        agent: BaseLLMAgent,
+        agent,
         context: List[Dict],
         original_report: AgentReport,
         free_comment: bool = False
     ) -> str:
-        """Agent 参与讨论"""
+        """Agent 参与讨论（兼容同步/异步）"""
         if free_comment:
             prompt = f"""你是 {agent.name}（{agent.role_description}）。
 
@@ -346,7 +394,7 @@ class DiscussionManager:
                 role_description=agent.role_description,
                 discussion_context=format_discussion_context(context),
                 other_views=format_other_views(agent.name, [
-                    {"agent_name": r.agent_name, "analysis": r.analysis}
+                    {"agent_name": r.agent_name, "analysis": r.analysis, "score": r.score}
                     for r in self.history.rounds[0].agent_reports
                     if r.agent_name != agent.name
                 ])
@@ -354,17 +402,42 @@ class DiscussionManager:
         
         if self.llm_callable:
             return await self.llm_callable(prompt)
-        return await agent.analyze(prompt)
+        
+        # 兼容同步/异步 Agent
+        analyze_method = getattr(agent, 'analyze', None)
+        if analyze_method is None:
+            raise ValueError(f"Agent {agent.name} 没有 analyze 方法")
+        
+        is_async = inspect.iscoroutinefunction(analyze_method)
+        
+        if is_async:
+            result = await analyze_method(prompt)
+        else:
+            loop = asyncio.get_event_loop()
+            result = await loop.run_in_executor(
+                self._executor,
+                lambda: analyze_method(prompt)
+            )
+        
+        if isinstance(result, AgentReport):
+            return result.analysis
+        return str(result)
     
     async def _agent_final_report(
         self,
-        agent: BaseLLMAgent,
+        agent,
         previous_reports: List[AgentReport],
         agent_discussion_content: List[str]
     ) -> AgentReport:
-        """生成最终报告"""
+        """生成最终报告（兼容同步/异步）"""
+        # 安全地获取原始评分
+        agent_names = [r.agent_name for r in previous_reports]
+        original_score = 5.0  # 默认评分
+        if agent.name in agent_names:
+            original_score = previous_reports[agent_names.index(agent.name)].score
+        
         context = f"""
-你的原始评分：{previous_reports[[r.agent_name for r in previous_reports].index(agent.name)].score}
+你的原始评分：{original_score}
 你的讨论发言：{''.join(agent_discussion_content)}
 
 请给出最终评分、置信度和简短理由。
@@ -381,10 +454,25 @@ class DiscussionManager:
         
         if self.llm_callable:
             response = await self.llm_callable(prompt)
-        else:
-            response = await agent.analyze(prompt)
+            return self._parse_report(agent, response)
         
-        return self._parse_report(agent, response)
+        # 兼容同步/异步 Agent
+        analyze_method = getattr(agent, 'analyze', None)
+        if analyze_method is None:
+            raise ValueError(f"Agent {agent.name} 没有 analyze 方法")
+        
+        is_async = inspect.iscoroutinefunction(analyze_method)
+        
+        if is_async:
+            result = await analyze_method(prompt)
+        else:
+            loop = asyncio.get_event_loop()
+            result = await loop.run_in_executor(
+                self._executor,
+                lambda: analyze_method(prompt)
+            )
+        
+        return self._parse_report(agent, result)
     
     def _prepare_leader_discussion_prompt(self, round1: DiscussionRound) -> str:
         """准备 Leader 发起讨论的提示词"""
@@ -421,23 +509,35 @@ class DiscussionManager:
         messages: List[Dict]
     ) -> Optional[str]:
         """提取与特定角色相关的问题"""
+        # 处理 role 可能是字符串或枚举的情况
+        role_value = role.value if hasattr(role, 'value') else str(role)
+        role_name = role.name.lower() if hasattr(role, 'name') else str(role).lower()
+        
         # 简化的实现，实际可能需要更复杂的逻辑
         for msg in reversed(messages):
             content = msg.get('content', '').lower()
             # 检查是否提到了该角色
-            if role.value in content or role.name.lower() in content:
+            if role_value in content or role_name in content:
                 return msg.get('content')
         return None
     
-    def _parse_report(self, agent: BaseLLMAgent, response: str) -> AgentReport:
-        """解析 LLM 响应生成报告"""
+    def _parse_report(self, agent, response) -> AgentReport:
+        """解析 LLM 响应生成报告（兼容多种输入类型）"""
+        import re
+        
+        # 如果已经是 AgentReport 对象，直接返回
+        if isinstance(response, AgentReport):
+            return response
+        
+        # 如果不是字符串，转为字符串
+        if not isinstance(response, str):
+            response = str(response)
+        
         # 简化的解析逻辑
-        # 实际可能需要更复杂的解析或使用结构化输出
         score = 5.0
         confidence = 0.5
         
         # 尝试提取评分
-        import re
         score_match = re.search(r'评分[：:]?\s*(\d+\.?\d*)', response)
         if score_match:
             score = float(score_match.group(1))
@@ -446,9 +546,36 @@ class DiscussionManager:
         if confidence_match:
             confidence = float(confidence_match.group(1))
         
+        # 尝试从 JSON 格式解析
+        try:
+            import json
+            json_start = response.find('{')
+            json_end = response.rfind('}')
+            if json_start != -1 and json_end != -1:
+                data = json.loads(response[json_start:json_end+1])
+                if 'score' in data:
+                    score = float(data['score'])
+                if 'confidence' in data:
+                    confidence = float(data['confidence'])
+        except (json.JSONDecodeError, ValueError):
+            pass
+        
+        # 获取 agent 的 role（兼容不同类型）
+        agent_role = getattr(agent, 'role', AgentRole.TECHNICAL)
+        if isinstance(agent_role, str):
+            # 将字符串转为 AgentRole 枚举
+            role_map = {
+                'technical': AgentRole.TECHNICAL,
+                'intelligence': AgentRole.INTELLIGENCE,
+                'risk': AgentRole.RISK,
+                'fundamental': AgentRole.FUNDAMENTAL,
+                'leader': AgentRole.LEADER,
+            }
+            agent_role = role_map.get(agent_role.lower(), AgentRole.TECHNICAL)
+        
         return AgentReport(
             agent_name=agent.name,
-            agent_role=agent.role,
+            agent_role=agent_role,
             score=score,
             confidence=confidence,
             analysis=response
@@ -514,11 +641,13 @@ class DiscussionManager:
 
 # ==================== 示例 Agent 实现 ====================
 
-class SimpleLLMAgent(BaseLLMAgent):
+class SimpleLLMAgent:
     """简单的 LLM Agent 实现（用于测试）"""
     
     def __init__(self, name: str, role: AgentRole, role_description: str):
-        super().__init__(name, role, role_description)
+        self.name = name
+        self.role = role
+        self.role_description = role_description
     
     async def analyze(self, prompt: str) -> str:
         """简单的分析实现"""

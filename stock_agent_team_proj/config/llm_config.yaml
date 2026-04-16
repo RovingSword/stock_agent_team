@@ -12,7 +12,7 @@ llm:
     openai_compatible:
       api_key: "sk-mgzorsYLeEFnIJHrK2B1LQurNOn5VCj3nrSAtXymUGToTzcb"
       base_url: "https://www.dmxapi.cn/v1"
-      model: "doubao-seed-1-6-flash-250615"
+      model: "doubao-seed-2-0-pro-260215"
       temperature: 0.7
       max_tokens: 2000
       

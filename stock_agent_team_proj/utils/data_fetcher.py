@@ -706,6 +706,14 @@ class DataFetcher:
         cache_key = f"quote_{code}"
         
         def fetch():
+            # 优先尝试新浪实时行情API
+            try:
+                quote = self._get_quote_sina(code)
+                if quote is not None:
+                    return quote
+            except Exception as e:
+                logger.debug(f"新浪实时行情获取失败: {e}")
+            
             # 尝试 efinance
             if 'efinance' in self.data_sources:
                 try:
@@ -752,6 +760,134 @@ class DataFetcher:
             return None
         
         return self._get_with_cache(cache_key, fetch)
+    
+    def _get_quote_sina(self, code: str) -> Optional[Dict[str, Any]]:
+        """使用新浪财经 API 获取实时行情"""
+        try:
+            # 判断市场
+            if code.startswith(('60', '68')):
+                symbol = f"sh{code}"
+            elif code.startswith(('00', '30')):
+                symbol = f"sz{code}"
+            else:
+                symbol = f"bj{code}"
+            
+            # 新浪实时行情API（不需要额外参数）
+            url = f"https://hq.sinajs.cn/list={symbol}"
+            
+            # 使用正确的 Referer
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Referer': f'https://finance.sina.com.cn/realstock/company/{symbol}/nc.shtml',
+            }
+            
+            resp = requests.get(url, headers=headers, timeout=10)
+            if resp.status_code != 200 or not resp.text:
+                return None
+            
+            # 解析返回数据: var hq_str_sz002202="金风科技,25.100,25.020,..."
+            import re
+            match = re.search(r'="([^"]*)"', resp.text)
+            if not match:
+                return None
+            
+            data_str = match.group(1)
+            if not data_str:  # 空字符串
+                return None
+            
+            data = data_str.split(',')
+            if len(data) < 32:
+                return None
+            
+            # 数据格式: 名称,今开,昨收,当前价,最高,最低,买一,卖一,成交量,成交额,...
+            name = data[0]
+            open_price = self._safe_float(data[1], None)
+            prev_close = self._safe_float(data[2], None)
+            current_price = self._safe_float(data[3], None)
+            high = self._safe_float(data[4], None)
+            low = self._safe_float(data[5], None)
+            volume = self._safe_float(data[8], None)  # 单位: 手
+            amount = self._safe_float(data[9], None)  # 单位: 元
+            
+            # 计算涨跌幅
+            change_pct = None
+            if prev_close and prev_close > 0 and current_price:
+                change_pct = round((current_price - prev_close) / prev_close * 100, 2)
+            
+            result = {
+                'code': code,
+                'name': name,
+                'current_price': current_price,
+                'open': open_price,
+                'high': high,
+                'low': low,
+                'prev_close': prev_close,
+                'volume': int(volume * 100) if volume else 0,  # 手转股
+                'amount': amount,
+                'change_pct': change_pct,
+                'data_source': 'sina',
+            }
+            
+            logger.info(f"✅ 新浪实时行情获取成功 ({code}): {name} ¥{current_price}")
+            return result
+            
+        except Exception as e:
+            logger.debug(f"新浪实时行情解析失败: {e}")
+            return None
+    
+    def _get_market_index_sina(self) -> Optional[Dict[str, Any]]:
+        """使用新浪财经 API 获取大盘指数"""
+        try:
+            # 新浪大盘指数API（需要单独请求每个指数）
+            indices = [
+                ('sh000001', 'sh'),
+                ('sz399001', 'sz'),
+                ('sz399006', 'cyb'),
+            ]
+            
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Referer': 'https://finance.sina.com.cn/',
+            }
+            
+            result = {
+                'market_index': {'sh': 0, 'sz': 0, 'cyb': 0},
+                'sh_index': None,
+                'sz_index': None,
+                'cyb_index': None,
+            }
+            
+            import re
+            
+            for symbol, key in indices:
+                url = f"https://hq.sinajs.cn/list={symbol}"
+                resp = requests.get(url, headers=headers, timeout=10)
+                
+                if resp.status_code == 200 and resp.text:
+                    match = re.search(r'="([^"]*)"', resp.text)
+                    if match and match.group(1):
+                        data = match.group(1).split(',')
+                        if len(data) >= 4:
+                            # 格式: 名称,今开,昨收,当前价,最高,最低,...
+                            current = self._safe_float(data[3], None)
+                            if current:
+                                result['market_index'][key] = current
+                                if key == 'sh':
+                                    result['sh_index'] = current
+                                elif key == 'sz':
+                                    result['sz_index'] = current
+                                elif key == 'cyb':
+                                    result['cyb_index'] = current
+            
+            if result['sh_index']:
+                logger.info(f"✅ 新浪大盘指数获取成功: 上证{result['sh_index']}, 深证{result['sz_index']}, 创业板{result['cyb_index']}")
+                return result
+            
+            return None
+            
+        except Exception as e:
+            logger.debug(f"新浪大盘指数获取失败: {e}")
+            return None
     
     # ============================================================
     # 资金数据
@@ -841,29 +977,43 @@ class DataFetcher:
         def fetch():
             result = {
                 'market_index': {'sh': 0, 'sz': 0, 'cyb': 0},
+                'sh_index': None,
+                'sz_index': None,
+                'cyb_index': None,
                 'market_trend': '震荡',
                 'limit_up': 50,
                 'limit_down': 10,
                 'limit_ratio': 5.0,
             }
             
-            # 获取指数
-            if 'akshare' in self.data_sources:
+            # 优先使用新浪API获取大盘指数
+            try:
+                market_data = self._get_market_index_sina()
+                if market_data:
+                    result.update(market_data)
+            except Exception as e:
+                logger.debug(f"新浪大盘指数获取失败: {e}")
+            
+            # 获取指数（备用 akshare）
+            if result['sh_index'] is None and 'akshare' in self.data_sources:
                 try:
                     # 上证指数
                     sh_df = self.ak.stock_zh_index_daily(symbol="sh000001")
                     if sh_df is not None and not sh_df.empty:
                         result['market_index']['sh'] = float(sh_df.iloc[-1]['close'])
+                        result['sh_index'] = float(sh_df.iloc[-1]['close'])
                     
                     # 深证成指
                     sz_df = self.ak.stock_zh_index_daily(symbol="sz399001")
                     if sz_df is not None and not sz_df.empty:
                         result['market_index']['sz'] = float(sz_df.iloc[-1]['close'])
+                        result['sz_index'] = float(sz_df.iloc[-1]['close'])
                     
                     # 创业板指
                     cyb_df = self.ak.stock_zh_index_daily(symbol="sz399006")
                     if cyb_df is not None and not cyb_df.empty:
                         result['market_index']['cyb'] = float(cyb_df.iloc[-1]['close'])
+                        result['cyb_index'] = float(cyb_df.iloc[-1]['close'])
                     
                     # 涨跌停
                     today = datetime.now().strftime('%Y%m%d')

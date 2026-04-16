@@ -1,29 +1,48 @@
 """
 LLM Agent 数据模型
+
+注意：AgentReport 和 AgentRole 从 conversation.message 模块导入，
+这里主要定义 LLM Agent 特有的数据模型。
 """
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 
+# 从 conversation 模块导入共享的数据类型
+# 避免循环导入，使用延迟导入或直接定义
+class AgentRole:
+    """Agent 角色枚举（占位，实际从 conversation.message 导入）"""
+    LEADER = "leader"
+    TECHNICAL = "technical"
+    INTELLIGENCE = "intelligence"
+    RISK = "risk"
+    FUNDAMENTAL = "fundamental"
+
 
 @dataclass
 class AgentReport:
-    """Agent 分析报告"""
+    """Agent 分析报告（兼容版本）"""
     agent_name: str
-    agent_role: str
-    score: float  # 0-10 评分
-    confidence: float  # 0-1 置信度
-    summary: str  # 一句话总结
-    analysis: str  # 详细分析
+    agent_role: str  # 字符串类型，兼容两种定义
+    score: float = 0.0  # 0-10 评分
+    confidence: float = 0.0  # 0-1 置信度
+    summary: str = ""  # 一句话总结
+    analysis: str = ""  # 详细分析
     risks: List[str] = field(default_factory=list)  # 风险点
     opportunities: List[str] = field(default_factory=list)  # 机会点
     metadata: Dict[str, Any] = field(default_factory=dict)  # 额外元数据
+    timestamp: datetime = field(default_factory=datetime.now)
     
     def to_dict(self) -> Dict[str, Any]:
         """转换为字典"""
+        # 处理 agent_role 可能是枚举或字符串的情况
+        role_value = self.agent_role
+        if hasattr(role_value, 'value'):
+            role_value = role_value.value
+        
         return {
             'agent_name': self.agent_name,
-            'agent_role': self.agent_role,
+            'agent_role': role_value,
             'score': self.score,
             'confidence': self.confidence,
             'summary': self.summary,

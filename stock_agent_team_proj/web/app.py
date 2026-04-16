@@ -50,11 +50,12 @@ if os.path.exists(static_path):
     app.mount("/static", StaticFiles(directory=static_path), name="static")
 
 # 注册API路由
-from web.api import analyze, history, config
+from web.api import analyze, history, config, kline
 
 app.include_router(analyze.router, prefix="/api", tags=["股票分析"])
 app.include_router(history.router, prefix="/api", tags=["历史记录"])
 app.include_router(config.router, prefix="/api", tags=["配置管理"])
+app.include_router(kline.router, prefix="/api", tags=["K线数据"])
 
 
 @app.get("/", response_class=HTMLResponse)

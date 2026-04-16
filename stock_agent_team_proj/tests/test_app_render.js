@@ -70,6 +70,7 @@ const {
     getAgentDiscussionCardId,
     getAgentPrimaryAnalysisText,
     buildAgentAnalysisCardHtml,
+    renderMarkdown,
 } = appModule;
 
 const sampleData = {
@@ -97,5 +98,9 @@ assert.strictEqual(
 );
 assert.ok(finalHtml.includes('agent-analysis-summary'));
 assert.ok(finalHtml.includes('均线向上发散，量价配合良好。'));
+
+// 无 marked/DOMPurify 时降级为 HTML 转义，不应出现未转义的标签
+const safe = renderMarkdown('<script>alert(1)</script>');
+assert.ok(!safe.toLowerCase().includes('<script>'));
 
 console.log('app render tests passed');

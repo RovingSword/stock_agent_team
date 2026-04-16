@@ -260,8 +260,8 @@ class Leader(LeaderAgent):
 │ 操作方向：{decision.final_action if decision.final_action != 'risk_reject' else '不执行'}{'                                      '}
 │ 入场区间：{execution.get('entry_zone', ['-', '-'])[0]} - {execution.get('entry_zone', ['-', '-'])[1]}元
 │ 止损位：{execution.get('stop_loss', 0):.2f}元
-│ 止盈目标1：{execution.get('take_profit_target_1', 0):.2f}元
-│ 止盈目标2：{execution.get('take_profit_target_2', 0):.2f}元
+│ 止盈目标1：{execution.get('take_profit_1', 0):.2f}元
+│ 止盈目标2：{execution.get('take_profit_2', 0):.2f}元
 │ 建议仓位：{execution.get('position_size', 0)*100:.0f}%
 │ 预计持股周期：{execution.get('holding_period_estimate', '-')}
 └──────────────────────────────────────────────────────────────────────────┘

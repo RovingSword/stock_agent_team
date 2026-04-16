@@ -289,8 +289,8 @@ class LeaderAgent(BaseAgent):
         execution = {
             'entry_zone': [],
             'stop_loss': 0,
-            'take_profit_target_1': 0,
-            'take_profit_target_2': 0,
+            'take_profit_1': 0,
+            'take_profit_2': 0,
             'position_size': 0.15,
             'holding_period_estimate': '5-7 trading days'
         }
@@ -300,8 +300,8 @@ class LeaderAgent(BaseAgent):
         if tech_report and tech_report.conclusion:
             execution['entry_zone'] = tech_report.conclusion.get('entry_zone', [])
             execution['stop_loss'] = tech_report.conclusion.get('stop_loss', 0)
-            execution['take_profit_target_1'] = tech_report.conclusion.get('take_profit_1', 0)
-            execution['take_profit_target_2'] = tech_report.conclusion.get('take_profit_2', 0)
+            execution['take_profit_1'] = tech_report.conclusion.get('take_profit_1', 0)
+            execution['take_profit_2'] = tech_report.conclusion.get('take_profit_2', 0)
         
         # 从风控报告获取仓位限制
         risk_report = self.worker_reports.get('risk')

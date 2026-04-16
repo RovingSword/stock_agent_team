@@ -68,26 +68,24 @@
                 </div>
             </section>
 
+            <!-- K线图区域 -->
+            <section id="klineSection" class="kline-section hidden">
+                <div class="kline-header">
+                    <h3>📈 日K线图</h3>
+                    <span id="klineStatus" class="kline-status"></span>
+                </div>
+                <div id="klineChart" class="kline-chart"></div>
+                <div id="klineLegend" class="kline-legend">
+                    <span class="legend-item"><span class="legend-dot legend-ma5"></span>MA5</span>
+                    <span class="legend-item"><span class="legend-dot legend-ma10"></span>MA10</span>
+                    <span class="legend-item"><span class="legend-dot legend-ma20"></span>MA20</span>
+                    <span class="legend-item"><span class="legend-dot legend-support"></span>支撑位</span>
+                    <span class="legend-item"><span class="legend-dot legend-resistance"></span>阻力位</span>
+                </div>
+            </section>
+
             <!-- 结果展示区 -->
             <section id="resultSection" class="result-section hidden">
-                <!-- 股票信息卡片 -->
-                <div class="stock-info-card">
-                    <div class="stock-header">
-                        <h2 id="stockTitle">--(--)</h2>
-                        <span id="actionBadge" class="action-badge">--</span>
-                    </div>
-                    <div class="score-display">
-                        <div class="main-score">
-                            <div class="score-value" id="compositeScore">0.0</div>
-                            <div class="score-label">综合评分</div>
-                        </div>
-                        <div class="confidence">
-                            <span class="confidence-label">置信度:</span>
-                            <span id="confidenceText" class="confidence-value">--</span>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Agent评分卡片 -->
                 <div class="agent-cards">
                     <div class="agent-card" id="techCard">
@@ -204,6 +202,9 @@
         </footer>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/lib/marked.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script src="/static/js/app.js"></script>
 </body>
 </html>

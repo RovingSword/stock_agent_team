@@ -19,10 +19,41 @@ const elements = {
     errorSection: document.getElementById('errorSection'),
     historySection: document.getElementById('historySection'),
     refreshHistory: document.getElementById('refreshHistory'),
+    klineSection: document.getElementById('klineSection'),
+    klineChart: document.getElementById('klineChart'),
+    klineStatus: document.getElementById('klineStatus'),
 };
 
 // SSE连接
 let eventSource = null;
+
+// K线图 ECharts 实例与缓存数据
+let klineChartInstance = null;
+let klineDataCache = null;
+
+let markedMarkdownConfigured = false;
+
+function ensureMarkedConfigured() {
+    if (markedMarkdownConfigured) return;
+    if (typeof marked !== 'undefined' && typeof marked.use === 'function') {
+        marked.use({ gfm: true, breaks: true });
+    }
+    markedMarkdownConfigured = true;
+}
+
+/**
+ * 将 Markdown 转为可安全插入 DOM 的 HTML（依赖 marked + DOMPurify）
+ */
+function renderMarkdown(text) {
+    if (text == null || text === '') return '';
+    const raw = String(text);
+    if (typeof marked === 'undefined' || typeof DOMPurify === 'undefined') {
+        return escapeHtml(raw);
+    }
+    ensureMarkedConfigured();
+    const html = marked.parse(raw);
+    return DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
+}
 
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
@@ -103,6 +134,8 @@ async function handleAnalyze() {
 async function handleRuleAnalyze(stockCode) {
     showLoading();
     
+    loadKlineChart(stockCode);
+    
     try {
         const response = await fetch(`${API_BASE}/api/analyze`, {
             method: 'POST',
@@ -120,7 +153,7 @@ async function handleRuleAnalyze(stockCode) {
         
         if (result.success) {
             displayResult(result.data);
-            // 刷新历史记录
+            updateChartAnnotations(result.data);
             loadHistory();
         } else {
             showError(result.message || '分析失败');
@@ -143,6 +176,9 @@ async function handleLLMAnalyze(stockCode) {
     elements.errorSection.classList.add('hidden');
     elements.discussionSection.classList.remove('hidden');
     elements.discussionSection.classList.remove('analysis-complete');
+
+    // 并行加载K线图
+    loadKlineChart(stockCode);
 
     // 清空讨论内容
     elements.discussionContent.innerHTML = '';
@@ -331,9 +367,12 @@ function renderAgentAnalysis(data) {
         const summaryElement = card.querySelector('.agent-analysis-summary');
         const analysisElement = card.querySelector('.agent-analysis-text');
 
-        summaryElement.textContent = getAgentSummaryText(data);
-        summaryElement.classList.toggle('hidden', !getAgentSummaryText(data));
-        analysisElement.textContent = getAgentPrimaryAnalysisText(data);
+        const summaryText = getAgentSummaryText(data);
+        summaryElement.classList.toggle('hidden', !summaryText);
+        summaryElement.classList.add('markdown-body');
+        summaryElement.innerHTML = summaryText ? renderMarkdown(summaryText) : '';
+        analysisElement.classList.add('markdown-body');
+        analysisElement.innerHTML = renderMarkdown(getAgentPrimaryAnalysisText(data));
         card.querySelector('.agent-score-value').textContent = (data.score || 0).toFixed(1);
     } else {
         container.insertAdjacentHTML('beforeend', buildAgentAnalysisCardHtml(data, false));
@@ -354,7 +393,7 @@ function renderDiscussion(data) {
                 <span class="message-avatar">${getAvatarByRole(data.agent_role)}</span>
                 <span class="message-name">${data.agent_name}</span>
             </div>
-            <div class="message-content">${escapeHtml(data.content)}</div>
+            <div class="message-content markdown-body">${renderMarkdown(data.content)}</div>
         </div>
     `;
     
@@ -366,6 +405,16 @@ function renderDiscussion(data) {
  * 渲染最终决策
  */
 function renderFinalDecision(data) {
+    const action = data.final_action || 'watch';
+    const shortLabel = getActionText(action);
+    const rawAdvice = (data.action_text || '').trim();
+    const showAdviceDetail =
+        rawAdvice &&
+        rawAdvice.replace(/\s/g, '') !== String(shortLabel).replace(/\s/g, '');
+    const adviceBlock = showAdviceDetail
+        ? `<div class="decision-action-detail markdown-body">${renderMarkdown(rawAdvice)}</div>`
+        : '';
+    const scoreVal = (data.composite_score || 0).toFixed(1);
     const html = `
         <div class="final-decision-card">
             <div class="decision-header">
@@ -373,11 +422,17 @@ function renderFinalDecision(data) {
                 <span class="decision-title">最终决策</span>
             </div>
             <div class="decision-content">
-                <div class="decision-action ${data.final_action || 'watch'}">${data.action_text || getActionText(data.final_action)}</div>
-                <div class="decision-score">
-                    综合评分: <strong>${(data.composite_score || 0).toFixed(1)}</strong>/10
+                <div class="decision-action-row">
+                    <span class="decision-action ${action}">${escapeHtml(shortLabel)}</span>
                 </div>
-                <div class="decision-summary">${escapeHtml(data.summary || data.analysis || '综合分析完成')}</div>
+                ${adviceBlock}
+                <div class="decision-score" aria-label="综合评分 ${scoreVal} 分">
+                    <span class="decision-score-label">综合评分</span>
+                    <span class="decision-score-main">
+                        <span class="decision-score-number">${scoreVal}</span><span class="decision-score-denom">/10</span>
+                    </span>
+                </div>
+                <div class="decision-summary markdown-body">${renderMarkdown(data.summary || data.analysis || '综合分析完成')}</div>
             </div>
         </div>
     `;
@@ -442,22 +497,8 @@ function displayLLMResult(data) {
     // 不再隐藏讨论区域，让用户可以看到分析过程
     elements.resultSection.classList.remove('hidden');
     
-    // 基本信息
-    document.getElementById('stockTitle').textContent = 
-        `${data.stock_name || '--'}(${data.stock_code || '--'})`;
-
-    // 动作徽章
-    const actionBadge = document.getElementById('actionBadge');
-    actionBadge.textContent = data.action_text || getActionText(data.final_action);
-    actionBadge.className = `action-badge ${data.final_action || 'watch'}`;
-
-    // 综合评分
-    const compositeScore = data.composite_score || 0;
-    document.getElementById('compositeScore').textContent = compositeScore.toFixed(1);
-
-    // 置信度
-    document.getElementById('confidenceText').textContent = 
-        getConfidenceText(data.confidence);
+    // 叠加 Agent 分析标注到 K 线图
+    updateChartAnnotations(data);
     
     // Agent评分
     const agentScores = data.agent_scores || [];
@@ -484,7 +525,7 @@ function displayLLMResult(data) {
     const buyReasons = data.buy_reasons || [];
     const buyReasonsList = document.getElementById('buyReasons');
     if (buyReasons.length > 0) {
-        buyReasonsList.innerHTML = buyReasons.map(r => `<li>${escapeHtml(r)}</li>`).join('');
+        buyReasonsList.innerHTML = buyReasons.map(r => `<li><div class="markdown-body">${renderMarkdown(r)}</div></li>`).join('');
     } else {
         buyReasonsList.innerHTML = '<li>暂无</li>';
     }
@@ -493,7 +534,7 @@ function displayLLMResult(data) {
     const riskWarnings = data.risk_warnings || [];
     const riskWarningsList = document.getElementById('riskWarnings');
     if (riskWarnings.length > 0) {
-        riskWarningsList.innerHTML = riskWarnings.map(r => `<li>${escapeHtml(r)}</li>`).join('');
+        riskWarningsList.innerHTML = riskWarnings.map(r => `<li><div class="markdown-body">${renderMarkdown(r)}</div></li>`).join('');
     } else {
         riskWarningsList.innerHTML = '<li>暂无</li>';
     }
@@ -520,8 +561,9 @@ function updateAgentCardFromLLM(score) {
         (score.score || 0).toFixed(1);
     document.getElementById(`${prefix}Weight`).textContent =
         typeof score.weight === 'number' ? `${(score.weight * 100).toFixed(0)}%` : '--';
-    document.getElementById(`${prefix}Comment`).textContent = 
-        getAgentPrimaryAnalysisText(score);
+    const commentEl = document.getElementById(`${prefix}Comment`);
+    commentEl.classList.add('markdown-body');
+    commentEl.innerHTML = renderMarkdown(getAgentPrimaryAnalysisText(score));
 }
 
 function getAgentDiscussionCardId(agentRole) {
@@ -540,6 +582,11 @@ function buildAgentAnalysisCardHtml(data, pending = false) {
     const summaryText = getAgentSummaryText(data);
     const analysisText = pending ? '正在分析...' : getAgentPrimaryAnalysisText(data);
 
+    const summaryBlock = `<div class="agent-analysis-summary markdown-body ${summaryText ? '' : 'hidden'}">${summaryText ? renderMarkdown(summaryText) : ''}</div>`;
+    const analysisBlock = pending
+        ? `<div class="agent-analysis-text">${escapeHtml(analysisText)}</div>`
+        : `<div class="agent-analysis-text markdown-body">${renderMarkdown(analysisText)}</div>`;
+
     return `
         <div class="agent-analysis-card ${pending ? 'pending' : ''}" id="${getAgentDiscussionCardId(data.agent_role)}">
             <div class="analysis-header">
@@ -554,8 +601,8 @@ function buildAgentAnalysisCardHtml(data, pending = false) {
                 </span>
                 ` : ''}
             </div>
-            <div class="agent-analysis-summary ${summaryText ? '' : 'hidden'}">${escapeHtml(summaryText)}</div>
-            <div class="agent-analysis-text">${escapeHtml(analysisText)}</div>
+            ${summaryBlock}
+            ${analysisBlock}
         </div>
     `;
 }
@@ -570,23 +617,6 @@ function displayResult(data) {
     
     // 显示结果区域
     elements.resultSection.classList.remove('hidden');
-    
-    // 基本信息
-    document.getElementById('stockTitle').textContent = 
-        `${data.stock_name}(${data.stock_code})`;
-    
-    // 动作徽章
-    const actionBadge = document.getElementById('actionBadge');
-    actionBadge.textContent = getActionText(data.final_action);
-    actionBadge.className = `action-badge ${data.final_action}`;
-    
-    // 综合评分
-    document.getElementById('compositeScore').textContent = 
-        data.composite_score.toFixed(1);
-    
-    // 置信度
-    document.getElementById('confidenceText').textContent = 
-        getConfidenceText(data.confidence);
     
     // Agent评分
     const agentScores = data.agent_scores || [];
@@ -614,7 +644,7 @@ function displayResult(data) {
     const buyReasons = data.rationale?.buy_reasons || [];
     const buyReasonsList = document.getElementById('buyReasons');
     if (buyReasons.length > 0) {
-        buyReasonsList.innerHTML = buyReasons.map(r => `<li>${escapeHtml(r)}</li>`).join('');
+        buyReasonsList.innerHTML = buyReasons.map(r => `<li><div class="markdown-body">${renderMarkdown(r)}</div></li>`).join('');
     } else {
         buyReasonsList.innerHTML = '<li>暂无</li>';
     }
@@ -623,7 +653,7 @@ function displayResult(data) {
     const riskWarnings = data.rationale?.risk_warnings || [];
     const riskWarningsList = document.getElementById('riskWarnings');
     if (riskWarnings.length > 0) {
-        riskWarningsList.innerHTML = riskWarnings.map(r => `<li>${escapeHtml(r)}</li>`).join('');
+        riskWarningsList.innerHTML = riskWarnings.map(r => `<li><div class="markdown-body">${renderMarkdown(r)}</div></li>`).join('');
     } else {
         riskWarningsList.innerHTML = '<li>暂无</li>';
     }
@@ -639,8 +669,9 @@ function updateAgentCard(prefix, agentData) {
         agentData.score ? agentData.score.toFixed(1) : '0.0';
     document.getElementById(`${prefix}Weight`).textContent = 
         agentData.weight ? `${(agentData.weight * 100).toFixed(0)}%` : '--';
-    document.getElementById(`${prefix}Comment`).textContent = 
-        agentData.comment || '暂无评价';
+    const commentEl = document.getElementById(`${prefix}Comment`);
+    commentEl.classList.add('markdown-body');
+    commentEl.innerHTML = renderMarkdown(agentData.comment || '暂无评价');
 }
 
 /**
@@ -715,6 +746,7 @@ function showError(message) {
     elements.resultSection.classList.add('hidden');
     elements.discussionSection.classList.add('hidden');
     document.getElementById('errorMessage').textContent = message;
+    // K线图保持可见（如果已加载），方便用户参考
 }
 
 /**
@@ -781,11 +813,378 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// ============================================================
+// K线图相关功能
+// ============================================================
+
+async function fetchKlineData(stockCode) {
+    const resp = await fetch(`${API_BASE}/api/kline/${encodeURIComponent(stockCode)}?days=60`);
+    if (!resp.ok) throw new Error(`K线数据请求失败: HTTP ${resp.status}`);
+    return resp.json();
+}
+
+function showKlineSection() {
+    elements.klineSection.classList.remove('hidden');
+    elements.klineStatus.textContent = '加载中...';
+}
+
+function hideKlineSection() {
+    elements.klineSection.classList.add('hidden');
+}
+
+function initKlineChart() {
+    if (klineChartInstance) {
+        klineChartInstance.dispose();
+    }
+    klineChartInstance = echarts.init(elements.klineChart);
+    window.addEventListener('resize', () => {
+        if (klineChartInstance) klineChartInstance.resize();
+    });
+}
+
+function renderKlineChart(data) {
+    klineDataCache = data;
+    if (!klineChartInstance) initKlineChart();
+
+    const upColor = '#ef5350';
+    const downColor = '#26a69a';
+
+    const volumeColors = data.ohlc.map(item => (item[1] >= item[0]) ? upColor : downColor);
+
+    const option = {
+        animation: true,
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: { type: 'cross' },
+            formatter: function (params) {
+                if (!params || params.length === 0) return '';
+                const date = params[0].axisValue;
+                let html = `<div style="font-weight:600;margin-bottom:4px">${date}</div>`;
+                for (const p of params) {
+                    if (p.seriesType === 'candlestick') {
+                        const d = p.data;
+                        html += `开: ${d[1]}<br>收: ${d[2]}<br>低: ${d[3]}<br>高: ${d[4]}<br>`;
+                    } else if (p.seriesType === 'bar') {
+                        html += `成交量: ${Number(p.data).toLocaleString()}<br>`;
+                    } else if (p.seriesName && p.data != null) {
+                        html += `${p.seriesName}: ${p.data}<br>`;
+                    }
+                }
+                return html;
+            }
+        },
+        grid: [
+            { left: '8%', right: '3%', top: '6%', height: '58%' },
+            { left: '8%', right: '3%', top: '70%', height: '20%' }
+        ],
+        xAxis: [
+            {
+                type: 'category',
+                data: data.dates,
+                gridIndex: 0,
+                axisLine: { lineStyle: { color: '#8392A5' } },
+                axisLabel: { fontSize: 10 },
+                boundaryGap: true,
+                axisPointer: { label: { show: true } }
+            },
+            {
+                type: 'category',
+                data: data.dates,
+                gridIndex: 1,
+                axisLine: { lineStyle: { color: '#8392A5' } },
+                axisLabel: { show: false },
+                boundaryGap: true
+            }
+        ],
+        yAxis: [
+            {
+                scale: true,
+                gridIndex: 0,
+                splitLine: { lineStyle: { color: '#f0f0f0' } },
+                axisLine: { lineStyle: { color: '#8392A5' } },
+                axisLabel: { fontSize: 10 }
+            },
+            {
+                scale: true,
+                gridIndex: 1,
+                splitNumber: 2,
+                splitLine: { lineStyle: { color: '#f0f0f0' } },
+                axisLine: { lineStyle: { color: '#8392A5' } },
+                axisLabel: { show: false }
+            }
+        ],
+        dataZoom: [
+            {
+                type: 'inside',
+                xAxisIndex: [0, 1],
+                start: 0,
+                end: 100
+            },
+            {
+                type: 'slider',
+                xAxisIndex: [0, 1],
+                bottom: '2%',
+                height: 20,
+                start: 0,
+                end: 100
+            }
+        ],
+        series: [
+            {
+                name: 'K线',
+                type: 'candlestick',
+                xAxisIndex: 0,
+                yAxisIndex: 0,
+                data: data.ohlc,
+                itemStyle: {
+                    color: upColor,
+                    color0: downColor,
+                    borderColor: upColor,
+                    borderColor0: downColor
+                },
+                markLine: buildSupportResistanceMarkLines(data.support_levels, data.resistance_levels),
+            },
+            {
+                name: 'MA5',
+                type: 'line',
+                xAxisIndex: 0,
+                yAxisIndex: 0,
+                data: data.ma5,
+                smooth: true,
+                showSymbol: false,
+                lineStyle: { width: 1.2, color: '#ff9800' }
+            },
+            {
+                name: 'MA10',
+                type: 'line',
+                xAxisIndex: 0,
+                yAxisIndex: 0,
+                data: data.ma10,
+                smooth: true,
+                showSymbol: false,
+                lineStyle: { width: 1.2, color: '#2196f3' }
+            },
+            {
+                name: 'MA20',
+                type: 'line',
+                xAxisIndex: 0,
+                yAxisIndex: 0,
+                data: data.ma20,
+                smooth: true,
+                showSymbol: false,
+                lineStyle: { width: 1.2, color: '#9c27b0' }
+            },
+            {
+                name: '成交量',
+                type: 'bar',
+                xAxisIndex: 1,
+                yAxisIndex: 1,
+                data: data.volumes,
+                itemStyle: {
+                    color: function (params) {
+                        return volumeColors[params.dataIndex] || '#999';
+                    }
+                }
+            }
+        ]
+    };
+
+    klineChartInstance.setOption(option, true);
+    elements.klineStatus.textContent = `近${data.dates.length}个交易日`;
+}
+
+function buildSupportResistanceMarkLines(supportLevels, resistanceLevels) {
+    const lines = [];
+
+    if (supportLevels) {
+        supportLevels.forEach((price, i) => {
+            lines.push({
+                yAxis: price,
+                name: `支撑${i + 1}`,
+                lineStyle: { color: '#4caf50', type: 'dashed', width: 1.5 },
+                label: {
+                    formatter: `支撑 ${price}`,
+                    position: 'insideStartBottom',
+                    color: '#4caf50',
+                    fontSize: 10
+                }
+            });
+        });
+    }
+
+    if (resistanceLevels) {
+        resistanceLevels.forEach((price, i) => {
+            lines.push({
+                yAxis: price,
+                name: `阻力${i + 1}`,
+                lineStyle: { color: '#f44336', type: 'dashed', width: 1.5 },
+                label: {
+                    formatter: `阻力 ${price}`,
+                    position: 'insideStartTop',
+                    color: '#f44336',
+                    fontSize: 10
+                }
+            });
+        });
+    }
+
+    return { data: lines, silent: true, animation: true };
+}
+
+function updateChartAnnotations(analysisData) {
+    if (!klineChartInstance || !klineDataCache) return;
+
+    const lastDate = klineDataCache.dates[klineDataCache.dates.length - 1];
+    const markPoints = [];
+    const markLines = [];
+    const markAreas = [];
+
+    const entryZone = analysisData.entry_zone || (analysisData.execution && analysisData.execution.entry_zone) || [];
+    const stopLoss = analysisData.stop_loss || (analysisData.execution && analysisData.execution.stop_loss) || 0;
+    const takeProfit1 = analysisData.take_profit_1 || (analysisData.execution && analysisData.execution.take_profit_1) || 0;
+    const takeProfit2 = analysisData.take_profit_2 || (analysisData.execution && analysisData.execution.take_profit_2) || 0;
+    const finalAction = analysisData.final_action || '';
+
+    if (finalAction === 'buy' || finalAction === 'strong_buy') {
+        markPoints.push({
+            name: '买入',
+            coord: [lastDate, klineDataCache.ohlc[klineDataCache.ohlc.length - 1][2]],
+            value: '买',
+            itemStyle: { color: '#4caf50' },
+            symbol: 'arrow',
+            symbolSize: [24, 28],
+            symbolRotate: 0,
+            label: {
+                show: true,
+                formatter: '买入',
+                color: '#fff',
+                fontSize: 10,
+                fontWeight: 'bold',
+                backgroundColor: '#4caf50',
+                padding: [3, 6],
+                borderRadius: 3,
+                offset: [0, -10]
+            }
+        });
+    } else if (finalAction === 'sell' || finalAction === 'avoid') {
+        markPoints.push({
+            name: '卖出',
+            coord: [lastDate, klineDataCache.ohlc[klineDataCache.ohlc.length - 1][4]],
+            value: '卖',
+            itemStyle: { color: '#f44336' },
+            symbol: 'arrow',
+            symbolSize: [24, 28],
+            symbolRotate: 180,
+            label: {
+                show: true,
+                formatter: finalAction === 'sell' ? '卖出' : '回避',
+                color: '#fff',
+                fontSize: 10,
+                fontWeight: 'bold',
+                backgroundColor: '#f44336',
+                padding: [3, 6],
+                borderRadius: 3,
+                offset: [0, 10]
+            }
+        });
+    }
+
+    if (stopLoss > 0) {
+        markLines.push({
+            yAxis: stopLoss,
+            name: '止损',
+            lineStyle: { color: '#f44336', type: 'dotted', width: 2 },
+            label: {
+                formatter: `止损 ${stopLoss}`,
+                position: 'insideEndTop',
+                color: '#f44336',
+                fontSize: 10,
+                fontWeight: 'bold'
+            }
+        });
+    }
+
+    if (takeProfit1 > 0) {
+        markLines.push({
+            yAxis: takeProfit1,
+            name: '止盈1',
+            lineStyle: { color: '#2196f3', type: 'dotted', width: 1.5 },
+            label: {
+                formatter: `止盈1 ${takeProfit1}`,
+                position: 'insideEndTop',
+                color: '#2196f3',
+                fontSize: 10
+            }
+        });
+    }
+
+    if (takeProfit2 > 0) {
+        markLines.push({
+            yAxis: takeProfit2,
+            name: '止盈2',
+            lineStyle: { color: '#1565c0', type: 'dotted', width: 1.5 },
+            label: {
+                formatter: `止盈2 ${takeProfit2}`,
+                position: 'insideEndTop',
+                color: '#1565c0',
+                fontSize: 10
+            }
+        });
+    }
+
+    if (entryZone.length >= 2) {
+        markAreas.push([
+            { yAxis: entryZone[0], itemStyle: { color: 'rgba(33,150,243,0.08)' } },
+            { yAxis: entryZone[entryZone.length - 1] }
+        ]);
+        markLines.push({
+            yAxis: entryZone[0],
+            name: '入场下沿',
+            lineStyle: { color: '#2196f3', type: 'dashed', width: 1 },
+            label: { formatter: `入场 ${entryZone[0]}`, position: 'insideStartBottom', color: '#2196f3', fontSize: 9 }
+        });
+        markLines.push({
+            yAxis: entryZone[entryZone.length - 1],
+            name: '入场上沿',
+            lineStyle: { color: '#2196f3', type: 'dashed', width: 1 },
+            label: { formatter: `入场 ${entryZone[entryZone.length - 1]}`, position: 'insideStartTop', color: '#2196f3', fontSize: 9 }
+        });
+    }
+
+    const existingLines = (klineChartInstance.getOption().series[0].markLine || {}).data || [];
+
+    klineChartInstance.setOption({
+        series: [{
+            name: 'K线',
+            markPoint: { data: markPoints, animation: true, animationDuration: 600 },
+            markLine: { data: [...existingLines, ...markLines], silent: true, animation: true, animationDuration: 600 },
+            markArea: { data: markAreas, silent: true, animation: true, animationDuration: 600 }
+        }]
+    });
+}
+
+async function loadKlineChart(stockCode) {
+    try {
+        showKlineSection();
+        if (typeof echarts === 'undefined') {
+            elements.klineStatus.textContent = 'ECharts 未加载';
+            return;
+        }
+        initKlineChart();
+        const data = await fetchKlineData(stockCode);
+        renderKlineChart(data);
+    } catch (err) {
+        console.error('K线图加载失败:', err);
+        elements.klineStatus.textContent = 'K线数据加载失败';
+    }
+}
+
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         getAgentDiscussionCardId,
         getAgentSummaryText,
         getAgentPrimaryAnalysisText,
         buildAgentAnalysisCardHtml,
+        renderMarkdown,
     };
 }
