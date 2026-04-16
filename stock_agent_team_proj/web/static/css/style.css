@@ -625,3 +625,361 @@ body {
         grid-template-columns: 1fr 1fr;
     }
 }
+
+/* ============================================================
+   LLM Agent 讨论过程样式
+   ============================================================ */
+
+/* 模式选择器 */
+.mode-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.mode-selector {
+    display: flex;
+    gap: 15px;
+    margin-top: 5px;
+}
+
+.mode-option {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.mode-option input[type="radio"] {
+    margin-right: 6px;
+    accent-color: var(--primary-light);
+}
+
+.mode-label {
+    padding: 8px 16px;
+    background: var(--bg-card);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: all 0.3s ease;
+}
+
+.mode-option input[type="radio"]:checked + .mode-label {
+    background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-blue) 100%);
+    color: #ffffff;
+    border-color: var(--primary-light);
+}
+
+/* 讨论区域 */
+.discussion-section {
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: var(--shadow);
+    animation: fadeIn 0.5s ease;
+    max-height: 800px;
+    overflow-y: auto;
+}
+
+/* 讨论区域完成状态 - 展开显示所有内容 */
+.discussion-section.analysis-complete {
+    max-height: none;
+}
+
+.discussion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.discussion-header h3 {
+    color: var(--primary-dark);
+    font-size: 1.2rem;
+}
+
+.discussion-status {
+    padding: 6px 14px;
+    background: var(--bg-dark);
+    border-radius: 20px;
+    font-size: 0.85rem;
+    color: var(--primary-light);
+    font-weight: 500;
+}
+
+.discussion-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* 讨论轮次 */
+.discussion-round {
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+    animation: slideIn 0.4s ease;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.round-header {
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-light) 100%);
+    color: #ffffff;
+    padding: 12px 20px;
+    font-weight: 600;
+}
+
+.round-content {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Agent分析卡片 */
+.agent-analysis-card {
+    background: var(--bg-dark);
+    border-radius: 10px;
+    padding: 15px;
+    border-left: 4px solid var(--primary-light);
+    animation: cardAppear 0.4s ease;
+}
+
+@keyframes cardAppear {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.agent-analysis-card.pending {
+    opacity: 0.6;
+    border-left-color: var(--text-muted);
+}
+
+.analysis-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.analysis-avatar {
+    font-size: 1.5rem;
+}
+
+.analysis-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    flex: 1;
+}
+
+.analysis-score {
+    background: linear-gradient(135deg, var(--accent-gold) 0%, var(--accent-light) 100%);
+    color: #ffffff;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.agent-analysis-text {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
+/* 思考中动画 */
+.thinking-dots {
+    display: inline-flex;
+    gap: 4px;
+}
+
+.thinking-dots span {
+    width: 6px;
+    height: 6px;
+    background: var(--primary-light);
+    border-radius: 50%;
+    animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.thinking-dots span:nth-child(1) { animation-delay: -0.32s; }
+.thinking-dots span:nth-child(2) { animation-delay: -0.16s; }
+.thinking-dots span:nth-child(3) { animation-delay: 0s; }
+
+@keyframes bounce {
+    0%, 80%, 100% { transform: scale(0); }
+    40% { transform: scale(1); }
+}
+
+/* 讨论消息 */
+.discussion-message {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 15px;
+    animation: messageAppear 0.3s ease;
+}
+
+@keyframes messageAppear {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.discussion-message.opening {
+    background: linear-gradient(135deg, rgba(26, 54, 93, 0.05) 0%, rgba(44, 82, 130, 0.05) 100%);
+    border-color: var(--primary-light);
+}
+
+.discussion-message.response {
+    border-left: 3px solid var(--accent-gold);
+}
+
+.message-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.message-avatar {
+    font-size: 1.3rem;
+}
+
+.message-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.message-content {
+    color: var(--text-secondary);
+    line-height: 1.7;
+    font-size: 0.9rem;
+}
+
+/* 最终决策卡片 */
+.final-decision-card {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-blue) 100%);
+    border-radius: 12px;
+    padding: 20px;
+    color: #ffffff;
+    animation: decisionAppear 0.5s ease;
+}
+
+@keyframes decisionAppear {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.decision-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.decision-icon {
+    font-size: 1.8rem;
+}
+
+.decision-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.decision-content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.decision-action {
+    display: inline-block;
+    padding: 8px 20px;
+    background: var(--success);
+    border-radius: 20px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    width: fit-content;
+}
+
+.decision-action.buy { background: var(--success); }
+.decision-action.sell { background: var(--danger); }
+.decision-action.watch { background: var(--warning); }
+.decision-action.avoid { background: var(--danger); }
+
+.decision-score {
+    font-size: 1rem;
+    opacity: 0.9;
+}
+
+/* 讨论加载动画 */
+.discussion-loading {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+}
+
+.loading-dots {
+    display: inline-flex;
+    gap: 6px;
+    margin-bottom: 15px;
+}
+
+.loading-dots span {
+    width: 10px;
+    height: 10px;
+    background: var(--primary-light);
+    border-radius: 50%;
+    animation: loadingBounce 1.4s infinite ease-in-out both;
+}
+
+.loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+.loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+.loading-dots span:nth-child(3) { animation-delay: 0s; }
+.loading-dots span:nth-child(4) { animation-delay: 0.16s; }
+
+@keyframes loadingBounce {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+    40% { transform: scale(1); opacity: 1; }
+}
+
+/* Agent图标颜色 */
+.agent-analysis-card .analysis-avatar {
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .mode-selector {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .mode-label {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .discussion-section {
+        max-height: 500px;
+        padding: 15px;
+    }
+    
+    .analysis-header {
+        flex-wrap: wrap;
+    }
+    
+    .analysis-score {
+        order: -1;
+        width: 100%;
+        text-align: center;
+        margin-bottom: 8px;
+    }
+}

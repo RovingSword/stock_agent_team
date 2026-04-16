@@ -30,6 +30,20 @@
                         <label for="stockName">股票名称 <span class="optional">(可选)</span></label>
                         <input type="text" id="stockName" placeholder="如: 宁德时代">
                     </div>
+                    <!-- 分析模式选择 -->
+                    <div class="input-group mode-group">
+                        <label>分析模式</label>
+                        <div class="mode-selector">
+                            <label class="mode-option">
+                                <input type="radio" name="analyzeMode" value="rule" checked>
+                                <span class="mode-label">规则引擎</span>
+                            </label>
+                            <label class="mode-option">
+                                <input type="radio" name="analyzeMode" value="llm">
+                                <span class="mode-label">LLM Agent</span>
+                            </label>
+                        </div>
+                    </div>
                     <button id="analyzeBtn" class="btn-primary">
                         <span class="btn-icon">🔍</span>
                         开始分析
@@ -42,6 +56,17 @@
                 <div class="loading-spinner"></div>
                 <p>Agent团队正在分析中，请稍候...</p>
             </div>
+
+            <!-- LLM讨论过程展示区 -->
+            <section id="discussionSection" class="discussion-section hidden">
+                <div class="discussion-header">
+                    <h3>🤖 LLM Agent Team 分析中...</h3>
+                    <span id="discussionStatus" class="discussion-status">准备中</span>
+                </div>
+                <div class="discussion-content" id="discussionContent">
+                    <!-- 动态渲染讨论过程 -->
+                </div>
+            </section>
 
             <!-- 结果展示区 -->
             <section id="resultSection" class="result-section hidden">

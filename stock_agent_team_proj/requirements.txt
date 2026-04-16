@@ -21,6 +21,9 @@ python-json-logger>=2.0.0
 # 进程管理
 psutil>=5.9.0
 
+# 配置文件解析
+pyyaml>=6.0
+
 # 数据库（SQLite为Python内置，无需额外安装）
 
 # 可选：性能优化
