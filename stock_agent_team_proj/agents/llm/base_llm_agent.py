@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional
 import json
 import logging
+import re
 
 from .models import (
     AgentReport, 
@@ -194,28 +195,153 @@ class BaseLLMAgent(ABC):
         Returns:
             解析后的字典
         """
-        # 尝试提取 JSON
         content = content.strip()
-        
-        # 查找 JSON 块
+
+        parsed_json = self._extract_json_payload(content)
+        if parsed_json is not None:
+            normalized = self._normalize_structured_payload(parsed_json)
+            normalized["raw_content"] = content
+            normalized["parse_mode"] = "json"
+            return normalized
+
+        parsed_text = self._extract_text_payload(content)
+        if parsed_text:
+            normalized = self._normalize_structured_payload(parsed_text)
+            normalized["raw_content"] = content
+            normalized["parse_mode"] = "text"
+            return normalized
+
+        return {
+            "raw_content": content,
+            "summary": content[:100] if content else "",
+            "analysis": content,
+            "parse_mode": "raw",
+        }
+
+    def _extract_json_payload(self, content: str) -> Optional[Dict[str, Any]]:
+        """优先从 JSON 内容中提取结构化数据"""
         json_start = content.find('{')
         json_end = content.rfind('}')
-        
+
         if json_start != -1 and json_end != -1 and json_start < json_end:
             json_str = content[json_start:json_end + 1]
             try:
                 return json.loads(json_str)
             except json.JSONDecodeError:
                 pass
-        
-        # 尝试整体解析
+
         try:
             return json.loads(content)
         except json.JSONDecodeError:
-            pass
-        
-        # 返回原始内容
-        return {"raw_content": content}
+            return None
+
+    def _extract_text_payload(self, content: str) -> Dict[str, Any]:
+        """兼容纯文本格式的兜底解析"""
+        field_aliases = {
+            "score": ("评分", "score"),
+            "confidence": ("置信度", "confidence"),
+            "summary": ("摘要", "summary", "总结"),
+            "analysis": ("分析", "analysis", "详细分析"),
+            "risks": ("风险", "风险点", "risks"),
+            "opportunities": ("机会", "机会点", "opportunities"),
+            "decision": ("决策", "decision"),
+            "action": ("操作", "建议", "action"),
+            "target_price": ("目标价", "target_price"),
+            "stop_loss": ("止损", "stop_loss"),
+            "position_ratio": ("仓位", "position_ratio"),
+        }
+
+        extracted: Dict[str, Any] = {}
+        for key, aliases in field_aliases.items():
+            value = self._match_labeled_value(content, aliases)
+            if value:
+                extracted[key] = value
+
+        return extracted
+
+    @staticmethod
+    def _match_labeled_value(content: str, labels) -> Optional[str]:
+        for label in labels:
+            pattern = rf"(?:^|\n)\s*{re.escape(label)}\s*[:：]\s*(.+?)(?=\n\s*[\u4e00-\u9fa5A-Za-z_]+\s*[:：]|\Z)"
+            match = re.search(pattern, content, flags=re.IGNORECASE | re.DOTALL)
+            if match:
+                return match.group(1).strip()
+        return None
+
+    def _normalize_structured_payload(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """统一结构化字段类型，避免下游反复兜底"""
+        normalized = dict(payload)
+
+        if "score" in normalized:
+            normalized["score"] = self._safe_float(normalized.get("score"))
+        if "confidence" in normalized:
+            normalized["confidence"] = self._safe_float(normalized.get("confidence"))
+        if "target_price" in normalized:
+            normalized["target_price"] = self._safe_float(normalized.get("target_price"))
+        if "stop_loss" in normalized:
+            normalized["stop_loss"] = self._safe_float(normalized.get("stop_loss"))
+        if "position_ratio" in normalized:
+            normalized["position_ratio"] = self._safe_float(normalized.get("position_ratio"))
+
+        normalized["risks"] = self._ensure_list(normalized.get("risks"))
+        normalized["opportunities"] = self._ensure_list(normalized.get("opportunities"))
+
+        for field in ("summary", "analysis", "decision", "action"):
+            value = normalized.get(field)
+            if value is not None and not isinstance(value, str):
+                normalized[field] = str(value)
+
+        return normalized
+
+    @staticmethod
+    def _safe_float(value: Any) -> Optional[float]:
+        if value is None or value == "":
+            return None
+        if isinstance(value, (int, float)):
+            return float(value)
+
+        text = str(value).strip()
+        match = re.search(r"-?\d+(?:\.\d+)?", text)
+        if not match:
+            return None
+        return float(match.group(0))
+
+    @staticmethod
+    def _ensure_list(value: Any) -> List[str]:
+        if value is None or value == "":
+            return []
+        if isinstance(value, list):
+            return [str(item).strip() for item in value if str(item).strip()]
+
+        text = str(value).strip()
+        if not text:
+            return []
+
+        parts = re.split(r"[,\n;；、]+", text)
+        return [part.strip(" -") for part in parts if part.strip(" -")]
+
+    def build_agent_report(
+        self,
+        response: str,
+        result: Dict[str, Any],
+        default_summary: str,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> AgentReport:
+        """基于统一解析结果构建 AgentReport"""
+        analysis = result.get("analysis") or result.get("raw_content") or response
+        summary = result.get("summary") or (analysis[:100] if analysis else default_summary)
+
+        return AgentReport(
+            agent_name=self.name,
+            agent_role=self.role,
+            score=result.get("score") if result.get("score") is not None else 0.0,
+            confidence=result.get("confidence") if result.get("confidence") is not None else 0.5,
+            summary=summary or default_summary,
+            analysis=analysis or response,
+            risks=self._ensure_list(result.get("risks")),
+            opportunities=self._ensure_list(result.get("opportunities")),
+            metadata=metadata or {}
+        )
     
     @abstractmethod
     def analyze(self, context: StockAnalysisContext) -> AgentReport:

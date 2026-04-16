@@ -794,6 +794,19 @@ body {
     font-size: 0.95rem;
 }
 
+.agent-analysis-summary {
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.decision-summary {
+    margin-top: 10px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
 /* 思考中动画 */
 .thinking-dots {
     display: inline-flex;

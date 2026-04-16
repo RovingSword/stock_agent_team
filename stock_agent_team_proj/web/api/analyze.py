@@ -8,7 +8,7 @@ import json
 import os
 import sys
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Dict, Any, List
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
@@ -49,11 +49,157 @@ class AnalyzeResponse(BaseModel):
     data: Optional[dict] = None
 
 
+LLM_ROLE_WEIGHTS = {
+    "technical": 0.25,
+    "intelligence": 0.25,
+    "risk": 0.25,
+    "fundamental": 0.25,
+}
+
+
 def get_team() -> StockAgentTeam:
     """获取StockAgentTeam实例"""
     if not hasattr(get_team, '_instance'):
         get_team._instance = StockAgentTeam()
     return get_team._instance
+
+
+def _build_llm_agent_prompt(
+    agent_name: str,
+    role_name: str,
+    stock_code: str,
+    stock_name: str,
+    current_price: Any,
+    role_data: Dict[str, Any]
+) -> str:
+    key_points = role_data.get("key_points") or role_data.get("risk_points") or []
+
+    return f"""你是 {agent_name}，负责{role_name}。
+
+请基于以下股票信息输出结构化 JSON，不要输出额外解释。
+
+股票信息：
+- 股票代码: {stock_code}
+- 股票名称: {stock_name}
+- 当前价格: {current_price}
+
+规则引擎提供的参考信息：
+- 参考评分: {role_data.get('score', 5)}
+- 参考评价: {role_data.get('comment', '')}
+- 参考要点: {', '.join(key_points[:3]) if key_points else '暂无'}
+
+请输出 JSON：
+{{
+  "score": 0-10 的评分,
+  "confidence": 0-1 的置信度,
+  "summary": "一句话总结",
+  "analysis": "详细分析",
+  "risks": ["风险1", "风险2"],
+  "opportunities": ["机会1", "机会2"]
+}}"""
+
+
+def _serialize_agent_report(report: AgentReport, icon: str, round_number: int) -> Dict[str, Any]:
+    payload = report.to_dict()
+    payload["icon"] = icon
+    payload["round"] = round_number
+    return payload
+
+
+def _normalize_final_action(action: Optional[str], score: float) -> str:
+    normalized = (action or "").strip().lower()
+    alias_map = {
+        "建议买入": "buy",
+        "买入": "buy",
+        "buy": "buy",
+        "强烈买入": "buy",
+        "sell": "sell",
+        "卖出": "sell",
+        "watch": "watch",
+        "观望": "watch",
+        "hold": "hold",
+        "持有": "hold",
+        "avoid": "avoid",
+        "回避": "avoid",
+    }
+    if normalized in alias_map:
+        return alias_map[normalized]
+
+    if score >= 7.0:
+        return "buy"
+    if score >= 5.0:
+        return "watch"
+    return "avoid"
+
+
+def _get_action_text(final_action: str, leader_report: AgentReport) -> str:
+    action_text = leader_report.metadata.get("action") if leader_report.metadata else None
+    if action_text:
+        return str(action_text)
+
+    action_map = {
+        "buy": "建议买入",
+        "sell": "建议卖出",
+        "watch": "观望",
+        "hold": "继续持有",
+        "avoid": "建议回避",
+    }
+    return action_map.get(final_action, final_action)
+
+
+def _build_final_decision(
+    stock_code: str,
+    stock_name: str,
+    rule_decision,
+    round1_reports: List[Dict[str, Any]],
+    leader_report: AgentReport,
+) -> Dict[str, Any]:
+    leader_score = leader_report.score if leader_report.score is not None else 0.0
+    final_action = _normalize_final_action(
+        leader_report.metadata.get("decision") if leader_report.metadata else None,
+        leader_score,
+    )
+
+    return {
+        "stock_code": stock_code,
+        "stock_name": stock_name,
+        "final_action": final_action,
+        "action_text": _get_action_text(final_action, leader_report),
+        "composite_score": round(leader_score, 1),
+        "confidence": leader_report.confidence,
+        "summary": leader_report.summary,
+        "analysis": leader_report.analysis,
+        "risks": leader_report.risks,
+        "opportunities": leader_report.opportunities,
+        "entry_zone": rule_decision.execution.get("entry_zone", []),
+        "stop_loss": leader_report.metadata.get("stop_loss") if leader_report.metadata and leader_report.metadata.get("stop_loss") is not None else rule_decision.execution.get("stop_loss", 0),
+        "take_profit_1": rule_decision.execution.get("take_profit_1", 0),
+        "take_profit_2": rule_decision.execution.get("take_profit_2", 0),
+        "position_size": (
+            leader_report.metadata.get("position_ratio", 0) / 100
+            if leader_report.metadata and leader_report.metadata.get("position_ratio") not in (None, "")
+            else rule_decision.execution.get("position_size", 0)
+        ),
+        "agent_scores": [
+            {
+                "agent_name": r["agent_name"],
+                "agent_role": r["agent_role"],
+                "icon": r["icon"],
+                "score": r["score"],
+                "confidence": r["confidence"],
+                "summary": r["summary"],
+                "analysis": r["analysis"],
+                "risks": r.get("risks", []),
+                "opportunities": r.get("opportunities", []),
+                "weight": LLM_ROLE_WEIGHTS.get(r["agent_role"], 0),
+                "weighted_score": round(r["score"] * LLM_ROLE_WEIGHTS.get(r["agent_role"], 0), 2),
+            }
+            for r in round1_reports
+        ],
+        "buy_reasons": rule_decision.rationale.get("buy_reasons", [])[:3],
+        "risk_warnings": rule_decision.rationale.get("risk_warnings", [])[:3],
+        "timestamp": datetime.now().isoformat(),
+    }
 
 
 @router.post("/analyze", response_model=AnalyzeResponse)
@@ -329,6 +475,7 @@ async def generate_sse_events(stock_code: str, stock_name: str):
         }
         
         round1_reports = []
+        discussion_messages = []
         
         for role in agent_roles:
             agent = team.get(role)
@@ -353,28 +500,14 @@ async def generate_sse_events(stock_code: str, stock_name: str):
             
             # 准备分析提示词
             role_data = analysis_data.get(role, {})
-            prompt = f"""你是 {agent.name}，负责{agent_configs.get(role, {}).get('name', role)}的分析。
-
-股票信息：
-- 股票代码: {stock_code}
-- 股票名称: {stock_name}
-- 当前价格: {analysis_data.get('current_price', 'N/A')}
-
-你的分析数据：
-- 评分: {role_data.get('score', 5)}
-- 评价: {role_data.get('comment', '')}
-- 关键点: {', '.join(role_data.get('key_points', [])[:3])}
-
-请给出你的专业分析，包括：
-1. 评分（0-10）
-2. 置信度（0-1）
-3. 简短分析（100字以内）
-
-格式：
-评分: X.X
-置信度: X.X
-分析: XXX
-"""
+            prompt = _build_llm_agent_prompt(
+                agent_name=agent.name,
+                role_name=agent_configs.get(role, {}).get('name', role),
+                stock_code=stock_code,
+                stock_name=stock_name,
+                current_price=analysis_data.get('current_price', 'N/A'),
+                role_data=role_data,
+            )
             
             try:
                 # agent.analyze() 是同步方法，需要在线程池中运行以避免阻塞事件循环
@@ -382,27 +515,25 @@ async def generate_sse_events(stock_code: str, stock_name: str):
                 
                 # agent.analyze() 返回 AgentReport 对象
                 if isinstance(agent_report, AgentReport):
-                    score = agent_report.score
-                    confidence = agent_report.confidence
-                    analysis_text = agent_report.analysis
-                    summary = agent_report.summary
+                    report = _serialize_agent_report(
+                        agent_report,
+                        icon=config.get('icon', '🤖'),
+                        round_number=1,
+                    )
                 else:
-                    # 兼容字符串返回
-                    score = role_data.get('score', 5.0)
-                    confidence = 0.7
                     analysis_text = str(agent_report)
-                    summary = analysis_text[:100] if len(analysis_text) > 100 else analysis_text
-                
-                report = {
-                    'agent_name': config.get('name', role),
-                    'agent_role': role,
-                    'icon': config.get('icon', '🤖'),
-                    'score': score,
-                    'confidence': confidence,
-                    'analysis': analysis_text,
-                    'summary': summary,
-                    'round': 1
-                }
+                    report = {
+                        'agent_name': config.get('name', role),
+                        'agent_role': role,
+                        'icon': config.get('icon', '🤖'),
+                        'score': role_data.get('score', 0.0),
+                        'confidence': 0.5,
+                        'summary': analysis_text[:100] if len(analysis_text) > 100 else analysis_text,
+                        'analysis': analysis_text,
+                        'risks': [],
+                        'opportunities': [],
+                        'round': 1,
+                    }
                 round1_reports.append(report)
                 
                 # 发送分析完成事件
@@ -437,13 +568,15 @@ async def generate_sse_events(stock_code: str, stock_name: str):
                 # 处理 AgentReport 返回值
                 leader_content = leader_report.analysis if isinstance(leader_report, AgentReport) else str(leader_report)
 
-                yield f"event: discussion\ndata: {json.dumps({
+                leader_event = {
                     'round': 2,
                     'agent_name': '👔 队长',
                     'agent_role': 'leader',
                     'content': leader_content,
                     'type': 'opening'
-                })}\n\n"
+                }
+                discussion_messages.append(leader_event)
+                yield f"event: discussion\ndata: {json.dumps(leader_event)}\n\n"
                 
                 await asyncio.sleep(0.5)
                 
@@ -467,13 +600,15 @@ async def generate_sse_events(stock_code: str, stock_name: str):
                         # 处理 AgentReport 返回值
                         response_content = agent_report.analysis if isinstance(agent_report, AgentReport) else str(agent_report)
 
-                        yield f"event: discussion\ndata: {json.dumps({
+                        response_event = {
                             'round': 2,
                             'agent_name': report['icon'] + ' ' + report['agent_name'],
                             'agent_role': role,
                             'content': response_content,
                             'type': 'response'
-                        })}\n\n"
+                        }
+                        discussion_messages.append(response_event)
+                        yield f"event: discussion\ndata: {json.dumps(response_event)}\n\n"
                         
                         await asyncio.sleep(0.3)
                         
@@ -491,45 +626,90 @@ async def generate_sse_events(stock_code: str, stock_name: str):
         # ===== 第三轮：达成共识 =====
         yield f"event: round_start\ndata: {json.dumps({'round': 3, 'type': 'consensus', 'title': '🤝 第三轮：达成共识'})}\n\n"
         
-        # 计算综合评分
-        avg_score = sum(r['score'] for r in round1_reports) / len(round1_reports) if round1_reports else 5.0
-        
-        # 确定最终决策
-        if avg_score >= 7.0:
-            action = "buy"
-            action_text = "建议买入"
-        elif avg_score >= 5.0:
-            action = "watch"
-            action_text = "观望"
-        else:
-            action = "avoid"
-            action_text = "建议回避"
-        
-        # 生成最终决策
-        final_decision = {
-            'stock_code': stock_code,
-            'stock_name': stock_name,
-            'final_action': action,
-            'action_text': action_text,
-            'composite_score': round(avg_score, 1),
-            'confidence': rule_decision.confidence,
-            'entry_zone': rule_decision.execution.get('entry_zone', []),
-            'stop_loss': rule_decision.execution.get('stop_loss', 0),
-            'take_profit_1': rule_decision.execution.get('take_profit_1', 0),
-            'take_profit_2': rule_decision.execution.get('take_profit_2', 0),
-            'position_size': rule_decision.execution.get('position_size', 0),
-            'agent_scores': [{
-                'agent_name': r['agent_name'],
-                'agent_role': r['agent_role'],
-                'icon': r['icon'],
-                'score': r['score'],
-                'confidence': r['confidence'],
-                'summary': r['summary']
-            } for r in round1_reports],
-            'buy_reasons': rule_decision.rationale.get('buy_reasons', [])[:3],
-            'risk_warnings': rule_decision.rationale.get('risk_warnings', [])[:3],
-            'timestamp': datetime.now().isoformat()
-        }
+        final_prompt = f"""你是投资决策队长，请基于以下信息输出最终 JSON 决策，不要输出额外解释。
+
+股票信息：
+- 股票代码: {stock_code}
+- 股票名称: {stock_name}
+
+第一轮独立分析：
+{chr(10).join([f"- {r['agent_name']}({r['agent_role']}): 评分 {r['score']:.1f}，摘要：{r['summary']}，分析：{r['analysis']}" for r in round1_reports])}
+
+第二轮讨论摘录：
+{chr(10).join([f"- {m['agent_name']}: {m['content']}" for m in discussion_messages]) if discussion_messages else "- 暂无讨论记录"}
+
+请输出 JSON：
+{{
+  "score": 综合评分(0-10),
+  "confidence": 置信度(0-1),
+  "summary": "一句话决策",
+  "analysis": "最终决策理由",
+  "risks": ["主要风险"],
+  "opportunities": ["主要机会"],
+  "decision": "buy/sell/watch/hold/avoid",
+  "action": "展示给用户的中文动作",
+  "stop_loss": 止损价,
+  "position_ratio": 建议仓位百分比
+}}"""
+
+        final_decision = None
+        if leader:
+            try:
+                final_report = await asyncio.to_thread(leader.analyze, final_prompt)
+                if isinstance(final_report, AgentReport):
+                    final_decision = _build_final_decision(
+                        stock_code=stock_code,
+                        stock_name=stock_name,
+                        rule_decision=rule_decision,
+                        round1_reports=round1_reports,
+                        leader_report=final_report,
+                    )
+            except Exception as e:
+                yield f"event: error\ndata: {json.dumps({'error': f'Leader最终决策失败: {str(e)}'})}\n\n"
+
+        if final_decision is None:
+            fallback_score = sum(r['score'] for r in round1_reports) / len(round1_reports) if round1_reports else 0.0
+            fallback_action = _normalize_final_action(None, fallback_score)
+            final_decision = {
+                'stock_code': stock_code,
+                'stock_name': stock_name,
+                'final_action': fallback_action,
+                'action_text': _get_action_text(fallback_action, AgentReport(
+                    agent_name='👔 队长',
+                    agent_role='leader',
+                    score=fallback_score,
+                    confidence=0.5,
+                    summary='综合分析完成',
+                    analysis='未能获取队长最终决策，使用各 Agent 综合结果兜底。',
+                )),
+                'composite_score': round(fallback_score, 1),
+                'confidence': 0.5,
+                'summary': '综合分析完成',
+                'analysis': '未能获取队长最终决策，使用各 Agent 综合结果兜底。',
+                'risks': [],
+                'opportunities': [],
+                'entry_zone': rule_decision.execution.get('entry_zone', []),
+                'stop_loss': rule_decision.execution.get('stop_loss', 0),
+                'take_profit_1': rule_decision.execution.get('take_profit_1', 0),
+                'take_profit_2': rule_decision.execution.get('take_profit_2', 0),
+                'position_size': rule_decision.execution.get('position_size', 0),
+                'agent_scores': [{
+                    'agent_name': r['agent_name'],
+                    'agent_role': r['agent_role'],
+                    'icon': r['icon'],
+                    'score': r['score'],
+                    'confidence': r['confidence'],
+                    'summary': r['summary'],
+                    'analysis': r['analysis'],
+                    'risks': r.get('risks', []),
+                    'opportunities': r.get('opportunities', []),
+                    'weight': LLM_ROLE_WEIGHTS.get(r['agent_role'], 0),
+                    'weighted_score': round(r['score'] * LLM_ROLE_WEIGHTS.get(r['agent_role'], 0), 2),
+                } for r in round1_reports],
+                'buy_reasons': rule_decision.rationale.get('buy_reasons', [])[:3],
+                'risk_warnings': rule_decision.rationale.get('risk_warnings', [])[:3],
+                'timestamp': datetime.now().isoformat()
+            }
         
         yield f"event: final_decision\ndata: {json.dumps(final_decision)}\n\n"
         

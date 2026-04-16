@@ -311,20 +311,11 @@ function renderRoundStart(data) {
 function renderAgentStart(data) {
     const round = data.round;
     const container = document.getElementById(`round-${round}-content`) || elements.discussionContent;
-    
-    const html = `
-        <div class="agent-analysis pending" id="agent-${data.agent_role}">
-            <div class="agent-header">
-                <span class="agent-avatar">${data.icon || '🤖'}</span>
-                <span class="agent-name">${data.agent_name}</span>
-                <span class="thinking-dots">
-                    <span></span><span></span><span></span>
-                </span>
-            </div>
-        </div>
-    `;
-    
-    container.insertAdjacentHTML('beforeend', html);
+
+    const cardId = getAgentDiscussionCardId(data.agent_role);
+    if (!document.getElementById(cardId)) {
+        container.insertAdjacentHTML('beforeend', buildAgentAnalysisCardHtml(data, true));
+    }
     elements.discussionContent.scrollTop = elements.discussionContent.scrollHeight;
 }
 
@@ -332,30 +323,20 @@ function renderAgentStart(data) {
  * 渲染Agent分析完成
  */
 function renderAgentAnalysis(data) {
-    // 使用正确的轮次容器，而不是硬编码 round-1
     const container = document.getElementById(`round-${data.round || 1}-content`) || elements.discussionContent;
-
-    // 更新或添加分析卡片
-    let card = document.getElementById(`agent-card-${data.agent_role}`);
+    let card = document.getElementById(getAgentDiscussionCardId(data.agent_role));
     
     if (card) {
         card.classList.remove('pending');
-        card.querySelector('.agent-analysis-text').textContent = data.summary || data.analysis;
+        const summaryElement = card.querySelector('.agent-analysis-summary');
+        const analysisElement = card.querySelector('.agent-analysis-text');
+
+        summaryElement.textContent = getAgentSummaryText(data);
+        summaryElement.classList.toggle('hidden', !getAgentSummaryText(data));
+        analysisElement.textContent = getAgentPrimaryAnalysisText(data);
         card.querySelector('.agent-score-value').textContent = (data.score || 0).toFixed(1);
     } else {
-        const html = `
-            <div class="agent-analysis-card" id="agent-card-${data.agent_role}">
-                <div class="analysis-header">
-                    <span class="analysis-avatar">${data.icon || '🤖'}</span>
-                    <span class="analysis-name">${data.agent_name}</span>
-                    <span class="analysis-score">
-                        评分: <span class="agent-score-value">${(data.score || 0).toFixed(1)}</span>/10
-                    </span>
-                </div>
-                <div class="agent-analysis-text">${escapeHtml(data.summary || data.analysis || '分析完成')}</div>
-            </div>
-        `;
-        container.insertAdjacentHTML('beforeend', html);
+        container.insertAdjacentHTML('beforeend', buildAgentAnalysisCardHtml(data, false));
     }
     
     elements.discussionContent.scrollTop = elements.discussionContent.scrollHeight;
@@ -396,6 +377,7 @@ function renderFinalDecision(data) {
                 <div class="decision-score">
                     综合评分: <strong>${(data.composite_score || 0).toFixed(1)}</strong>/10
                 </div>
+                <div class="decision-summary">${escapeHtml(data.summary || data.analysis || '综合分析完成')}</div>
             </div>
         </div>
     `;
@@ -536,9 +518,46 @@ function updateAgentCardFromLLM(score) {
     
     document.getElementById(`${prefix}Score`).textContent = 
         (score.score || 0).toFixed(1);
-    document.getElementById(`${prefix}Weight`).textContent = '--';
+    document.getElementById(`${prefix}Weight`).textContent =
+        typeof score.weight === 'number' ? `${(score.weight * 100).toFixed(0)}%` : '--';
     document.getElementById(`${prefix}Comment`).textContent = 
-        score.summary || score.analysis || '暂无评价';
+        getAgentPrimaryAnalysisText(score);
+}
+
+function getAgentDiscussionCardId(agentRole) {
+    return `agent-card-${agentRole}`;
+}
+
+function getAgentSummaryText(data) {
+    return data.summary || '';
+}
+
+function getAgentPrimaryAnalysisText(data) {
+    return data.analysis || data.summary || '分析完成';
+}
+
+function buildAgentAnalysisCardHtml(data, pending = false) {
+    const summaryText = getAgentSummaryText(data);
+    const analysisText = pending ? '正在分析...' : getAgentPrimaryAnalysisText(data);
+
+    return `
+        <div class="agent-analysis-card ${pending ? 'pending' : ''}" id="${getAgentDiscussionCardId(data.agent_role)}">
+            <div class="analysis-header">
+                <span class="analysis-avatar">${data.icon || '🤖'}</span>
+                <span class="analysis-name">${data.agent_name}</span>
+                <span class="analysis-score ${pending ? 'hidden' : ''}">
+                    评分: <span class="agent-score-value">${(data.score || 0).toFixed(1)}</span>/10
+                </span>
+                ${pending ? `
+                <span class="thinking-dots">
+                    <span></span><span></span><span></span>
+                </span>
+                ` : ''}
+            </div>
+            <div class="agent-analysis-summary ${summaryText ? '' : 'hidden'}">${escapeHtml(summaryText)}</div>
+            <div class="agent-analysis-text">${escapeHtml(analysisText)}</div>
+        </div>
+    `;
 }
 
 /**
@@ -760,4 +779,13 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        getAgentDiscussionCardId,
+        getAgentSummaryText,
+        getAgentPrimaryAnalysisText,
+        buildAgentAnalysisCardHtml,
+    };
 }

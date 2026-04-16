@@ -83,15 +83,10 @@ class LLMIntelligence(BaseLLMAgent):
             self.logger.info("情报分析（字符串提示词模式）")
             response = self.chat(context)
             result = self.parse_structured_response(response)
-            return AgentReport(
-                agent_name=self.name,
-                agent_role=self.role,
-                score=result.get("score", 5.0),
-                confidence=result.get("confidence", 0.5),
-                summary=result.get("summary", "情报分析完成"),
-                analysis=result.get("analysis", response),
-                risks=result.get("risks", []),
-                opportunities=result.get("opportunities", [])
+            return self.build_agent_report(
+                response=response,
+                result=result,
+                default_summary="情报分析完成",
             )
         
         self.logger.info("情报分析中...")
@@ -105,16 +100,10 @@ class LLMIntelligence(BaseLLMAgent):
         # 解析结果
         result = self.parse_structured_response(response)
         
-        # 生成报告
-        report = AgentReport(
-            agent_name=self.name,
-            agent_role=self.role,
-            score=result.get("score", 5.0),
-            confidence=result.get("confidence", 0.5),
-            summary=result.get("summary", "情报分析完成"),
-            analysis=result.get("analysis", response),
-            risks=result.get("risks", []),
-            opportunities=result.get("opportunities", []),
+        return self.build_agent_report(
+            response=response,
+            result=result,
+            default_summary="情报分析完成",
             metadata={
                 "main_force_flow": result.get("main_force_flow", "unknown"),
                 "north_flow": result.get("north_flow", "unknown"),
@@ -122,8 +111,6 @@ class LLMIntelligence(BaseLLMAgent):
                 "sentiment": result.get("sentiment", "neutral")
             }
         )
-        
-        return report
     
     def build_analysis_prompt(self, context: StockAnalysisContext) -> str:
         """构建情报分析提示词"""

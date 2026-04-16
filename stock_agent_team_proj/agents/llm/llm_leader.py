@@ -75,15 +75,17 @@ class LLMLeader(DiscussionAgent):
             self.logger.info("Leader分析（字符串提示词模式）")
             response = self.chat(context)
             result = self.parse_structured_response(response)
-            return AgentReport(
-                agent_name=self.name,
-                agent_role=self.role,
-                score=result.get("score", 5.0),
-                confidence=result.get("confidence", 0.5),
-                summary=result.get("summary", "分析完成"),
-                analysis=result.get("analysis", response),
-                risks=result.get("risks", []),
-                opportunities=result.get("opportunities", [])
+            return self.build_agent_report(
+                response=response,
+                result=result,
+                default_summary="分析完成",
+                metadata={
+                    "decision": result.get("decision", "watch"),
+                    "action": result.get("action", "观望"),
+                    "target_price": result.get("target_price"),
+                    "stop_loss": result.get("stop_loss"),
+                    "position_ratio": result.get("position_ratio", 0),
+                }
             )
         
         self.logger.info("Leader分析中...")
@@ -108,20 +110,17 @@ class LLMLeader(DiscussionAgent):
         # 5. 解析结果
         result = self.parse_structured_response(response)
         
-        # 6. 生成报告
-        report = AgentReport(
-            agent_name=self.name,
-            agent_role=self.role,
-            score=result.get("score", 5.0),
-            confidence=result.get("confidence", 0.5),
-            summary=result.get("summary", "综合分析完成"),
-            analysis=result.get("analysis", response),
-            risks=result.get("risks", []),
-            opportunities=result.get("opportunities", []),
+        report = self.build_agent_report(
+            response=response,
+            result=result,
+            default_summary="综合分析完成",
             metadata={
                 "decision": result.get("decision", "watch"),
                 "action": result.get("action", "观望"),
-                "worker_count": len(self.worker_reports)
+                "worker_count": len(self.worker_reports),
+                "target_price": result.get("target_price"),
+                "stop_loss": result.get("stop_loss"),
+                "position_ratio": result.get("position_ratio", 0),
             }
         )
         
@@ -159,19 +158,15 @@ class LLMLeader(DiscussionAgent):
         response = self.chat(prompt)
         result = self.parse_structured_response(response)
         
-        return AgentReport(
-            agent_name=self.name,
-            agent_role=self.role,
-            score=result.get("score", 5.0),
-            confidence=result.get("confidence", 0.5),
-            summary=result.get("summary", "分析完成"),
-            analysis=result.get("analysis", response),
-            risks=result.get("risks", []),
-            opportunities=result.get("opportunities", []),
+        return self.build_agent_report(
+            response=response,
+            result=result,
+            default_summary="分析完成",
             metadata={
                 "decision": result.get("decision", "watch"),
                 "action": result.get("action", "观望"),
                 "target_price": result.get("target_price"),
+                "stop_loss": result.get("stop_loss"),
                 "position_ratio": result.get("position_ratio", 0)
             }
         )

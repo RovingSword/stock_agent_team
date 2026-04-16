@@ -90,15 +90,10 @@ class LLMRisk(BaseLLMAgent):
             self.logger.info("风控分析（字符串提示词模式）")
             response = self.chat(context)
             result = self.parse_structured_response(response)
-            return AgentReport(
-                agent_name=self.name,
-                agent_role=self.role,
-                score=result.get("score", 5.0),
-                confidence=result.get("confidence", 0.5),
-                summary=result.get("summary", "风控分析完成"),
-                analysis=result.get("analysis", response),
-                risks=result.get("risks", []),
-                opportunities=result.get("opportunities", [])
+            return self.build_agent_report(
+                response=response,
+                result=result,
+                default_summary="风控分析完成",
             )
         
         self.logger.info("风控分析中...")
@@ -112,16 +107,10 @@ class LLMRisk(BaseLLMAgent):
         # 解析结果
         result = self.parse_structured_response(response)
         
-        # 生成报告
-        report = AgentReport(
-            agent_name=self.name,
-            agent_role=self.role,
-            score=result.get("score", 5.0),
-            confidence=result.get("confidence", 0.5),
-            summary=result.get("summary", "风险评估完成"),
-            analysis=result.get("analysis", response),
-            risks=result.get("risks", []),
-            opportunities=result.get("opportunities", []),
+        return self.build_agent_report(
+            response=response,
+            result=result,
+            default_summary="风险评估完成",
             metadata={
                 "risk_level": result.get("risk_level", "medium"),
                 "recommended_position": result.get("recommended_position", 0),
@@ -130,8 +119,6 @@ class LLMRisk(BaseLLMAgent):
                 "risk_reward_ratio": result.get("risk_reward_ratio")
             }
         )
-        
-        return report
     
     def build_analysis_prompt(self, context: StockAnalysisContext) -> str:
         """构建风险评估提示词"""

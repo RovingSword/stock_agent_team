@@ -85,15 +85,10 @@ class LLMFundamental(BaseLLMAgent):
             self.logger.info("基本面分析（字符串提示词模式）")
             response = self.chat(context)
             result = self.parse_structured_response(response)
-            return AgentReport(
-                agent_name=self.name,
-                agent_role=self.role,
-                score=result.get("score", 5.0),
-                confidence=result.get("confidence", 0.5),
-                summary=result.get("summary", "基本面分析完成"),
-                analysis=result.get("analysis", response),
-                risks=result.get("risks", []),
-                opportunities=result.get("opportunities", [])
+            return self.build_agent_report(
+                response=response,
+                result=result,
+                default_summary="基本面分析完成",
             )
         
         self.logger.info("基本面分析中...")
@@ -107,24 +102,16 @@ class LLMFundamental(BaseLLMAgent):
         # 解析结果
         result = self.parse_structured_response(response)
         
-        # 生成报告
-        report = AgentReport(
-            agent_name=self.name,
-            agent_role=self.role,
-            score=result.get("score", 5.0),
-            confidence=result.get("confidence", 0.5),
-            summary=result.get("summary", "基本面分析完成"),
-            analysis=result.get("analysis", response),
-            risks=result.get("risks", []),
-            opportunities=result.get("opportunities", []),
+        return self.build_agent_report(
+            response=response,
+            result=result,
+            default_summary="基本面分析完成",
             metadata={
                 "valuation": result.get("valuation", {}),
                 "financial_health": result.get("financial_health", "unknown"),
                 "growth_potential": result.get("growth_potential", "unknown")
             }
         )
-        
-        return report
     
     def build_analysis_prompt(self, context: StockAnalysisContext) -> str:
         """构建基本面分析提示词"""

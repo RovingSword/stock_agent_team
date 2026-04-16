@@ -79,24 +79,16 @@ class LLMTechnical(BaseLLMAgent):
             response = self.chat(prompt)
             result = self.parse_structured_response(response)
         
-        # 生成报告
-        report = AgentReport(
-            agent_name=self.name,
-            agent_role=self.role,
-            score=result.get("score", 5.0),
-            confidence=result.get("confidence", 0.5),
-            summary=result.get("summary", "技术分析完成"),
-            analysis=result.get("analysis", response),
-            risks=result.get("risks", []),
-            opportunities=result.get("opportunities", []),
+        return self.build_agent_report(
+            response=response,
+            result=result,
+            default_summary="技术分析完成",
             metadata={
                 "indicators": result.get("indicators", {}),
                 "trend": result.get("trend", "unknown"),
                 "support_resistance": result.get("support_resistance", {})
             }
         )
-        
-        return report
     
     def build_analysis_prompt(self, context: StockAnalysisContext) -> str:
         """构建技术分析提示词"""
