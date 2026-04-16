@@ -23,6 +23,7 @@ def get_logger(name: str) -> logging.Logger:
         logger.addHandler(console_handler)
         
         # 文件处理器
+        os.makedirs(LOGS_DIR, exist_ok=True)
         log_file = os.path.join(
             LOGS_DIR, 
             f"{LOG_CONFIG['file_prefix']}_{datetime.now().strftime('%Y%m%d')}.log"
