@@ -1,0 +1,6 @@
+.worktrees/
+.DS_Store
+**/__pycache__/
+*.py[cod]
+stock_agent_team_proj/logs/*.log
+stock_agent_team_proj/data/*.db
