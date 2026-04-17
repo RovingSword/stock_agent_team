@@ -4,20 +4,18 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a52f1baa-f3d7-4bab-a2d5-a0b3ecf59e11" name="Changes" comment="fix">
-      <change beforePath="$PROJECT_DIR$/agents/base_agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/agents/base_agent.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/agents/leader.py" beforeDir="false" afterPath="$PROJECT_DIR$/agents/leader.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/agents/llm/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/agents/llm/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config/llm_config.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/config/llm_config.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/conversation/discussion_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/conversation/discussion_manager.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_app_render.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_app_render.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_llm_protocol.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_llm_protocol.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_logger_runtime.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_logger_runtime.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/data_fetcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/data_fetcher.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/web/app.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/static/css/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/css/style.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/static/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/static/js/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/js/app.js" afterDir="false" />
+    <list default="true" id="a52f1baa-f3d7-4bab-a2d5-a0b3ecf59e11" name="Changes" comment="feat:增加k线">
+      <change afterPath="$PROJECT_DIR$/../.omc/state/hud-stdin-cache.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../.omc/state/sessions/247a8eab-6c5b-420b-a0ec-add00d835cea/hud-state.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/analyze_002202.log" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/analyze_002202.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/logs/agent_team_20260415.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/agents/llm/llm_fundamental.py" beforeDir="false" afterPath="$PROJECT_DIR$/agents/llm/llm_fundamental.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/agents/llm/llm_intelligence.py" beforeDir="false" afterPath="$PROJECT_DIR$/agents/llm/llm_intelligence.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/agents/llm/llm_leader.py" beforeDir="false" afterPath="$PROJECT_DIR$/agents/llm/llm_leader.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/agents/llm/llm_risk.py" beforeDir="false" afterPath="$PROJECT_DIR$/agents/llm/llm_risk.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/agents/llm/llm_technical.py" beforeDir="false" afterPath="$PROJECT_DIR$/agents/llm/llm_technical.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -114,7 +112,15 @@
       <option name="project" value="LOCAL" />
       <updated>1776326430974</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="feat:增加k线">
+      <option name="closed" value="true" />
+      <created>1776351764020</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1776351764021</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -132,6 +138,7 @@
     <MESSAGE value="web页面修复" />
     <MESSAGE value="Version 2" />
     <MESSAGE value="fix" />
-    <option name="LAST_COMMIT_MESSAGE" value="fix" />
+    <MESSAGE value="feat:增加k线" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat:增加k线" />
   </component>
 </project>
