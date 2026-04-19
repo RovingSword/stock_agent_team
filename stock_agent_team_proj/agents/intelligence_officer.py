@@ -2,8 +2,10 @@
 情报员 Agent
 负责情报面分析：资金流向、龙虎榜、北向资金、热点题材、消息催化剂
 """
+import json
+import os
 from datetime import datetime
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 from agents.base_agent import WorkerAgent, AgentContext
 from models.base import AgentType
@@ -21,8 +23,14 @@ class IntelligenceOfficer(WorkerAgent):
         stock_code = context.stock_code
         stock_name = context.stock_name
         
-        # 获取情报数据
+        # 获取情报数据（API数据）
         intel_data = self._get_intelligence_data(stock_code)
+        
+        # 合并网络情报（如果有）
+        web_intel = context.additional_info.get('web_intelligence', {})
+        if web_intel:
+            intel_data['web_intelligence'] = web_intel
+            self.logger.info(f"已合并网络情报: 整体情绪={web_intel.get('overall_sentiment', 'neutral')}")
         
         # 1. 题材分析
         theme_analysis = self._analyze_theme(intel_data)
@@ -30,19 +38,19 @@ class IntelligenceOfficer(WorkerAgent):
         # 2. 资金流向
         fund_analysis = self._analyze_fund_flow(intel_data)
         
-        # 3. 消息催化剂
-        catalyst_analysis = self._analyze_catalyst(intel_data)
+        # 3. 消息催化剂（增强：使用网络情报）
+        catalyst_analysis = self._analyze_catalyst(intel_data, web_intel)
         
-        # 4. 市场情绪
-        sentiment_analysis = self._analyze_sentiment(intel_data)
+        # 4. 市场情绪（增强：使用网络情报）
+        sentiment_analysis = self._analyze_sentiment(intel_data, web_intel)
         
-        # 5. 综合评分
-        overall_score = self.calculate_score({
-            'theme_score': theme_analysis['score'],
-            'fund_score': fund_analysis['score'],
-            'catalyst_score': catalyst_analysis['score'],
-            'sentiment_score': sentiment_analysis['score']
-        })
+        # 5. 综合评分 (加权平均，突出资金和题材)
+        overall_score = (
+            theme_analysis['score'] * 0.3 +
+            fund_analysis['score'] * 0.3 +
+            catalyst_analysis['score'] * 0.2 +
+            sentiment_analysis['score'] * 0.2
+        )
         
         # 6. 爆发力评估
         explosion = self._assess_explosion(theme_analysis, fund_analysis, catalyst_analysis)
@@ -77,13 +85,16 @@ class IntelligenceOfficer(WorkerAgent):
         }
     
     def _get_intelligence_data(self, stock_code: str) -> Dict[str, Any]:
-        """获取情报数据 - 真实数据"""
-        # 获取真实数据
+        """获取情报数据 - 真实数据 + 已存储的情报"""
+        # 1. 先尝试读取已存储的情报文件
+        stored_intel = self._load_stored_intel(stock_code)
+
+        # 2. 获取API实时数据
         fund_flow = data_fetcher.get_fund_flow(stock_code)
         north_bound = data_fetcher.get_north_bound_flow()
         news = data_fetcher.get_news(stock_code, limit=5)
         
-        # 构建数据结构
+        # 构建资金流数据
         if fund_flow:
             fund_flows = fund_flow['fund_flows']
             net_inflow_5d = fund_flow['net_inflow_5d']
@@ -107,31 +118,105 @@ class IntelligenceOfficer(WorkerAgent):
                     'impact': 'medium'
                 })
         
-        # 返回整合后的数据（部分字段暂时使用推断值）
+        # 3. 合并已存储的情报到新闻列表
+        if stored_intel:
+            # 合并存储的新闻
+            stored_news = stored_intel.get('news', [])
+            for sn in stored_news:
+                if sn.get('title') and not any(n.get('title') == sn.get('title') for n in news_list):
+                    news_list.append({
+                        'date': sn.get('date', sn.get('time', '')),
+                        'title': sn.get('title', ''),
+                        'sentiment': sn.get('sentiment', 'neutral'),
+                        'impact': 'medium'
+                    })
+
+            # 合并存储的研报
+            stored_research = stored_intel.get('research', [])
+            for sr in stored_research:
+                if sr.get('title') and not any(n.get('title') == sr.get('title') for n in news_list):
+                    news_list.append({
+                        'date': sr.get('date', sr.get('time', '')),
+                        'title': sr.get('title', ''),
+                        'sentiment': sr.get('sentiment', 'neutral'),
+                        'impact': 'high'  # 研报影响较高
+                    })
+
+            self.logger.info(f"已合并存储情报: {len(stored_news)}条新闻, {len(stored_research)}条研报")
+
+        # 4. 从存储情报中提取板块/题材信息（如果有）
+        sector = stored_intel.get('sector', '新能源/智能制造') if stored_intel else '新能源/智能制造'
+        theme = stored_intel.get('theme', '智能制造龙头') if stored_intel else '智能制造龙头'
+
+        # 返回整合后的数据
         return {
-            'sector': '新能源/智能制造',
-            'theme': '智能制造龙头',
-            'theme_stage': '发酵',
-            'theme_sustainability': '中',
-            'is_sector_leader': True,  # 需要额外数据判断
+            'sector': sector,
+            'theme': theme,
+            'theme_stage': stored_intel.get('theme_stage', '发酵') if stored_intel else '发酵',
+            'theme_sustainability': stored_intel.get('theme_sustainability', '中') if stored_intel else '中',
+            'is_sector_leader': stored_intel.get('is_sector_leader', True) if stored_intel else True,
             
             'fund_flow_5d': fund_flows,
             'north_bound_5d_change': north_bound['positive_days'] / 5 if north_bound else 0.1,
-            'dragon_tiger': None,
-            'margin_balance': 0,
-            'margin_change_5d': 0.01,
+            'dragon_tiger': stored_intel.get('dragon_tiger') if stored_intel else None,
+            'margin_balance': stored_intel.get('margin_balance', 0) if stored_intel else 0,
+            'margin_change_5d': stored_intel.get('margin_change_5d', 0.01) if stored_intel else 0.01,
             
             'news': news_list if news_list else [
                 {'date': datetime.now().strftime('%Y-%m-%d'), 'title': '暂无重大消息', 'sentiment': 'neutral', 'impact': 'low'}
             ],
             
-            'sector_5d_change': 0.03,
-            'sector_leader': stock_code,
-            'sector_leader_5d_change': 0.05,
-            'limit_up_count': 50,
-            'market_sentiment': '中性偏乐观'
+            'sector_5d_change': stored_intel.get('sector_5d_change', 0.03) if stored_intel else 0.03,
+            'sector_leader': stored_intel.get('sector_leader', stock_code) if stored_intel else stock_code,
+            'sector_leader_5d_change': stored_intel.get('sector_leader_5d_change', 0.05) if stored_intel else 0.05,
+            'limit_up_count': stored_intel.get('limit_up_count', 50) if stored_intel else 50,
+            'market_sentiment': stored_intel.get('market_sentiment', '中性偏乐观') if stored_intel else '中性偏乐观'
         }
     
+    def _load_stored_intel(self, stock_code: str) -> Optional[Dict[str, Any]]:
+        """加载已存储的情报文件
+
+        读取 data/intel/{stock_code}.json，如果文件存在且未过期（7天内），
+        则返回情报数据，否则返回 None
+        """
+        intel_file = os.path.join('data', 'intel', f'{stock_code}.json')
+
+        if not os.path.exists(intel_file):
+            return None
+
+        try:
+            with open(intel_file, 'r', encoding='utf-8') as f:
+                intel_data = json.load(f)
+
+            # 检查时效性（超过7天视为过期）
+            tracked_at = intel_data.get('tracked_at', '')
+            if tracked_at:
+                try:
+                    tracked_time = datetime.fromisoformat(tracked_at)
+                    if (datetime.now() - tracked_time).days > 7:
+                        self.logger.info(f"存储情报已过期: {stock_code} (采集于{tracked_at[:10]})")
+                        return None
+                except (ValueError, TypeError):
+                    pass
+
+            # 检查是否有实质内容
+            has_content = (
+                bool(intel_data.get('news')) or
+                bool(intel_data.get('research')) or
+                bool(intel_data.get('announcements'))
+            )
+
+            if has_content:
+                self.logger.info(f"加载存储情报: {stock_code} (采集于{tracked_at[:10] if tracked_at else '未知'})")
+                return intel_data
+            else:
+                self.logger.info(f"存储情报无实质内容: {stock_code}")
+                return None
+
+        except Exception as e:
+            self.logger.warning(f"读取存储情报失败: {stock_code} - {e}")
+            return None
+
     def _analyze_theme(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """分析题材"""
         theme = data['theme']
@@ -186,10 +271,10 @@ class IntelligenceOfficer(WorkerAgent):
         inflow_days = sum(1 for f in fund_flows if f['net_inflow'] > 0)
         inflow_ratio = inflow_days / len(fund_flows)
         
-        # 评分
-        if net_inflow > 300000000:
+        # 评分 (降低资金门槛)
+        if net_inflow > 150000000:
             fund_score = 8.5
-        elif net_inflow > 100000000:
+        elif net_inflow > 50000000:
             fund_score = 7.0
         elif net_inflow > 0:
             fund_score = 6.0
@@ -220,18 +305,41 @@ class IntelligenceOfficer(WorkerAgent):
             'description': f"近5日净流入{net_inflow/100000000:.1f}亿，北向{'增持' if north_bound > 0 else '减持'}"
         }
     
-    def _analyze_catalyst(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """分析消息催化剂"""
+    def _analyze_catalyst(self, data: Dict[str, Any], web_intel: Dict[str, Any] = None) -> Dict[str, Any]:
+        """分析消息催化剂（增强：融合网络情报）"""
         news_list = data['news']
         
         positive_news = [n for n in news_list if n['sentiment'] == 'positive']
         negative_news = [n for n in news_list if n['sentiment'] == 'negative']
         
-        # 计算催化剂影响
+        # 计算催化剂影响（API数据）
         positive_impact = sum(1 if n['impact'] == 'high' else 0.5 for n in positive_news)
         negative_impact = sum(1 if n['impact'] == 'high' else 0.5 for n in negative_news)
         
         net_impact = positive_impact - negative_impact
+        
+        # 融合网络情报
+        web_catalyst_items = []
+        if web_intel:
+            # 网络新闻催化剂
+            for item in web_intel.get('news', [])[:3]:
+                web_catalyst_items.append({
+                    'title': item.get('title', ''),
+                    'sentiment': item.get('sentiment', 'neutral'),
+                    'source': '网络搜索'
+                })
+            # 研报催化剂
+            for item in web_intel.get('research', [])[:2]:
+                web_catalyst_items.append({
+                    'title': item.get('title', ''),
+                    'sentiment': item.get('sentiment', 'neutral'),
+                    'source': '研报'
+                })
+            
+            # 根据网络情报调整影响
+            web_positive = len([i for i in web_catalyst_items if i['sentiment'] == 'positive'])
+            web_negative = len([i for i in web_catalyst_items if i['sentiment'] == 'negative'])
+            net_impact += (web_positive - web_negative) * 0.3
         
         if net_impact >= 1:
             score = 8.0
@@ -253,11 +361,12 @@ class IntelligenceOfficer(WorkerAgent):
             'strength': strength,
             'score': score,
             'news_list': news_list,
+            'web_catalyst_items': web_catalyst_items,
             'description': f"催化剂强度{strength}，{'利好为主' if net_impact > 0 else '利空为主'}"
         }
     
-    def _analyze_sentiment(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """分析市场情绪"""
+    def _analyze_sentiment(self, data: Dict[str, Any], web_intel: Dict[str, Any] = None) -> Dict[str, Any]:
+        """分析市场情绪（增强：融合网络情报）"""
         sector_change = data['sector_5d_change']
         leader_change = data['sector_leader_5d_change']
         limit_up = data['limit_up_count']
@@ -273,7 +382,7 @@ class IntelligenceOfficer(WorkerAgent):
         else:
             sector_score = 4.0
         
-        # 情绪评分
+        # 情绪评分（API数据）
         sentiment_scores = {
             '高涨': 8.5,
             '偏乐观': 7.0,
@@ -283,7 +392,30 @@ class IntelligenceOfficer(WorkerAgent):
         }
         sentiment_score = sentiment_scores.get(sentiment, 5.5)
         
-        overall = sector_score * 0.5 + sentiment_score * 0.5
+        # 融合网络情报
+        web_sentiment_adjust = 0
+        web_sentiment_detail = []
+        if web_intel:
+            web_overall = web_intel.get('overall_sentiment', 'neutral')
+            web_sentiment_scores = {'positive': 1.0, 'negative': -1.0, 'neutral': 0}
+            web_sentiment_adjust = web_sentiment_scores.get(web_overall, 0)
+            
+            # 网络舆情详情
+            for item in web_intel.get('sentiment', [])[:3]:
+                web_sentiment_detail.append({
+                    'title': item.get('title', ''),
+                    'sentiment': item.get('sentiment', 'neutral')
+                })
+            
+            # 关键正面/负面信息
+            key_positive = web_intel.get('key_positive', [])
+            key_negative = web_intel.get('key_negative', [])
+            if key_positive:
+                web_sentiment_adjust += 0.3
+            if key_negative:
+                web_sentiment_adjust -= 0.3
+        
+        overall = sector_score * 0.4 + sentiment_score * 0.4 + (5.5 + web_sentiment_adjust) * 0.2
         
         return {
             'sector_5d_change': sector_change,
@@ -292,8 +424,10 @@ class IntelligenceOfficer(WorkerAgent):
             'sentiment': sentiment,
             'sector_score': sector_score,
             'sentiment_score': sentiment_score,
+            'web_sentiment_adjust': web_sentiment_adjust,
+            'web_sentiment_detail': web_sentiment_detail,
             'score': round(overall, 1),
-            'description': f"板块涨幅{sector_change*100:.1f}%，市场情绪{sentiment}"
+            'description': f"板块涨幅{sector_change*100:.1f}%，市场情绪{sentiment}，网络情绪{web_intel.get('overall_sentiment', 'neutral') if web_intel else '无'}"
         }
     
     def _assess_explosion(self, theme: Dict, fund: Dict, catalyst: Dict) -> Dict[str, Any]:

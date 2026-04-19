@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>股票Agent分析系统</title>
-    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/style.css?v=20260419e">
 </head>
 <body>
     <div class="container">
@@ -19,181 +19,468 @@
 
         <!-- 主内容区 -->
         <main class="main-content">
-            <!-- 搜索区域 -->
-            <section class="search-section">
-                <div class="search-box">
-                    <div class="input-group">
-                        <label for="stockCode">股票代码</label>
-                        <input type="text" id="stockCode" placeholder="如: 300750" maxlength="10">
-                    </div>
-                    <div class="input-group">
-                        <label for="stockName">股票名称 <span class="optional">(可选)</span></label>
-                        <input type="text" id="stockName" placeholder="如: 宁德时代">
-                    </div>
-                    <!-- 分析模式选择 -->
-                    <div class="input-group mode-group">
-                        <label>分析模式</label>
-                        <div class="mode-selector">
-                            <label class="mode-option">
-                                <input type="radio" name="analyzeMode" value="rule" checked>
-                                <span class="mode-label">规则引擎</span>
+            <!-- Tab导航 -->
+            <nav class="tab-nav">
+                <button class="tab-btn active" data-tab="analyze">📈 分析</button>
+                <button class="tab-btn" data-tab="watchlist">👁️ 观察池</button>
+                <button class="tab-btn" data-tab="performance">📊 表现统计</button>
+            </nav>
+
+            <!-- Tab内容区域 -->
+            <div class="tab-content">
+                <!-- ========== 分析Tab ========== -->
+                <div id="tab-analyze" class="tab-panel active">
+                    <!-- 搜索区域 -->
+                    <section class="search-section">
+                        <div class="search-box">
+                            <div class="input-group">
+                                <label for="stockCode">股票代码</label>
+                                <input type="text" id="stockCode" placeholder="如: 300750" maxlength="10">
+                            </div>
+                            <div class="input-group">
+                                <label for="stockName">股票名称 <span class="optional">(可选)</span></label>
+                                <input type="text" id="stockName" placeholder="如: 宁德时代">
+                            </div>
+                            <!-- 分析模式选择 -->
+                            <div class="input-group mode-group">
+                                <label>分析模式</label>
+                                <div class="mode-selector">
+                                    <label class="mode-option">
+                                        <input type="radio" name="analyzeMode" value="rule" checked>
+                                        <span class="mode-label">规则引擎</span>
+                                    </label>
+                                    <label class="mode-option">
+                                        <input type="radio" name="analyzeMode" value="llm">
+                                        <span class="mode-label">LLM Agent</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;" title="勾选后将忽略缓存，重新搜索最新情报">
+                                <input type="checkbox" id="forceRefreshIntel">
+                                <span style="font-size:0.85em;color:#e53e3e;">🔄 强制刷新情报</span>
                             </label>
-                            <label class="mode-option">
-                                <input type="radio" name="analyzeMode" value="llm">
-                                <span class="mode-label">LLM Agent</span>
+                            <button id="analyzeBtn" class="btn-primary">
+                                <span class="btn-icon">🔍</span>
+                                开始分析
+                            </button>
+                        </div>
+                    </section>
+
+                    <!-- 加载状态 -->
+                    <div id="loadingSection" class="loading-section hidden">
+                        <div class="loading-spinner"></div>
+                        <p>Agent团队正在分析中，请稍候...</p>
+                    </div>
+
+                    <!-- LLM讨论过程展示区 -->
+                    <section id="discussionSection" class="discussion-section hidden">
+                        <div class="discussion-header">
+                            <h3>🤖 LLM Agent Team 分析中...</h3>
+                            <span id="discussionStatus" class="discussion-status">准备中</span>
+                        </div>
+                        <div class="discussion-content" id="discussionContent">
+                            <!-- 动态渲染讨论过程 -->
+                        </div>
+                    </section>
+
+                    <!-- K线图区域 -->
+                    <section id="klineSection" class="kline-section hidden">
+                        <div class="kline-header">
+                            <h3>📈 日K线图</h3>
+                            <span id="klineStatus" class="kline-status"></span>
+                        </div>
+                        <div id="klineChart" class="kline-chart"></div>
+                        <div id="klineLegend" class="kline-legend">
+                            <span class="legend-item"><span class="legend-dot legend-ma5"></span>MA5</span>
+                            <span class="legend-item"><span class="legend-dot legend-ma10"></span>MA10</span>
+                            <span class="legend-item"><span class="legend-dot legend-ma20"></span>MA20</span>
+                            <span class="legend-item"><span class="legend-dot legend-support"></span>支撑位</span>
+                            <span class="legend-item"><span class="legend-dot legend-resistance"></span>阻力位</span>
+                        </div>
+                    </section>
+
+                    <!-- 结果展示区 -->
+                    <section id="resultSection" class="result-section hidden">
+                        <!-- Agent评分卡片 -->
+                        <div class="agent-cards">
+                            <div class="agent-card" id="techCard">
+                                <div class="agent-icon">📈</div>
+                                <div class="agent-name">技术分析员</div>
+                                <div class="agent-score" id="techScore">0.0</div>
+                                <div class="agent-weight">权重: <span id="techWeight">35%</span></div>
+                                <div class="agent-comment" id="techComment">--</div>
+                            </div>
+                            <div class="agent-card" id="intelCard">
+                                <div class="agent-icon">📡</div>
+                                <div class="agent-name">情报员</div>
+                                <div class="agent-score" id="intelScore">0.0</div>
+                                <div class="agent-weight">权重: <span id="intelWeight">30%</span></div>
+                                <div class="agent-comment" id="intelComment">--</div>
+                            </div>
+                            <div class="agent-card" id="riskCard">
+                                <div class="agent-icon">🛡️</div>
+                                <div class="agent-name">风控官</div>
+                                <div class="agent-score" id="riskScore">0.0</div>
+                                <div class="agent-weight">权重: <span id="riskWeight">20%</span></div>
+                                <div class="agent-comment" id="riskComment">--</div>
+                            </div>
+                            <div class="agent-card" id="fundCard">
+                                <div class="agent-icon">📋</div>
+                                <div class="agent-name">基本面分析师</div>
+                                <div class="agent-score" id="fundScore">0.0</div>
+                                <div class="agent-weight">权重: <span id="fundWeight">15%</span></div>
+                                <div class="agent-comment" id="fundComment">--</div>
+                            </div>
+                        </div>
+
+                        <!-- 交易建议 -->
+                        <div class="execution-section">
+                            <h3>📌 交易建议</h3>
+                            <div class="execution-grid">
+                                <div class="execution-item">
+                                    <span class="execution-label">入场区间</span>
+                                    <span class="execution-value" id="entryZone">--</span>
+                                </div>
+                                <div class="execution-item">
+                                    <span class="execution-label">止损位</span>
+                                    <span class="execution-value risk" id="stopLoss">--</span>
+                                </div>
+                                <div class="execution-item">
+                                    <span class="execution-label">第一止盈</span>
+                                    <span class="execution-value profit" id="takeProfit1">--</span>
+                                </div>
+                                <div class="execution-item">
+                                    <span class="execution-label">第二止盈</span>
+                                    <span class="execution-value profit" id="takeProfit2">--</span>
+                                </div>
+                                <div class="execution-item">
+                                    <span class="execution-label">建议仓位</span>
+                                    <span class="execution-value" id="positionSize">--</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 理由与风险 -->
+                        <div class="rationale-section">
+                            <div class="rationale-card buy-reasons">
+                                <h4>✅ 买入理由</h4>
+                                <ul id="buyReasons">
+                                    <li>--</li>
+                                </ul>
+                            </div>
+                            <div class="rationale-card risk-warnings">
+                                <h4>⚠️ 风险提示</h4>
+                                <ul id="riskWarnings">
+                                    <li>--</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 错误提示 -->
+                    <div id="errorSection" class="error-section hidden">
+                        <div class="error-icon">❌</div>
+                        <p id="errorMessage">发生错误</p>
+                    </div>
+
+                    <!-- 历史记录 -->
+                    <section class="history-section">
+                        <div class="section-header">
+                            <h3>📜 历史分析记录</h3>
+                            <button id="refreshHistory" class="btn-small">🔄 刷新</button>
+                        </div>
+                        <div class="history-table-container">
+                            <table class="history-table">
+                                <thead>
+                                    <tr>
+                                        <th>股票代码</th>
+                                        <th>股票名称</th>
+                                        <th>分析日期</th>
+                                        <th>综合评分</th>
+                                        <th>状态</th>
+                                        <th>收益率</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historyTableBody">
+                                    <tr class="empty-row">
+                                        <td colspan="6">暂无历史记录</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- ========== 观察池Tab ========== -->
+                <div id="tab-watchlist" class="tab-panel">
+                    <!-- 观察池状态概览 -->
+                    <section class="watchlist-overview">
+                        <div class="overview-cards">
+                            <div class="overview-card">
+                                <div class="overview-icon">📋</div>
+                                <div class="overview-data">
+                                    <span class="overview-value" id="wlTotalCount">0</span>
+                                    <span class="overview-label">总数量</span>
+                                </div>
+                            </div>
+                            <div class="overview-card success">
+                                <div class="overview-icon">✅</div>
+                                <div class="overview-data">
+                                    <span class="overview-value" id="wlBuyRecCount">0</span>
+                                    <span class="overview-label">推荐买入</span>
+                                </div>
+                            </div>
+                            <div class="overview-card warning">
+                                <div class="overview-icon">⏳</div>
+                                <div class="overview-data">
+                                    <span class="overview-value" id="wlPendingCount">0</span>
+                                    <span class="overview-label">待分析</span>
+                                </div>
+                            </div>
+                            <div class="overview-card">
+                                <div class="overview-icon">👁️</div>
+                                <div class="overview-data">
+                                    <span class="overview-value" id="wlWatchingCount">0</span>
+                                    <span class="overview-label">观察中</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 添加股票区域 -->
+                    <section class="watchlist-add">
+                        <div class="add-stock-form">
+                            <div class="input-group">
+                                <label for="wlStockCode">股票代码</label>
+                                <input type="text" id="wlStockCode" placeholder="如: 300750" maxlength="10">
+                            </div>
+                            <div class="input-group">
+                                <label for="wlStockName">股票名称</label>
+                                <input type="text" id="wlStockName" placeholder="如: 宁德时代">
+                            </div>
+                            <div class="input-group">
+                                <label for="wlAddReason">添加原因</label>
+                                <input type="text" id="wlAddReason" placeholder="如: 龙虎榜机构净买入">
+                            </div>
+                            <button id="wlAddBtn" class="btn-primary">➕ 添加到观察池</button>
+                        </div>
+                    </section>
+
+                    <!-- 操作按钮 -->
+                    <section class="watchlist-actions">
+                        <div class="mode-group" style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+                            <span style="font-size:0.9em;color:#666;">分析模式:</span>
+                            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
+                                <input type="radio" name="wlAnalyzeMode" value="rule">
+                                <span style="font-size:0.9em;">规则引擎</span>
+                            </label>
+                            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
+                                <input type="radio" name="wlAnalyzeMode" value="llm" checked>
+                                <span style="font-size:0.9em;">LLM Agent</span>
+                            </label>
+                            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;margin-left:12px;" title="勾选后将忽略缓存，重新搜索情报">
+                                <input type="checkbox" id="wlForceRefresh">
+                                <span style="font-size:0.9em;color:#e53e3e;">🔄 强制刷新情报</span>
                             </label>
                         </div>
-                    </div>
-                    <button id="analyzeBtn" class="btn-primary">
-                        <span class="btn-icon">🔍</span>
-                        开始分析
-                    </button>
-                </div>
-            </section>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                            <button id="wlAnalyzeAllBtn" class="btn-secondary">🔍 分析所有待分析股票</button>
+                            <button id="wlRefreshBtn" class="btn-secondary">🔄 刷新列表</button>
+                            <button id="wlCollectIntelBtn" class="btn-secondary">📡 采集情报</button>
+                            <button id="wlRunSchedulerBtn" class="btn-secondary">⏰ 启动定时任务</button>
+                        </div>
+                    </section>
 
-            <!-- 加载状态 -->
-            <div id="loadingSection" class="loading-section hidden">
-                <div class="loading-spinner"></div>
-                <p>Agent团队正在分析中，请稍候...</p>
+                    <!-- 观察池列表 -->
+                    <section class="watchlist-table-section">
+                        <div class="section-header">
+                            <h3>👁️ 观察池候选股</h3>
+                            <div class="filter-group">
+                                <select id="wlStatusFilter">
+                                    <option value="">全部状态</option>
+                                    <option value="pending">待分析</option>
+                                    <option value="watching">观察中</option>
+                                    <option value="archived">已归档</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="watchlist-table-container">
+                            <table class="watchlist-table">
+                                <thead>
+                                    <tr>
+                                        <th>股票代码</th>
+                                        <th>股票名称</th>
+                                        <th>来源</th>
+                                        <th>评分</th>
+                                        <th>综合评分</th>
+                                        <th>状态</th>
+                                        <th>推荐</th>
+                                        <th>添加日期</th>
+                                        <th>最后分析</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="wlTableBody">
+                                    <tr class="empty-row">
+                                        <td colspan="10">暂无候选股票</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <!-- 情报追踪区域 -->
+                    <section class="intel-section">
+                        <div class="section-header">
+                            <h3>📡 情报追踪</h3>
+                        </div>
+                        <div class="intel-form">
+                            <div class="input-group">
+                                <label for="intelStockCode">股票代码</label>
+                                <input type="text" id="intelStockCode" placeholder="输入股票代码追踪情报">
+                            </div>
+                            <button id="intelTrackBtn" class="btn-primary">追踪情报</button>
+                            <button class="btn-secondary" onclick="handleTrackIntel(true)" title="忽略缓存，重新搜索最新情报">🔄 强制刷新</button>
+                        </div>
+                        <div id="intelBriefSection" class="intel-brief hidden">
+                            <h4>📋 情报简报</h4>
+                            <div id="intelBriefContent"></div>
+                        </div>
+                    </section>
+
+                    <!-- 定时任务状态 -->
+                    <section class="scheduler-section">
+                        <div class="section-header">
+                            <h3>⏰ 定时任务</h3>
+                            <button id="refreshSchedulerBtn" class="btn-small">🔄 刷新状态</button>
+                        </div>
+                        <div id="schedulerStatus" class="scheduler-status">
+                            <p>加载中...</p>
+                        </div>
+                        <div class="scheduler-tasks" id="schedulerTasks">
+                            <!-- 任务列表动态生成 -->
+                        </div>
+                    </section>
+                </div>
+
+                <!-- ========== 表现统计Tab ========== -->
+                <div id="tab-performance" class="tab-panel">
+                    <!-- 统计概览 -->
+                    <section class="perf-overview">
+                        <div class="perf-cards">
+                            <div class="perf-card">
+                                <div class="perf-icon">📈</div>
+                                <div class="perf-value" id="perfTotalSignals">0</div>
+                                <div class="perf-label">总信号数</div>
+                            </div>
+                            <div class="perf-card">
+                                <div class="perf-icon">🎯</div>
+                                <div class="perf-value" id="perfWinRate">0%</div>
+                                <div class="perf-label">胜率</div>
+                            </div>
+                            <div class="perf-card profit">
+                                <div class="perf-icon">💰</div>
+                                <div class="perf-value" id="perfTotalProfit">0%</div>
+                                <div class="perf-label">累计收益率</div>
+                            </div>
+                            <div class="perf-card">
+                                <div class="perf-icon">📅</div>
+                                <div class="perf-value" id="perfAvgDays">0</div>
+                                <div class="perf-label">平均持仓天数</div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 图表区域 -->
+                    <section class="perf-charts">
+                        <div class="chart-row">
+                            <div class="chart-container">
+                                <h4>📊 胜率分布</h4>
+                                <div id="perfPieChart" class="chart"></div>
+                            </div>
+                            <div class="chart-container wide">
+                                <h4>📈 累计收益曲线</h4>
+                                <div id="perfLineChart" class="chart"></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 持仓记录 -->
+                    <section class="positions-section">
+                        <div class="section-header">
+                            <h3>💼 当前持仓</h3>
+                            <button id="refreshPositionsBtn" class="btn-small">🔄 刷新</button>
+                        </div>
+                        <div class="positions-table-container">
+                            <table class="positions-table">
+                                <thead>
+                                    <tr>
+                                        <th>股票代码</th>
+                                        <th>股票名称</th>
+                                        <th>入场价格</th>
+                                        <th>股数</th>
+                                        <th>入场日期</th>
+                                        <th>持仓天数</th>
+                                        <th>盈亏</th>
+                                        <th>收益率</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="positionsTableBody">
+                                    <tr class="empty-row">
+                                        <td colspan="9">暂无持仓记录</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <!-- 历史信号 -->
+                    <section class="signals-section">
+                        <div class="section-header">
+                            <h3>📜 历史信号</h3>
+                            <button id="refreshSignalsBtn" class="btn-small">🔄 刷新</button>
+                        </div>
+                        <div class="signals-table-container">
+                            <table class="signals-table">
+                                <thead>
+                                    <tr>
+                                        <th>股票代码</th>
+                                        <th>股票名称</th>
+                                        <th>信号类型</th>
+                                        <th>入场价格</th>
+                                        <th>出场价格</th>
+                                        <th>信号日期</th>
+                                        <th>出场日期</th>
+                                        <th>持仓天数</th>
+                                        <th>收益率</th>
+                                        <th>状态</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="signalsTableBody">
+                                    <tr class="empty-row">
+                                        <td colspan="10">暂无历史信号</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <!-- 周报月报 -->
+                    <section class="reports-section">
+                        <div class="section-header">
+                            <h3>📑 报告</h3>
+                        </div>
+                        <div class="report-buttons">
+                            <button id="genWeeklyReportBtn" class="btn-secondary">📅 生成周报</button>
+                            <button id="genMonthlyReportBtn" class="btn-secondary">📆 生成月报</button>
+                        </div>
+                        <div id="reportContent" class="report-content hidden">
+                            <pre id="reportText"></pre>
+                        </div>
+                    </section>
+                </div>
             </div>
-
-            <!-- LLM讨论过程展示区 -->
-            <section id="discussionSection" class="discussion-section hidden">
-                <div class="discussion-header">
-                    <h3>🤖 LLM Agent Team 分析中...</h3>
-                    <span id="discussionStatus" class="discussion-status">准备中</span>
-                </div>
-                <div class="discussion-content" id="discussionContent">
-                    <!-- 动态渲染讨论过程 -->
-                </div>
-            </section>
-
-            <!-- K线图区域 -->
-            <section id="klineSection" class="kline-section hidden">
-                <div class="kline-header">
-                    <h3>📈 日K线图</h3>
-                    <span id="klineStatus" class="kline-status"></span>
-                </div>
-                <div id="klineChart" class="kline-chart"></div>
-                <div id="klineLegend" class="kline-legend">
-                    <span class="legend-item"><span class="legend-dot legend-ma5"></span>MA5</span>
-                    <span class="legend-item"><span class="legend-dot legend-ma10"></span>MA10</span>
-                    <span class="legend-item"><span class="legend-dot legend-ma20"></span>MA20</span>
-                    <span class="legend-item"><span class="legend-dot legend-support"></span>支撑位</span>
-                    <span class="legend-item"><span class="legend-dot legend-resistance"></span>阻力位</span>
-                </div>
-            </section>
-
-            <!-- 结果展示区 -->
-            <section id="resultSection" class="result-section hidden">
-                <!-- Agent评分卡片 -->
-                <div class="agent-cards">
-                    <div class="agent-card" id="techCard">
-                        <div class="agent-icon">📈</div>
-                        <div class="agent-name">技术分析员</div>
-                        <div class="agent-score" id="techScore">0.0</div>
-                        <div class="agent-weight">权重: <span id="techWeight">35%</span></div>
-                        <div class="agent-comment" id="techComment">--</div>
-                    </div>
-                    <div class="agent-card" id="intelCard">
-                        <div class="agent-icon">📡</div>
-                        <div class="agent-name">情报员</div>
-                        <div class="agent-score" id="intelScore">0.0</div>
-                        <div class="agent-weight">权重: <span id="intelWeight">30%</span></div>
-                        <div class="agent-comment" id="intelComment">--</div>
-                    </div>
-                    <div class="agent-card" id="riskCard">
-                        <div class="agent-icon">🛡️</div>
-                        <div class="agent-name">风控官</div>
-                        <div class="agent-score" id="riskScore">0.0</div>
-                        <div class="agent-weight">权重: <span id="riskWeight">20%</span></div>
-                        <div class="agent-comment" id="riskComment">--</div>
-                    </div>
-                    <div class="agent-card" id="fundCard">
-                        <div class="agent-icon">📋</div>
-                        <div class="agent-name">基本面分析师</div>
-                        <div class="agent-score" id="fundScore">0.0</div>
-                        <div class="agent-weight">权重: <span id="fundWeight">15%</span></div>
-                        <div class="agent-comment" id="fundComment">--</div>
-                    </div>
-                </div>
-
-                <!-- 交易建议 -->
-                <div class="execution-section">
-                    <h3>📌 交易建议</h3>
-                    <div class="execution-grid">
-                        <div class="execution-item">
-                            <span class="execution-label">入场区间</span>
-                            <span class="execution-value" id="entryZone">--</span>
-                        </div>
-                        <div class="execution-item">
-                            <span class="execution-label">止损位</span>
-                            <span class="execution-value risk" id="stopLoss">--</span>
-                        </div>
-                        <div class="execution-item">
-                            <span class="execution-label">第一止盈</span>
-                            <span class="execution-value profit" id="takeProfit1">--</span>
-                        </div>
-                        <div class="execution-item">
-                            <span class="execution-label">第二止盈</span>
-                            <span class="execution-value profit" id="takeProfit2">--</span>
-                        </div>
-                        <div class="execution-item">
-                            <span class="execution-label">建议仓位</span>
-                            <span class="execution-value" id="positionSize">--</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 理由与风险 -->
-                <div class="rationale-section">
-                    <div class="rationale-card buy-reasons">
-                        <h4>✅ 买入理由</h4>
-                        <ul id="buyReasons">
-                            <li>--</li>
-                        </ul>
-                    </div>
-                    <div class="rationale-card risk-warnings">
-                        <h4>⚠️ 风险提示</h4>
-                        <ul id="riskWarnings">
-                            <li>--</li>
-                        </ul>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 错误提示 -->
-            <div id="errorSection" class="error-section hidden">
-                <div class="error-icon">❌</div>
-                <p id="errorMessage">发生错误</p>
-            </div>
-
-            <!-- 历史记录 -->
-            <section class="history-section">
-                <div class="section-header">
-                    <h3>📜 历史分析记录</h3>
-                    <button id="refreshHistory" class="btn-small">🔄 刷新</button>
-                </div>
-                <div class="history-table-container">
-                    <table class="history-table">
-                        <thead>
-                            <tr>
-                                <th>股票代码</th>
-                                <th>股票名称</th>
-                                <th>分析日期</th>
-                                <th>综合评分</th>
-                                <th>状态</th>
-                                <th>收益率</th>
-                            </tr>
-                        </thead>
-                        <tbody id="historyTableBody">
-                            <tr class="empty-row">
-                                <td colspan="6">暂无历史记录</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
         </main>
 
         <!-- 页脚 -->
@@ -205,6 +492,7 @@
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/lib/marked.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
-    <script src="/static/js/app.js"></script>
+    <script src="/static/js/app.js?v=20260419e"></script>
+    <script src="/static/js/watchlist.js?v=20260419e"></script>
 </body>
 </html>

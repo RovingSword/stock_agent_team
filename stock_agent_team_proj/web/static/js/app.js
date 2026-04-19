@@ -203,7 +203,8 @@ async function handleLLMAnalyze(stockCode) {
             body: JSON.stringify({
                 stock_code: stockCode,
                 stock_name: elements.stockName.value.trim() || undefined,
-                user_request: '分析是否适合中短线买入'
+                user_request: '分析是否适合中短线买入',
+                force_refresh: document.getElementById('forceRefreshIntel')?.checked || false
             })
         });
         
@@ -271,6 +272,20 @@ function handleSSEMessage(eventType, dataStr) {
                 elements.discussionStatus.textContent = '规则引擎分析完成';
                 break;
                 
+            case 'intel_injected':
+                // 情报注入事件
+                const cacheStatus = data.cache_status || 'unknown';
+                const cacheLabel = cacheStatus === 'fresh' ? '新鲜缓存' :
+                                  cacheStatus === 'stale' ? '缓存过时' :
+                                  cacheStatus === 'expired' ? '缓存已过期' : '全新搜索';
+                elements.discussionStatus.textContent = `情报已注入 (${cacheLabel}: ${data.news_count || 0}条新闻, ${data.research_count || 0}条研报)`;
+                // 在讨论区显示情报注入消息
+                const intelMsg = document.createElement('div');
+                intelMsg.className = 'discussion-msg system-msg';
+                intelMsg.innerHTML = `<span class="msg-icon">📡</span> <strong>情报注入</strong>: ${cacheLabel} | ${data.news_count || 0}条新闻, ${data.research_count || 0}条研报, ${data.sentiment_count || 0}条舆情`;
+                elements.discussionContent.appendChild(intelMsg);
+                break;
+
             case 'round_start':
                 renderRoundStart(data);
                 break;

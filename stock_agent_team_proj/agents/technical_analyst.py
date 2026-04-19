@@ -4,11 +4,10 @@
 """
 from datetime import datetime
 from typing import Dict, Any, List
-import numpy as np
 
 from agents.base_agent import WorkerAgent, AgentContext
-from models.base import AgentType
 from config import TECHNICAL_PARAMS
+from models.base import AgentType
 from utils.data_fetcher import data_fetcher
 
 
@@ -41,12 +40,12 @@ class TechnicalAnalyst(WorkerAgent):
         # 4. 交易计划
         trade_plan = self._create_trade_plan(price_data, trend_analysis, position_analysis)
         
-        # 5. 综合评分
-        overall_score = self.calculate_score({
-            'trend_score': trend_analysis['score'],
-            'position_score': position_analysis['score'],
-            'signal_score': signal_analysis['score']
-        })
+        # 5. 综合评分 (加权平均，突出趋势和入场信号)
+        overall_score = (
+            trend_analysis['score'] * 0.4 +
+            position_analysis['score'] * 0.2 +
+            signal_analysis['score'] * 0.4
+        )
         
         # 6. 关键点和风险点
         key_points = self._extract_key_points(trend_analysis, signal_analysis)
@@ -157,19 +156,16 @@ class TechnicalAnalyst(WorkerAgent):
             macd_status = "死叉区域"
             macd_score = 4.0
         
-        # 趋势综合判断
-        if ma_score >= 6 and macd_score >= 6:
+        # 趋势综合判断 (加权计算，避免一票否决)
+        score = ma_score * 0.6 + macd_score * 0.4
+        if score >= 7.0:
             trend = "上升趋势"
-            score = 7.5
-        elif ma_score >= 5 and macd_score >= 5:
+        elif score >= 6.0:
             trend = "震荡偏强"
-            score = 6.5
-        elif ma_score <= 4 and macd_score <= 4:
+        elif score <= 4.5:
             trend = "下降趋势"
-            score = 3.0
         else:
             trend = "震荡趋势"
-            score = 5.0
         
         return {
             'trend': trend,
@@ -199,17 +195,17 @@ class TechnicalAnalyst(WorkerAgent):
         dist_support = (current_price - support[0]) / current_price * 100
         dist_resistance = (resistance[0] - current_price) / current_price * 100
         
-        # 位置评估
-        if dist_ma5 <= 2 and dist_ma10 <= 4:
+        # 位置评估 (放宽条件)
+        if abs(dist_ma5) <= 3 and abs(dist_ma10) <= 5:
             position = "均线附近"
             score = 7.0
-        elif dist_support <= 5:
+        elif dist_support <= 8:
             position = "支撑位附近"
             score = 7.5
         elif dist_resistance <= 3:
             position = "压力位附近"
             score = 5.0
-        elif dist_ma5 > 5:
+        elif dist_ma5 > 8:
             position = "高位偏离"
             score = 4.0
         else:

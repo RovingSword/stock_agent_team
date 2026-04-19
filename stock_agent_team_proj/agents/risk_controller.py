@@ -6,8 +6,8 @@ from datetime import datetime
 from typing import Dict, Any, List
 
 from agents.base_agent import WorkerAgent, AgentContext
-from models.base import AgentType
 from config import POSITION_LIMITS
+from models.base import AgentType
 from utils.data_fetcher import data_fetcher
 
 
@@ -38,12 +38,12 @@ class RiskController(WorkerAgent):
         # 4. 风控决策
         decision = self._make_risk_decision(market_risk, stock_risk, trade_risk)
         
-        # 5. 综合评分
-        overall_score = self.calculate_score({
-            'market_score': market_risk['score'],
-            'stock_score': stock_risk['score'],
-            'trade_score': trade_risk['score']
-        })
+        # 5. 综合评分 (加权平均，个股风险权重更高)
+        overall_score = (
+            market_risk['score'] * 0.3 +
+            stock_risk['score'] * 0.4 +
+            trade_risk['score'] * 0.3
+        )
         
         # 6. 风险点
         risk_points = self._extract_risk_points(market_risk, stock_risk, trade_risk)
@@ -204,19 +204,19 @@ class RiskController(WorkerAgent):
             score -= 1
             risks.append(f"近期解禁{unlock}")
         
-        # 质押风险
-        if pledge > 0.5:
-            score -= 3
+        # 质押风险 (放宽质押扣分门槛)
+        if pledge > 0.6:
+            score -= 2
             risks.append(f"高比例质押{pledge*100:.0f}%")
-        elif pledge > 0.3:
+        elif pledge > 0.4:
             score -= 1
             risks.append(f"质押比例{pledge*100:.0f}%")
         
-        # 流动性
-        if volume < 100000000:
+        # 流动性 (放宽流动性扣分门槛)
+        if volume < 50000000:
             score -= 2
             risks.append("流动性不足")
-        elif volume < 500000000:
+        elif volume < 200000000:
             score -= 1
             risks.append("流动性一般")
         

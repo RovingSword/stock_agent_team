@@ -4,18 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a52f1baa-f3d7-4bab-a2d5-a0b3ecf59e11" name="Changes" comment="feat:增加k线">
+    <list default="true" id="a52f1baa-f3d7-4bab-a2d5-a0b3ecf59e11" name="Changes" comment="feat:prompt优化">
       <change afterPath="$PROJECT_DIR$/../.omc/state/hud-stdin-cache.json" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/../.omc/state/sessions/247a8eab-6c5b-420b-a0ec-add00d835cea/hud-state.json" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/analyze_002202.log" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/analyze_002202.py" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/data/logs/agent_team_20260415.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/agents/llm/llm_fundamental.py" beforeDir="false" afterPath="$PROJECT_DIR$/agents/llm/llm_fundamental.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/agents/llm/llm_intelligence.py" beforeDir="false" afterPath="$PROJECT_DIR$/agents/llm/llm_intelligence.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/agents/llm/llm_leader.py" beforeDir="false" afterPath="$PROJECT_DIR$/agents/llm/llm_leader.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/agents/llm/llm_risk.py" beforeDir="false" afterPath="$PROJECT_DIR$/agents/llm/llm_risk.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/agents/llm/llm_technical.py" beforeDir="false" afterPath="$PROJECT_DIR$/agents/llm/llm_technical.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -120,7 +114,15 @@
       <option name="project" value="LOCAL" />
       <updated>1776351764021</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="feat:prompt优化">
+      <option name="closed" value="true" />
+      <created>1776416335301</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1776416335301</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -139,6 +141,7 @@
     <MESSAGE value="Version 2" />
     <MESSAGE value="fix" />
     <MESSAGE value="feat:增加k线" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat:增加k线" />
+    <MESSAGE value="feat:prompt优化" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat:prompt优化" />
   </component>
 </project>

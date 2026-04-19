@@ -1,0 +1,430 @@
+2026-04-18 15:48:34,173 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-18 15:48:34,212 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-18 15:48:34,815 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-18 15:48:34,815 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-18 15:48:42,008 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-18 15:48:42,068 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-18 15:48:42,355 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-18 15:48:42,355 - StockAgentTeam - INFO - 开始分析: 蓝色光标(300058)
+2026-04-18 15:48:42,355 - agent.leader - INFO - 开始分析 蓝色光标(300058)
+2026-04-18 15:48:42,356 - agent.technical - INFO - 开始分析 蓝色光标(300058)
+2026-04-18 15:48:42,356 - agent.intelligence - INFO - 开始分析 蓝色光标(300058)
+2026-04-18 15:48:42,358 - agent.fundamental - INFO - 开始分析 蓝色光标(300058)
+2026-04-18 15:48:42,357 - agent.risk - INFO - 开始分析 蓝色光标(300058)
+2026-04-18 15:48:42,511 - data_fetcher - INFO - ✅ 新浪财经K线获取成功 (300058), 共 60 条
+2026-04-18 15:48:42,703 - data_fetcher - INFO - ✅ 新浪大盘指数获取成功: 上证4051.4254, 深证14885.416, 创业板3678.293
+2026-04-18 15:48:43,033 - agent.risk - INFO - 分析完成，评分: 8.9
+2026-04-18 15:48:43,033 - agent.leader - INFO - 风控官 分析完成，评分: 8.9
+2026-04-18 15:48:43,714 - agent.technical - INFO - 分析完成，评分: 5.7
+2026-04-18 15:48:43,714 - agent.leader - INFO - 技术分析员 分析完成，评分: 5.7
+2026-04-18 15:48:43,983 - agent.fundamental - INFO - 分析完成，评分: 7.1
+2026-04-18 15:48:43,984 - agent.leader - INFO - 基本面分析师 分析完成，评分: 7.1
+2026-04-18 15:48:44,758 - agent.intelligence - INFO - 分析完成，评分: 6.3
+2026-04-18 15:48:44,758 - agent.leader - INFO - 情报员 分析完成，评分: 6.3
+2026-04-18 15:48:45,479 - agent.leader - INFO - 分析完成 - 决策: watch, 评分: 6.73
+2026-04-18 15:51:03,338 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-18 15:51:03,395 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-18 15:51:03,716 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-18 15:51:03,716 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-18 15:52:52,887 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-18 15:52:52,936 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-18 15:52:53,215 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-18 15:52:53,215 - StockAgentTeam - INFO - 开始分析: 蓝色光标(300058)
+2026-04-18 15:52:53,220 - web_intelligence - WARNING - [industry] 过滤过期数据: 上海广告业营收突破4000亿，发布41项政策举措... (年龄: 32天)
+2026-04-18 15:52:53,220 - StockAgentTeam - INFO - 已注入网络情报: 5 类
+2026-04-18 15:52:53,221 - agent.leader - INFO - 开始分析 蓝色光标(300058)
+2026-04-18 15:52:53,222 - agent.technical - INFO - 开始分析 蓝色光标(300058)
+2026-04-18 15:52:53,223 - agent.intelligence - INFO - 开始分析 蓝色光标(300058)
+2026-04-18 15:52:53,237 - agent.fundamental - INFO - 开始分析 蓝色光标(300058)
+2026-04-18 15:52:53,236 - agent.risk - INFO - 开始分析 蓝色光标(300058)
+2026-04-18 15:52:53,370 - data_fetcher - INFO - ✅ 新浪财经K线获取成功 (300058), 共 60 条
+2026-04-18 15:52:53,590 - data_fetcher - INFO - ✅ 新浪大盘指数获取成功: 上证4051.4254, 深证14885.416, 创业板3678.293
+2026-04-18 15:52:53,870 - agent.risk - INFO - 分析完成，评分: 8.9
+2026-04-18 15:52:53,871 - agent.leader - INFO - 风控官 分析完成，评分: 8.9
+2026-04-18 15:52:54,632 - agent.intelligence - INFO - 已合并网络情报: 整体情绪=neutral
+2026-04-18 15:52:54,652 - agent.fundamental - INFO - 分析完成，评分: 7.1
+2026-04-18 15:52:54,652 - agent.leader - INFO - 基本面分析师 分析完成，评分: 7.1
+2026-04-18 15:52:55,028 - agent.technical - INFO - 分析完成，评分: 5.7
+2026-04-18 15:52:55,030 - agent.leader - INFO - 技术分析员 分析完成，评分: 5.7
+2026-04-18 15:52:55,298 - agent.intelligence - INFO - 分析完成，评分: 6.0
+2026-04-18 15:52:55,298 - agent.leader - INFO - 情报员 分析完成，评分: 6.0
+2026-04-18 15:52:56,044 - agent.leader - INFO - 分析完成 - 决策: watch, 评分: 6.64
+2026-04-18 16:05:01,820 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-18 16:05:01,881 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-18 16:05:02,761 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-18 16:05:02,771 - web_intelligence - WARNING - [research] 低可信度来源(0.10): ⚠️ 低可信度来源(self_media) - 情绪化词汇: 十倍, 重磅, 极端预期: 十倍 - 年报重磅出炉！蓝色光标目标价198元，十倍成长空间已开启...
+2026-04-18 16:05:02,774 - web_intelligence - WARNING - [industry] 过滤过期数据: 上海广告业营收突破4000亿居全国之首... (年龄: 32天)
+2026-04-18 16:05:02,781 - StockAgentTeam - INFO - 开始分析: 蓝色光标(300058)
+2026-04-18 16:05:50,011 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-18 16:05:50,066 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-18 16:05:50,391 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-18 16:05:50,405 - web_intelligence - WARNING - [research] 低可信度来源(0.10): ⚠️ 低可信度来源(self_media) - 情绪化词汇: 十倍, 重磅, 极端预期: 十倍 - 年报重磅出炉！蓝色光标目标价198元，十倍成长空间已开启...
+2026-04-18 16:05:50,408 - web_intelligence - WARNING - [industry] 过滤过期数据: 上海广告业营收突破4000亿居全国之首... (年龄: 32天)
+2026-04-18 16:05:50,412 - StockAgentTeam - INFO - 开始分析: 蓝色光标(300058)
+2026-04-18 16:06:58,971 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-18 16:06:59,024 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-18 16:06:59,344 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-18 16:06:59,350 - web_intelligence - WARNING - [research] 低可信度来源(0.10): ⚠️ 低可信度来源(self_media) - 情绪化词汇: 十倍, 重磅, 极端预期: 十倍 - 年报重磅出炉！蓝色光标目标价198元，十倍成长空间已开启...
+2026-04-18 16:06:59,357 - web_intelligence - WARNING - [industry] 过滤过期数据: 上海广告业营收突破4000亿居全国之首... (年龄: 32天)
+2026-04-18 16:06:59,359 - StockAgentTeam - INFO - 开始分析: 蓝色光标(300058)
+2026-04-18 16:06:59,359 - StockAgentTeam - INFO - 已注入网络情报报告: 300058
+2026-04-18 16:06:59,360 - agent.leader - INFO - 开始分析 蓝色光标(300058)
+2026-04-18 16:06:59,362 - agent.technical - INFO - 开始分析 蓝色光标(300058)
+2026-04-18 16:06:59,369 - agent.intelligence - INFO - 开始分析 蓝色光标(300058)
+2026-04-18 16:06:59,385 - agent.fundamental - INFO - 开始分析 蓝色光标(300058)
+2026-04-18 16:06:59,384 - agent.risk - INFO - 开始分析 蓝色光标(300058)
+2026-04-18 16:06:59,647 - data_fetcher - INFO - ✅ 新浪大盘指数获取成功: 上证4051.4254, 深证14885.416, 创业板3678.293
+2026-04-18 16:06:59,925 - agent.risk - INFO - 分析完成，评分: 8.9
+2026-04-18 16:06:59,925 - agent.leader - INFO - 风控官 分析完成，评分: 8.9
+2026-04-18 16:07:00,801 - agent.intelligence - INFO - 已合并网络情报: 整体情绪=neutral
+2026-04-18 16:07:00,806 - agent.fundamental - INFO - 分析完成，评分: 7.1
+2026-04-18 16:07:00,808 - agent.leader - INFO - 基本面分析师 分析完成，评分: 7.1
+2026-04-18 16:07:01,240 - agent.intelligence - INFO - 分析完成，评分: 6.3
+2026-04-18 16:07:01,243 - agent.leader - INFO - 情报员 分析完成，评分: 6.3
+2026-04-18 16:07:01,578 - data_fetcher - WARNING - 无法获取 300058 的真实K线数据，使用模拟数据
+2026-04-18 16:07:01,579 - data_fetcher - INFO - ⚠️ 使用模拟数据生成技术指标（300058），数据仅供参考，不具实际参考价值
+2026-04-18 16:07:01,847 - agent.technical - INFO - 分析完成，评分: 5.9
+2026-04-18 16:07:01,848 - agent.leader - INFO - 技术分析员 分析完成，评分: 5.9
+2026-04-18 16:07:02,556 - agent.leader - INFO - 分析完成 - 决策: watch, 评分: 6.79
+2026-04-18 16:14:05,132 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-18 16:14:05,198 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-18 16:14:05,495 - web_intelligence - WARNING - [news] 低可信度来源(0.10): ⚠️ 低可信度来源(self_media) - 情绪化词汇: 暴涨, 十倍, 必涨, 极端预期: 十倍, 十倍, 绝对化预测 - 蓝色光标目标价198元，十倍成长空间！...
+2026-04-18 16:15:38,208 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-18 16:15:38,255 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-18 16:15:38,555 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-18 16:15:38,558 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-18 16:16:44,969 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-18 16:16:45,047 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-18 16:16:45,359 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-18 16:16:45,368 - web_intelligence - WARNING - [news] 过滤过期数据: 五洲新春丝杠产品进入特斯拉、华为供应链... (年龄: 90天)
+2026-04-18 16:16:45,368 - web_intelligence - WARNING - [news] 过滤过期数据: 五洲新春控股股东一致行动人减持1000万股... (年龄: 110天)
+2026-04-18 16:16:45,369 - web_intelligence - WARNING - [news] 过滤过期数据: 力星股份与五洲新春签署战略合作协议... (年龄: 18天)
+2026-04-18 16:16:45,370 - web_intelligence - WARNING - [research] 过滤过期数据: 国泰海通给予买入评级，目标价84.61元... (年龄: 52天)
+2026-04-18 16:16:45,371 - web_intelligence - WARNING - [research] 过滤过期数据: 东北证券买入评级，目标价53.39元... (年龄: 167天)
+2026-04-18 16:16:45,373 - web_intelligence - WARNING - [industry] 过滤过期数据: 工信部印发电子信息制造业稳增长行动方案... (年龄: 223天)
+2026-04-18 16:16:45,376 - StockAgentTeam - INFO - 开始分析: 五洲新春(603667)
+2026-04-18 16:16:45,376 - StockAgentTeam - INFO - 已注入网络情报报告: 603667
+2026-04-18 16:16:45,377 - agent.leader - INFO - 开始分析 五洲新春(603667)
+2026-04-18 16:16:45,379 - agent.technical - INFO - 开始分析 五洲新春(603667)
+2026-04-18 16:16:45,390 - agent.intelligence - INFO - 开始分析 五洲新春(603667)
+2026-04-18 16:16:45,399 - agent.risk - INFO - 开始分析 五洲新春(603667)
+2026-04-18 16:16:45,401 - agent.fundamental - INFO - 开始分析 五洲新春(603667)
+2026-04-18 16:16:45,746 - data_fetcher - INFO - ✅ 新浪大盘指数获取成功: 上证4051.4254, 深证14885.416, 创业板3678.293
+2026-04-18 16:16:46,135 - agent.risk - INFO - 分析完成，评分: 8.9
+2026-04-18 16:16:46,136 - agent.leader - INFO - 风控官 分析完成，评分: 8.9
+2026-04-18 16:16:46,512 - data_fetcher - WARNING - 无法获取 603667 的真实K线数据，使用模拟数据
+2026-04-18 16:16:46,515 - data_fetcher - INFO - ⚠️ 使用模拟数据生成技术指标（603667），数据仅供参考，不具实际参考价值
+2026-04-18 16:16:46,939 - agent.fundamental - INFO - 分析完成，评分: 6.7
+2026-04-18 16:16:46,939 - agent.leader - INFO - 基本面分析师 分析完成，评分: 6.7
+2026-04-18 16:16:47,126 - agent.intelligence - INFO - 已合并网络情报: 整体情绪=positive
+2026-04-18 16:16:47,145 - agent.technical - INFO - 分析完成，评分: 6.3
+2026-04-18 16:16:47,146 - agent.leader - INFO - 技术分析员 分析完成，评分: 6.3
+2026-04-18 16:16:47,434 - agent.intelligence - INFO - 分析完成，评分: 6.4
+2026-04-18 16:16:47,436 - agent.leader - INFO - 情报员 分析完成，评分: 6.4
+2026-04-18 16:16:48,156 - agent.leader - INFO - 分析完成 - 决策: watch, 评分: 6.90
+2026-04-18 16:22:39,250 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-18 16:22:39,328 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-18 16:22:39,767 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-18 16:22:39,767 - StockAgentTeam - INFO - 开始分析: 深南电路(002916)
+2026-04-18 16:22:39,767 - agent.leader - INFO - 开始分析 深南电路(002916)
+2026-04-18 16:22:39,767 - agent.technical - INFO - 开始分析 深南电路(002916)
+2026-04-18 16:22:39,768 - agent.intelligence - INFO - 开始分析 深南电路(002916)
+2026-04-18 16:22:39,768 - agent.risk - INFO - 开始分析 深南电路(002916)
+2026-04-18 16:22:39,772 - agent.fundamental - INFO - 开始分析 深南电路(002916)
+2026-04-18 16:22:40,153 - data_fetcher - INFO - ✅ 新浪大盘指数获取成功: 上证4051.4254, 深证14885.416, 创业板3678.293
+2026-04-18 16:22:40,504 - agent.risk - INFO - 分析完成，评分: 8.9
+2026-04-18 16:22:40,504 - agent.leader - INFO - 风控官 分析完成，评分: 8.9
+2026-04-18 16:22:41,087 - data_fetcher - WARNING - 无法获取 002916 的真实K线数据，使用模拟数据
+2026-04-18 16:22:41,100 - data_fetcher - INFO - ⚠️ 使用模拟数据生成技术指标（002916），数据仅供参考，不具实际参考价值
+2026-04-18 16:22:41,576 - agent.fundamental - INFO - 分析完成，评分: 7.4
+2026-04-18 16:22:41,577 - agent.leader - INFO - 基本面分析师 分析完成，评分: 7.4
+2026-04-18 16:22:41,887 - agent.intelligence - INFO - 分析完成，评分: 6.3
+2026-04-18 16:22:41,888 - agent.leader - INFO - 情报员 分析完成，评分: 6.3
+2026-04-18 16:22:42,272 - agent.technical - INFO - 分析完成，评分: 6.3
+2026-04-18 16:22:42,273 - agent.leader - INFO - 技术分析员 分析完成，评分: 6.3
+2026-04-18 16:22:42,780 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-18 16:22:42,877 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-18 16:22:42,986 - agent.leader - INFO - 分析完成 - 决策: watch, 评分: 6.99
+2026-04-18 16:22:42,986 - StockAgentTeam - INFO - 开始复盘: weekly
+2026-04-18 16:22:43,278 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-18 16:22:43,279 - StockAgentTeam - INFO - 开始分析: 中际旭创(300308)
+2026-04-18 16:22:43,301 - StockAgentTeam - INFO - 已注入网络情报: 5 类
+2026-04-18 16:22:43,303 - agent.leader - INFO - 开始分析 中际旭创(300308)
+2026-04-18 16:22:43,315 - agent.technical - INFO - 开始分析 中际旭创(300308)
+2026-04-18 16:22:43,330 - agent.intelligence - INFO - 开始分析 中际旭创(300308)
+2026-04-18 16:22:43,338 - agent.risk - INFO - 开始分析 中际旭创(300308)
+2026-04-18 16:22:43,346 - agent.fundamental - INFO - 开始分析 中际旭创(300308)
+2026-04-18 16:22:43,672 - data_fetcher - INFO - ✅ 新浪大盘指数获取成功: 上证4051.4254, 深证14885.416, 创业板3678.293
+2026-04-18 16:22:43,754 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-18 16:22:43,815 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-18 16:22:43,967 - agent.risk - INFO - 分析完成，评分: 8.9
+2026-04-18 16:22:43,967 - agent.leader - INFO - 风控官 分析完成，评分: 8.9
+2026-04-18 16:22:44,093 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-18 16:22:44,093 - StockAgentTeam - INFO - 开始分析: 圣邦股份(300661)
+2026-04-18 16:22:44,639 - data_fetcher - WARNING - 无法获取 300308 的真实K线数据，使用模拟数据
+2026-04-18 16:22:44,639 - data_fetcher - INFO - ⚠️ 使用模拟数据生成技术指标（300308），数据仅供参考，不具实际参考价值
+2026-04-18 16:22:45,074 - agent.technical - INFO - 分析完成，评分: 5.9
+2026-04-18 16:22:45,075 - agent.leader - INFO - 技术分析员 分析完成，评分: 5.9
+2026-04-18 16:22:45,385 - agent.fundamental - INFO - 分析完成，评分: 7.6
+2026-04-18 16:22:45,386 - agent.leader - INFO - 基本面分析师 分析完成，评分: 7.6
+2026-04-18 16:22:45,783 - agent.intelligence - INFO - 已合并网络情报: 整体情绪=neutral
+2026-04-18 16:22:46,056 - agent.intelligence - INFO - 分析完成，评分: 6.3
+2026-04-18 16:22:46,057 - agent.leader - INFO - 情报员 分析完成，评分: 6.3
+2026-04-18 16:22:46,781 - agent.leader - INFO - 分析完成 - 决策: watch, 评分: 6.86
+2026-04-18 16:22:46,782 - StockAgentTeam - INFO - 开始复盘: weekly
+2026-04-18 16:22:54,932 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-18 16:22:55,007 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-18 16:22:55,029 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-18 16:22:55,086 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-18 16:22:55,417 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-18 16:22:55,418 - StockAgentTeam - INFO - 开始分析: 云南锗业(002428)
+2026-04-18 16:22:55,424 - web_intelligence - WARNING - [news] 过滤过期数据: 云南锗业龙虎榜数据4月17日... (年龄: 732天)
+2026-04-18 16:22:55,424 - web_intelligence - WARNING - [news] 过滤过期数据: 云南锗业连续涨停... (年龄: 732天)
+2026-04-18 16:22:55,429 - web_intelligence - WARNING - [fundamentals] 低可信度来源(0.10): ⚠️ 低可信度来源(unknown) - 情绪化词汇: 暴涨 - 锗价暴涨创十年新高...
+2026-04-18 16:22:55,430 - StockAgentTeam - INFO - 已注入网络情报: 3 类
+2026-04-18 16:22:55,430 - agent.leader - INFO - 开始分析 云南锗业(002428)
+2026-04-18 16:22:55,431 - agent.technical - INFO - 开始分析 云南锗业(002428)
+2026-04-18 16:22:55,432 - agent.intelligence - INFO - 开始分析 云南锗业(002428)
+2026-04-18 16:22:55,441 - agent.risk - INFO - 开始分析 云南锗业(002428)
+2026-04-18 16:22:55,446 - agent.fundamental - INFO - 开始分析 云南锗业(002428)
+2026-04-18 16:22:55,458 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-18 16:22:55,459 - StockAgentTeam - INFO - 开始分析: 特发信息(000070)
+2026-04-18 16:22:55,462 - web_intelligence - WARNING - [dragon_tiger] 过滤过期数据: 特发信息龙虎榜-4月16日... (年龄: 368天)
+2026-04-18 16:22:55,462 - web_intelligence - WARNING - [dragon_tiger] 过滤过期数据: 特发信息龙虎榜-4月13日... (年龄: 371天)
+2026-04-18 16:22:55,462 - web_intelligence - WARNING - [trading] 过滤过期数据: 特发信息4月16日交易表现... (年龄: 368天)
+2026-04-18 16:22:55,481 - web_intelligence - WARNING - [risk] 过滤过期数据: 特发信息风险提示... (年龄: 368天)
+2026-04-18 16:22:55,489 - StockAgentTeam - INFO - 已注入网络情报: 6 类
+2026-04-18 16:22:55,493 - agent.leader - INFO - 开始分析 特发信息(000070)
+2026-04-18 16:22:55,521 - agent.technical - INFO - 开始分析 特发信息(000070)
+2026-04-18 16:22:55,535 - agent.intelligence - INFO - 开始分析 特发信息(000070)
+2026-04-18 16:22:55,549 - agent.risk - INFO - 开始分析 特发信息(000070)
+2026-04-18 16:22:55,559 - agent.fundamental - INFO - 开始分析 特发信息(000070)
+2026-04-18 16:22:55,886 - data_fetcher - INFO - ✅ 新浪大盘指数获取成功: 上证4051.4254, 深证14885.416, 创业板3678.293
+2026-04-18 16:22:55,982 - data_fetcher - INFO - ✅ 新浪大盘指数获取成功: 上证4051.4254, 深证14885.416, 创业板3678.293
+2026-04-18 16:22:56,311 - agent.risk - INFO - 分析完成，评分: 8.9
+2026-04-18 16:22:56,311 - agent.leader - INFO - 风控官 分析完成，评分: 8.9
+2026-04-18 16:22:56,397 - agent.risk - ERROR - 分析失败: UNIQUE constraint failed: analysis_reports.report_id
+2026-04-18 16:22:56,398 - agent.leader - ERROR - 风控官 分析失败: UNIQUE constraint failed: analysis_reports.report_id
+2026-04-18 16:22:57,177 - data_fetcher - WARNING - 无法获取 000070 的真实K线数据，使用模拟数据
+2026-04-18 16:22:57,179 - data_fetcher - INFO - ⚠️ 使用模拟数据生成技术指标（000070），数据仅供参考，不具实际参考价值
+2026-04-18 16:22:57,223 - data_fetcher - WARNING - 无法获取 002428 的真实K线数据，使用模拟数据
+2026-04-18 16:22:57,224 - data_fetcher - INFO - ⚠️ 使用模拟数据生成技术指标（002428），数据仅供参考，不具实际参考价值
+2026-04-18 16:22:57,271 - agent.intelligence - INFO - 已合并网络情报: 整体情绪=neutral
+2026-04-18 16:22:57,370 - agent.intelligence - INFO - 已合并网络情报: 整体情绪=neutral
+2026-04-18 16:22:58,427 - agent.technical - INFO - 分析完成，评分: 5.9
+2026-04-18 16:22:58,427 - agent.leader - INFO - 技术分析员 分析完成，评分: 5.9
+2026-04-18 16:22:58,802 - agent.fundamental - INFO - 分析完成，评分: 6.2
+2026-04-18 16:22:58,803 - agent.leader - INFO - 基本面分析师 分析完成，评分: 6.2
+2026-04-18 16:22:58,844 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-18 16:22:58,884 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-18 16:22:58,926 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-18 16:22:58,977 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-18 16:22:59,117 - agent.intelligence - INFO - 分析完成，评分: 6.3
+2026-04-18 16:22:59,117 - agent.leader - INFO - 情报员 分析完成，评分: 6.3
+2026-04-18 16:22:59,179 - agent.intelligence - ERROR - 分析失败: UNIQUE constraint failed: analysis_reports.report_id
+2026-04-18 16:22:59,180 - agent.leader - ERROR - 情报员 分析失败: UNIQUE constraint failed: analysis_reports.report_id
+2026-04-18 16:22:59,263 - agent.fundamental - ERROR - 分析失败: UNIQUE constraint failed: analysis_reports.report_id
+2026-04-18 16:22:59,265 - agent.leader - ERROR - 基本面分析师 分析失败: UNIQUE constraint failed: analysis_reports.report_id
+2026-04-18 16:22:59,300 - agent.technical - ERROR - 分析失败: UNIQUE constraint failed: analysis_reports.report_id
+2026-04-18 16:22:59,300 - agent.leader - ERROR - 技术分析员 分析失败: UNIQUE constraint failed: analysis_reports.report_id
+2026-04-18 16:22:59,617 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-18 16:22:59,618 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-18 16:22:59,618 - StockAgentTeam - INFO - 开始分析: 圣邦股份(300661)
+2026-04-18 16:22:59,619 - StockAgentTeam - INFO - 开始分析: 深南电路(002916)
+2026-04-18 16:22:59,620 - agent.leader - INFO - 开始分析 深南电路(002916)
+2026-04-18 16:22:59,630 - agent.technical - INFO - 开始分析 深南电路(002916)
+2026-04-18 16:22:59,641 - StockAgentTeam - INFO - 已注入网络情报: 3 类
+2026-04-18 16:22:59,642 - agent.leader - INFO - 开始分析 圣邦股份(300661)
+2026-04-18 16:22:59,645 - agent.technical - INFO - 开始分析 圣邦股份(300661)
+2026-04-18 16:22:59,645 - agent.intelligence - INFO - 开始分析 深南电路(002916)
+2026-04-18 16:22:59,658 - agent.fundamental - INFO - 开始分析 深南电路(002916)
+2026-04-18 16:22:59,650 - agent.risk - INFO - 开始分析 深南电路(002916)
+2026-04-18 16:22:59,664 - agent.intelligence - INFO - 开始分析 圣邦股份(300661)
+2026-04-18 16:22:59,669 - agent.risk - INFO - 开始分析 圣邦股份(300661)
+2026-04-18 16:22:59,675 - agent.fundamental - INFO - 开始分析 圣邦股份(300661)
+2026-04-18 16:23:00,054 - data_fetcher - INFO - ✅ 新浪大盘指数获取成功: 上证4051.4254, 深证14885.416, 创业板3678.293
+2026-04-18 16:23:00,094 - data_fetcher - INFO - ✅ 新浪大盘指数获取成功: 上证4051.4254, 深证14885.416, 创业板3678.293
+2026-04-18 16:23:00,592 - agent.risk - INFO - 分析完成，评分: 8.9
+2026-04-18 16:23:00,593 - agent.leader - INFO - 风控官 分析完成，评分: 8.9
+2026-04-18 16:23:00,820 - data_fetcher - WARNING - 无法获取 002916 的真实K线数据，使用模拟数据
+2026-04-18 16:23:00,823 - data_fetcher - INFO - ⚠️ 使用模拟数据生成技术指标（002916），数据仅供参考，不具实际参考价值
+2026-04-18 16:23:00,919 - agent.leader - INFO - 分析完成 - 决策: avoid, 评分: 3.95
+2026-04-18 16:23:00,920 - StockAgentTeam - INFO - 开始复盘: weekly
+2026-04-18 16:23:01,015 - agent.technical - ERROR - 分析失败: database disk image is malformed
+2026-04-18 16:23:01,017 - agent.leader - ERROR - 技术分析员 分析失败: database disk image is malformed
+2026-04-18 16:23:01,060 - data_fetcher - WARNING - 无法获取 300661 的真实K线数据，使用模拟数据
+2026-04-18 16:23:01,061 - data_fetcher - INFO - ⚠️ 使用模拟数据生成技术指标（300661），数据仅供参考，不具实际参考价值
+2026-04-18 16:23:01,063 - agent.risk - ERROR - 分析失败: database disk image is malformed
+2026-04-18 16:23:01,066 - agent.leader - ERROR - 风控官 分析失败: database disk image is malformed
+2026-04-18 16:23:01,126 - agent.fundamental - ERROR - 分析失败: database disk image is malformed
+2026-04-18 16:23:01,126 - agent.leader - ERROR - 基本面分析师 分析失败: database disk image is malformed
+2026-04-18 16:23:01,191 - agent.technical - ERROR - 分析失败: database disk image is malformed
+2026-04-18 16:23:01,195 - agent.leader - ERROR - 技术分析员 分析失败: database disk image is malformed
+2026-04-18 16:23:01,229 - agent.fundamental - ERROR - 分析失败: database disk image is malformed
+2026-04-18 16:23:01,230 - agent.leader - ERROR - 基本面分析师 分析失败: database disk image is malformed
+2026-04-18 16:23:01,457 - agent.intelligence - INFO - 已合并网络情报: 整体情绪=neutral
+2026-04-18 16:23:01,537 - agent.intelligence - ERROR - 分析失败: database disk image is malformed
+2026-04-18 16:23:01,538 - agent.leader - ERROR - 情报员 分析失败: database disk image is malformed
+2026-04-18 16:23:01,691 - agent.intelligence - ERROR - 分析失败: database disk image is malformed
+2026-04-18 16:23:01,691 - agent.leader - ERROR - 情报员 分析失败: database disk image is malformed
+2026-04-18 16:23:21,630 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-18 16:23:21,696 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-18 16:23:22,076 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-18 16:23:22,076 - StockAgentTeam - INFO - 开始分析: 云南锗业(002428)
+2026-04-18 16:23:22,079 - web_intelligence - WARNING - [news] 过滤过期数据: 云南锗业龙虎榜数据4月17日... (年龄: 732天)
+2026-04-18 16:23:22,081 - web_intelligence - WARNING - [news] 过滤过期数据: 云南锗业连续涨停... (年龄: 732天)
+2026-04-18 16:23:22,087 - web_intelligence - WARNING - [fundamentals] 低可信度来源(0.10): ⚠️ 低可信度来源(unknown) - 情绪化词汇: 暴涨 - 锗价暴涨创十年新高...
+2026-04-18 16:23:22,088 - StockAgentTeam - INFO - 已注入网络情报: 3 类
+2026-04-18 16:23:22,088 - agent.leader - INFO - 开始分析 云南锗业(002428)
+2026-04-18 16:23:22,088 - agent.technical - INFO - 开始分析 云南锗业(002428)
+2026-04-18 16:23:22,089 - agent.intelligence - INFO - 开始分析 云南锗业(002428)
+2026-04-18 16:23:22,090 - agent.risk - INFO - 开始分析 云南锗业(002428)
+2026-04-18 16:23:22,092 - agent.fundamental - INFO - 开始分析 云南锗业(002428)
+2026-04-18 16:23:22,383 - data_fetcher - INFO - ✅ 新浪大盘指数获取成功: 上证4051.4254, 深证14885.416, 创业板3678.293
+2026-04-18 16:23:22,633 - agent.risk - INFO - 分析完成，评分: 8.9
+2026-04-18 16:23:22,633 - agent.leader - INFO - 风控官 分析完成，评分: 8.9
+2026-04-18 16:23:23,403 - data_fetcher - WARNING - 无法获取 002428 的真实K线数据，使用模拟数据
+2026-04-18 16:23:23,403 - data_fetcher - INFO - ⚠️ 使用模拟数据生成技术指标（002428），数据仅供参考，不具实际参考价值
+2026-04-18 16:23:23,460 - agent.fundamental - INFO - 分析完成，评分: 6.2
+2026-04-18 16:23:23,460 - agent.leader - INFO - 基本面分析师 分析完成，评分: 6.2
+2026-04-18 16:23:23,546 - agent.intelligence - INFO - 已合并网络情报: 整体情绪=neutral
+2026-04-18 16:23:23,727 - agent.technical - INFO - 分析完成，评分: 5.9
+2026-04-18 16:23:23,729 - agent.leader - INFO - 技术分析员 分析完成，评分: 5.9
+2026-04-18 16:23:23,958 - agent.intelligence - INFO - 分析完成，评分: 6.3
+2026-04-18 16:23:23,958 - agent.leader - INFO - 情报员 分析完成，评分: 6.3
+2026-04-18 16:23:24,942 - agent.leader - INFO - 分析完成 - 决策: watch, 评分: 6.66
+2026-04-18 16:23:24,942 - StockAgentTeam - INFO - 开始复盘: weekly
+2026-04-18 16:23:25,971 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-18 16:23:26,029 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-18 16:23:26,336 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-18 16:23:26,336 - StockAgentTeam - INFO - 开始分析: 深南电路(002916)
+2026-04-18 16:23:26,336 - agent.leader - INFO - 开始分析 深南电路(002916)
+2026-04-18 16:23:26,337 - agent.technical - INFO - 开始分析 深南电路(002916)
+2026-04-18 16:23:26,337 - agent.intelligence - INFO - 开始分析 深南电路(002916)
+2026-04-18 16:23:26,338 - agent.risk - INFO - 开始分析 深南电路(002916)
+2026-04-18 16:23:26,338 - agent.fundamental - INFO - 开始分析 深南电路(002916)
+2026-04-18 16:23:26,851 - data_fetcher - INFO - ✅ 新浪大盘指数获取成功: 上证4051.4254, 深证14885.416, 创业板3678.293
+2026-04-18 16:23:27,119 - agent.risk - INFO - 分析完成，评分: 8.9
+2026-04-18 16:23:27,119 - agent.leader - INFO - 风控官 分析完成，评分: 8.9
+2026-04-18 16:23:27,453 - data_fetcher - WARNING - 无法获取 002916 的真实K线数据，使用模拟数据
+2026-04-18 16:23:27,454 - data_fetcher - INFO - ⚠️ 使用模拟数据生成技术指标（002916），数据仅供参考，不具实际参考价值
+2026-04-18 16:23:27,906 - agent.technical - INFO - 分析完成，评分: 6.3
+2026-04-18 16:23:27,909 - agent.leader - INFO - 技术分析员 分析完成，评分: 6.3
+2026-04-18 16:23:28,180 - agent.fundamental - INFO - 分析完成，评分: 7.4
+2026-04-18 16:23:28,181 - agent.leader - INFO - 基本面分析师 分析完成，评分: 7.4
+2026-04-18 16:23:28,367 - agent.intelligence - INFO - 分析完成，评分: 6.7
+2026-04-18 16:23:28,367 - agent.leader - INFO - 情报员 分析完成，评分: 6.7
+2026-04-18 16:23:29,691 - agent.leader - INFO - 分析完成 - 决策: buy, 评分: 7.11
+2026-04-18 16:23:29,691 - StockAgentTeam - INFO - 开始复盘: weekly
+2026-04-18 16:23:47,166 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-18 16:23:47,227 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-18 16:23:47,591 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-18 16:23:47,591 - StockAgentTeam - INFO - 开始分析: 圣邦股份(300661)
+2026-04-18 16:23:47,600 - StockAgentTeam - INFO - 已注入网络情报: 3 类
+2026-04-18 16:23:47,600 - agent.leader - INFO - 开始分析 圣邦股份(300661)
+2026-04-18 16:23:47,600 - agent.technical - INFO - 开始分析 圣邦股份(300661)
+2026-04-18 16:23:47,601 - agent.intelligence - INFO - 开始分析 圣邦股份(300661)
+2026-04-18 16:23:47,608 - agent.risk - INFO - 开始分析 圣邦股份(300661)
+2026-04-18 16:23:47,614 - agent.fundamental - INFO - 开始分析 圣邦股份(300661)
+2026-04-18 16:23:47,904 - data_fetcher - INFO - ✅ 新浪大盘指数获取成功: 上证4051.4254, 深证14885.416, 创业板3678.293
+2026-04-18 16:23:48,188 - agent.risk - INFO - 分析完成，评分: 8.9
+2026-04-18 16:23:48,190 - agent.leader - INFO - 风控官 分析完成，评分: 8.9
+2026-04-18 16:23:48,889 - data_fetcher - WARNING - 无法获取 300661 的真实K线数据，使用模拟数据
+2026-04-18 16:23:48,890 - data_fetcher - INFO - ⚠️ 使用模拟数据生成技术指标（300661），数据仅供参考，不具实际参考价值
+2026-04-18 16:23:49,043 - agent.intelligence - INFO - 已合并网络情报: 整体情绪=neutral
+2026-04-18 16:23:49,169 - agent.technical - INFO - 分析完成，评分: 7.2
+2026-04-18 16:23:49,170 - agent.leader - INFO - 技术分析员 分析完成，评分: 7.2
+2026-04-18 16:23:49,551 - agent.intelligence - INFO - 分析完成，评分: 6.3
+2026-04-18 16:23:49,552 - agent.leader - INFO - 情报员 分析完成，评分: 6.3
+2026-04-18 16:23:49,745 - agent.fundamental - INFO - 分析完成，评分: 7.0
+2026-04-18 16:23:49,746 - agent.leader - INFO - 基本面分析师 分析完成，评分: 7.0
+2026-04-18 16:23:50,962 - agent.leader - INFO - 分析完成 - 决策: buy, 评分: 7.23
+2026-04-18 16:23:50,963 - StockAgentTeam - INFO - 开始复盘: weekly
+2026-04-18 18:18:30,333 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:18:30,333 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:18:30,333 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:18:30,408 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:18:30,408 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:18:30,408 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:18:30,483 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:18:30,483 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:18:30,483 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:18:32,239 - data_fetcher - WARNING - akshare 加载失败: No module named 'akshare'
+2026-04-18 18:18:32,240 - data_fetcher - WARNING - efinance 加载失败: No module named 'efinance'
+2026-04-18 18:18:40,988 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:18:40,988 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:18:40,988 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:18:41,027 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:18:41,027 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:18:41,027 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:18:41,065 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:18:41,065 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:18:41,065 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:18:41,679 - data_fetcher - WARNING - akshare 加载失败: No module named 'akshare'
+2026-04-18 18:18:41,679 - data_fetcher - WARNING - efinance 加载失败: No module named 'efinance'
+2026-04-18 18:19:04,049 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:19:04,049 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:19:04,049 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:19:04,088 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:19:04,089 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:19:04,089 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:19:04,122 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:19:04,122 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:19:04,122 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:19:04,678 - data_fetcher - WARNING - akshare 加载失败: No module named 'akshare'
+2026-04-18 18:19:04,679 - data_fetcher - WARNING - efinance 加载失败: No module named 'efinance'
+2026-04-18 18:19:13,042 - data_fetcher - WARNING - akshare 加载失败: No module named 'akshare'
+2026-04-18 18:19:13,045 - data_fetcher - WARNING - efinance 加载失败: No module named 'efinance'
+2026-04-18 18:19:35,595 - data_fetcher - WARNING - akshare 加载失败: No module named 'akshare'
+2026-04-18 18:19:35,595 - data_fetcher - WARNING - efinance 加载失败: No module named 'efinance'
+2026-04-18 18:20:52,237 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:20:52,237 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:20:52,238 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:20:52,271 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:20:52,271 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:20:52,271 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:20:52,309 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:20:52,309 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:20:52,309 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-18 18:20:52,993 - data_fetcher - WARNING - akshare 加载失败: No module named 'akshare'
+2026-04-18 18:20:52,993 - data_fetcher - WARNING - efinance 加载失败: No module named 'efinance'
+2026-04-18 18:21:23,979 - data_fetcher - WARNING - akshare 加载失败: No module named 'akshare'
+2026-04-18 18:21:23,979 - data_fetcher - WARNING - efinance 加载失败: No module named 'efinance'
+2026-04-18 18:21:24,325 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-18 18:21:24,325 - StockAgentTeam - INFO - 开始分析: 贵州茅台(600519)
+2026-04-18 18:21:24,325 - agent.leader - INFO - 开始分析 贵州茅台(600519)
+2026-04-18 18:21:24,326 - agent.technical - INFO - 开始分析 贵州茅台(600519)
+2026-04-18 18:21:24,327 - agent.intelligence - INFO - 开始分析 贵州茅台(600519)
+2026-04-18 18:21:24,328 - agent.risk - INFO - 开始分析 贵州茅台(600519)
+2026-04-18 18:21:24,329 - agent.fundamental - INFO - 开始分析 贵州茅台(600519)
+2026-04-18 18:21:24,329 - data_fetcher - WARNING - 无法获取 600519 的真实估值数据，使用默认值
+2026-04-18 18:21:24,434 - data_fetcher - WARNING - 无法获取 600519 的真实K线数据，使用模拟数据
+2026-04-18 18:21:24,439 - data_fetcher - INFO - ⚠️ 使用模拟数据生成技术指标（600519），数据仅供参考，不具实际参考价值
+2026-04-18 18:21:24,592 - data_fetcher - INFO - ✅ 新浪大盘指数获取成功: 上证4051.4254, 深证14885.416, 创业板3678.293
+2026-04-18 18:21:25,063 - agent.intelligence - INFO - 分析完成，评分: 6.1
+2026-04-18 18:21:25,064 - agent.leader - INFO - 情报员 分析完成，评分: 6.1
+2026-04-18 18:21:25,379 - agent.fundamental - INFO - 分析完成，评分: 7.5
+2026-04-18 18:21:25,380 - agent.leader - INFO - 基本面分析师 分析完成，评分: 7.5
+2026-04-18 18:21:25,612 - agent.technical - INFO - 分析完成，评分: 5.9
+2026-04-18 18:21:25,612 - agent.leader - INFO - 技术分析员 分析完成，评分: 5.9
+2026-04-18 18:21:25,955 - agent.risk - INFO - 分析完成，评分: 8.9
+2026-04-18 18:21:25,956 - agent.leader - INFO - 风控官 分析完成，评分: 8.9
+2026-04-18 18:21:26,799 - agent.leader - INFO - 分析完成 - 决策: watch, 评分: 6.79
+2026-04-18 18:21:36,061 - data_fetcher - WARNING - akshare 加载失败: No module named 'akshare'
+2026-04-18 18:21:36,061 - data_fetcher - WARNING - efinance 加载失败: No module named 'efinance'
+2026-04-18 18:21:53,353 - data_fetcher - WARNING - akshare 加载失败: No module named 'akshare'
+2026-04-18 18:21:53,353 - data_fetcher - WARNING - efinance 加载失败: No module named 'efinance'
+2026-04-18 18:22:16,734 - data_fetcher - WARNING - akshare 加载失败: No module named 'akshare'
+2026-04-18 18:22:16,735 - data_fetcher - WARNING - efinance 加载失败: No module named 'efinance'
+2026-04-18 20:49:18,395 - data_fetcher - WARNING - akshare 加载失败: No module named 'akshare'
+2026-04-18 20:49:18,396 - data_fetcher - WARNING - efinance 加载失败: No module named 'efinance'
+2026-04-18 20:49:19,157 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-18 20:49:19,157 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-18 20:49:46,052 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-18 20:49:46,111 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-18 20:49:46,358 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-18 20:49:46,359 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-18 20:50:05,712 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-18 20:50:05,757 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-18 20:50:05,978 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-18 20:50:05,979 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成

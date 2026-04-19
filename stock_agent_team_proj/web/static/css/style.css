@@ -1254,3 +1254,656 @@ body {
         margin-bottom: 8px;
     }
 }
+
+
+/* ============================================================
+   观察池和表现统计 Tab 样式
+   ============================================================ */
+
+/* Tab导航 */
+.tab-nav {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 0;
+}
+
+.tab-btn {
+    padding: 12px 24px;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: -2px;
+}
+
+.tab-btn:hover {
+    color: var(--primary-light);
+}
+
+.tab-btn.active {
+    color: var(--primary-blue);
+    border-bottom-color: var(--primary-blue);
+}
+
+/* Tab面板 */
+.tab-panel {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.tab-panel.active {
+    display: block;
+}
+
+/* ========== 观察池样式 ========== */
+
+/* 观察池概览卡片 */
+.watchlist-overview {
+    margin-bottom: 25px;
+}
+
+.overview-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+}
+
+.overview-card {
+    background: linear-gradient(135deg, var(--bg-dark) 0%, #edf2f7 100%);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border: 1px solid var(--border-color);
+}
+
+.overview-card.success {
+    background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%);
+}
+
+.overview-card.warning {
+    background: linear-gradient(135deg, #feebc8 0%, #fbd38d 100%);
+}
+
+.overview-icon {
+    font-size: 2rem;
+}
+
+.overview-data {
+    display: flex;
+    flex-direction: column;
+}
+
+.overview-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--primary-blue);
+    line-height: 1;
+}
+
+.overview-card.success .overview-value {
+    color: #22543d;
+}
+
+.overview-card.warning .overview-value {
+    color: #744210;
+}
+
+.overview-label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.overview-card.success .overview-label {
+    color: #276749;
+}
+
+.overview-card.warning .overview-label {
+    color: #975a16;
+}
+
+/* 添加股票表单 */
+.watchlist-add {
+    background: var(--bg-dark);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border-color);
+}
+
+.add-stock-form {
+    display: flex;
+    gap: 15px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.add-stock-form .input-group {
+    flex: 1;
+    min-width: 150px;
+}
+
+/* 操作按钮组 */
+.watchlist-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 25px;
+}
+
+.btn-secondary {
+    padding: 10px 20px;
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background: var(--primary-light);
+    color: #ffffff;
+    border-color: var(--primary-light);
+}
+
+/* 观察池表格 */
+.watchlist-table-section {
+    margin-bottom: 30px;
+}
+
+.watchlist-table-container {
+    overflow-x: auto;
+}
+
+.watchlist-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.watchlist-table th,
+.watchlist-table td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+    white-space: nowrap;
+}
+
+.watchlist-table th {
+    background: var(--bg-dark);
+    font-weight: 600;
+    color: var(--text-secondary);
+    position: sticky;
+    top: 0;
+}
+
+.watchlist-table tbody tr:hover {
+    background: var(--bg-dark);
+}
+
+/* 状态徽章 */
+.status-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.status-badge.status-pending {
+    background: #feebc8;
+    color: #975a16;
+}
+
+.status-badge.status-watching {
+    background: #c6f6d5;
+    color: #22543d;
+}
+
+.status-badge.status-archived {
+    background: #e2e8f0;
+    color: #4a5568;
+}
+
+.status-badge.status-removed {
+    background: #fed7d7;
+    color: #742a2a;
+}
+
+/* 小按钮 */
+.btn-tiny {
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    margin-right: 5px;
+    transition: all 0.2s;
+}
+
+.btn-tiny.btn-analyze {
+    background: var(--primary-light);
+    color: #ffffff;
+}
+
+.btn-tiny.btn-analyze:hover {
+    background: var(--primary-blue);
+}
+
+.btn-tiny.btn-danger {
+    background: #feb2b2;
+    color: #742a2a;
+}
+
+.btn-tiny.btn-danger:hover {
+    background: var(--danger);
+    color: #ffffff;
+}
+
+.btn-tiny.btn-secondary {
+    background: var(--bg-dark);
+    color: var(--text-secondary);
+}
+
+/* 筛选器 */
+.filter-group {
+    display: flex;
+    gap: 10px;
+}
+
+.filter-group select {
+    padding: 6px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 0.85rem;
+    background: var(--bg-card);
+}
+
+/* 情报追踪区域 */
+.intel-section {
+    background: var(--bg-dark);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 25px;
+    border: 1px solid var(--border-color);
+}
+
+.intel-form {
+    display: flex;
+    gap: 15px;
+    align-items: flex-end;
+}
+
+.intel-form .input-group {
+    flex: 1;
+    max-width: 300px;
+}
+
+.intel-brief {
+    margin-top: 20px;
+    padding: 15px;
+    background: var(--bg-card);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.intel-brief h4 {
+    margin-bottom: 10px;
+    color: var(--text-primary);
+}
+
+.intel-item {
+    padding: 5px 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.intel-category {
+    margin-top: 12px;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.9rem;
+}
+
+.intel-news-item {
+    padding: 6px 0 6px 12px;
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+.intel-news-item a {
+    color: var(--primary-light);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.intel-news-item a:hover {
+    text-decoration: underline;
+}
+
+.intel-snippet {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin-top: 2px;
+}
+
+/* 情报缓存状态标签 */
+.cache-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    vertical-align: middle;
+}
+
+.cache-badge.cache-fresh {
+    background: #c6f6d5;
+    color: #22543d;
+}
+
+.cache-badge.cache-stale {
+    background: #fefcbf;
+    color: #744210;
+}
+
+.cache-badge.cache-expired {
+    background: #fed7d7;
+    color: #742a2a;
+}
+
+.cache-badge.cache-new {
+    background: #bee3f8;
+    color: #2a4365;
+}
+
+/* 定时任务区域 */
+.scheduler-section {
+    background: var(--bg-dark);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid var(--border-color);
+}
+
+.scheduler-status {
+    margin-bottom: 15px;
+    padding: 10px;
+    background: var(--bg-card);
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.text-success {
+    color: var(--success);
+    font-weight: 600;
+}
+
+.text-muted {
+    color: var(--text-muted);
+}
+
+.text-danger {
+    color: var(--danger);
+}
+
+.scheduler-tasks {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 15px;
+}
+
+.task-item {
+    background: var(--bg-card);
+    border-radius: 8px;
+    padding: 15px;
+    border: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.task-info strong {
+    display: block;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.task-info p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.task-schedule {
+    margin-top: 4px;
+    color: var(--primary-light) !important;
+}
+
+/* ========== 表现统计样式 ========== */
+
+/* 表现概览 */
+.perf-overview {
+    margin-bottom: 25px;
+}
+
+.perf-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+}
+
+.perf-card {
+    background: linear-gradient(135deg, var(--bg-dark) 0%, #edf2f7 100%);
+    border-radius: 12px;
+    padding: 25px;
+    text-align: center;
+    border: 1px solid var(--border-color);
+}
+
+.perf-card.profit {
+    background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%);
+}
+
+.perf-icon {
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.perf-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-blue);
+    line-height: 1;
+}
+
+.perf-card.profit .perf-value {
+    color: #22543d;
+}
+
+.perf-label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 8px;
+}
+
+.perf-card.profit .perf-label {
+    color: #276749;
+}
+
+/* 图表区域 */
+.perf-charts {
+    margin-bottom: 30px;
+}
+
+.chart-row {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 900px) {
+    .chart-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+.chart-container {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid var(--border-color);
+}
+
+.chart-container h4 {
+    margin-bottom: 15px;
+    color: var(--text-primary);
+    font-size: 1rem;
+}
+
+.chart-container.wide {
+    min-width: 0;
+}
+
+.chart {
+    width: 100%;
+    height: 300px;
+}
+
+/* 持仓表格 */
+.positions-section,
+.signals-section {
+    margin-bottom: 25px;
+}
+
+.positions-table-container,
+.signals-table-container {
+    overflow-x: auto;
+}
+
+.positions-table,
+.signals-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.positions-table th,
+.positions-table td,
+.signals-table th,
+.signals-table td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+    white-space: nowrap;
+}
+
+.positions-table th,
+.signals-table th {
+    background: var(--bg-dark);
+    font-weight: 600;
+    color: var(--text-secondary);
+    position: sticky;
+    top: 0;
+}
+
+.positions-table tbody tr:hover,
+.signals-table tbody tr:hover {
+    background: var(--bg-dark);
+}
+
+/* 报告区域 */
+.reports-section {
+    background: var(--bg-dark);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid var(--border-color);
+}
+
+.report-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.report-content {
+    background: var(--bg-card);
+    border-radius: 8px;
+    padding: 15px;
+    border: 1px solid var(--border-color);
+    max-height: 400px;
+    overflow: auto;
+}
+
+.report-content pre {
+    font-family: monospace;
+    font-size: 0.85rem;
+    white-space: pre-wrap;
+    word-break: break-all;
+    color: var(--text-secondary);
+}
+
+/* ========== 响应式调整 ========== */
+
+@media (max-width: 768px) {
+    .overview-cards,
+    .perf-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .watchlist-table,
+    .positions-table,
+    .signals-table {
+        font-size: 0.8rem;
+    }
+    
+    .watchlist-table th,
+    .watchlist-table td,
+    .positions-table th,
+    .positions-table td,
+    .signals-table th,
+    .signals-table td {
+        padding: 8px 8px;
+    }
+    
+    .tab-btn {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .overview-cards,
+    .perf-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .add-stock-form,
+    .intel-form {
+        flex-direction: column;
+    }
+    
+    .add-stock-form .input-group,
+    .intel-form .input-group {
+        max-width: none;
+    }
+    
+    .watchlist-actions {
+        flex-direction: column;
+    }
+    
+    .watchlist-actions button {
+        width: 100%;
+    }
+}

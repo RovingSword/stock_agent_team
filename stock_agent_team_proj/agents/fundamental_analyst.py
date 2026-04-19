@@ -36,13 +36,13 @@ class FundamentalAnalyst(WorkerAgent):
         # 4. 行业地位
         industry = self._analyze_industry(fundamental_data)
         
-        # 5. 综合评分
-        overall_score = self.calculate_score({
-            'risk_score': risk_check['score'],
-            'performance_score': performance['score'],
-            'valuation_score': valuation['score'],
-            'industry_score': industry['score']
-        })
+        # 5. 综合评分 (加权平均，突出业绩和行业地位)
+        overall_score = (
+            risk_check['score'] * 0.2 +
+            performance['score'] * 0.35 +
+            valuation['score'] * 0.2 +
+            industry['score'] * 0.25
+        )
         
         # 6. 关键点和风险点
         key_points = self._extract_key_points(performance, valuation, industry)
@@ -179,11 +179,11 @@ class FundamentalAnalyst(WorkerAgent):
         margin = data['net_margin']
         roe = data['roe']
         
-        # 增长评分
-        if profit_growth > 0.3:
+        # 增长评分 (放宽门槛)
+        if profit_growth > 0.20:
             growth_score = 9.0
             growth_status = "高增长"
-        elif profit_growth > 0.15:
+        elif profit_growth > 0.10:
             growth_score = 7.5
             growth_status = "稳健增长"
         elif profit_growth > 0:
@@ -193,12 +193,12 @@ class FundamentalAnalyst(WorkerAgent):
             growth_score = 3.0
             growth_status = "负增长"
         
-        # 盈利能力评分
-        if roe > 0.20:
+        # 盈利能力评分 (放宽门槛)
+        if roe > 0.15:
             roe_score = 8.5
-        elif roe > 0.15:
-            roe_score = 7.0
         elif roe > 0.10:
+            roe_score = 7.0
+        elif roe > 0.05:
             roe_score = 5.5
         else:
             roe_score = 4.0
@@ -224,14 +224,14 @@ class FundamentalAnalyst(WorkerAgent):
         pb = data['pb']
         percentile = data['pe_percentile']
         
-        # 估值相对行业
-        if pe < industry_pe * 0.7:
+        # 估值相对行业 (放宽门槛)
+        if pe < industry_pe * 0.8:
             relative_score = 8.5
             relative_status = "低估"
-        elif pe < industry_pe:
+        elif pe < industry_pe * 1.1:
             relative_score = 7.0
             relative_status = "合理偏低"
-        elif pe < industry_pe * 1.3:
+        elif pe < industry_pe * 1.4:
             relative_score = 5.5
             relative_status = "合理"
         else:

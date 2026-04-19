@@ -29,6 +29,7 @@ class AnalyzeRequest(BaseModel):
     stock_code: str = Field(..., description="股票代码", example="300750")
     stock_name: Optional[str] = Field(None, description="股票名称，不提供则自动获取")
     user_request: str = Field("", description="用户请求描述")
+    force_refresh: bool = Field(False, description="是否强制刷新情报缓存")
 
 
 class AgentScore(BaseModel):
@@ -73,6 +74,7 @@ def _build_llm_agent_prompt(
     current_price: Any,
     raw_data: Dict[str, Any],
     rule_reference: Dict[str, Any],
+    web_intelligence: Optional[Dict[str, Any]] = None,
 ) -> str:
     missing_fields = [
         field_name
@@ -80,6 +82,24 @@ def _build_llm_agent_prompt(
         if value in (None, {}, [])
     ]
     missing_text = "无" if not missing_fields else ", ".join(missing_fields)
+
+    # 构建网络情报部分（仅情报分析员角色使用）
+    intel_section = ""
+    if web_intelligence:
+        intel_items = []
+        for intel_type, items in web_intelligence.items():
+            if items and isinstance(items, list):
+                type_label = {"news": "最新新闻", "research": "研报", "sentiment": "舆情", "industry": "行业动态", "macro": "宏观信息"}.get(intel_type, intel_type)
+                for item in items[:5]:  # 最多5条
+                    if isinstance(item, dict):
+                        title = item.get("title", "")
+                        summary = item.get("summary", item.get("snippet", ""))
+                        time_str = item.get("time", item.get("date", ""))
+                        intel_items.append(f"  [{type_label}] {title} {'(' + time_str + ')' if time_str else ''}\n    {summary}")
+                    else:
+                        intel_items.append(f"  [{type_label}] {item}")
+        if intel_items:
+            intel_section = f"\n\n网络情报（已通过搜索引擎获取的真实数据）：\n" + "\n".join(intel_items)
 
     return f"""你是 {agent_name}，负责{role_name}。
 
@@ -96,9 +116,9 @@ def _build_llm_agent_prompt(
 关键缺失字段：{missing_text}
 
 规则引擎参考（仅供参考，不可当作原始事实）：
-{json.dumps(rule_reference, ensure_ascii=False, indent=2)}
+{json.dumps(rule_reference, ensure_ascii=False, indent=2)}{intel_section}
 
-请优先依据真实原始数据分析；如果关键数据缺失，请在结论中明确说明“数据不足”。
+请优先依据真实原始数据分析；如果关键数据缺失，请在结论中明确说明"数据不足"。
 
 请输出 JSON：
 {{
@@ -512,7 +532,7 @@ def get_llm_config():
     return config
 
 
-async def generate_sse_events(stock_code: str, stock_name: str):
+async def generate_sse_events(stock_code: str, stock_name: str, force_refresh: bool = False):
     """
     生成SSE事件流
     
@@ -574,6 +594,41 @@ async def generate_sse_events(stock_code: str, stock_name: str):
         
         await asyncio.sleep(0.5)
         
+        # ===== 注入缓存情报 =====
+        cached_intel_data = None
+        intel_cache_meta = None
+        try:
+            from utils.intel_cache import get_intel
+            raw_intel = get_intel(
+                stock_code=stock_code,
+                stock_name=stock_name,
+                force_refresh=force_refresh
+            )
+            intel_cache_meta = raw_intel.pop('_cache_meta', None)
+
+            # 检查是否有实质内容
+            has_content = any(raw_intel.get(k) for k in ['news', 'research', 'sentiment', 'industry', 'macro'])
+            if has_content:
+                cached_intel_data = raw_intel
+                # 注入到分析数据中，供情报分析员使用
+                analysis_data['web_intelligence'] = raw_intel
+        except Exception:
+            pass
+
+        # 发送情报注入事件
+        if cached_intel_data and intel_cache_meta:
+            intel_summary = {
+                "stock_code": stock_code,
+                "news_count": len(cached_intel_data.get('news', [])),
+                "research_count": len(cached_intel_data.get('research', [])),
+                "sentiment_count": len(cached_intel_data.get('sentiment', [])),
+                "cache_status": "fresh" if intel_cache_meta.get('is_fresh') else
+                               "stale" if intel_cache_meta.get('is_stale') else "expired",
+                "cache_age_days": intel_cache_meta.get('age_days'),
+            }
+            yield f"event: intel_injected\ndata: {json.dumps(intel_summary)}\n\n"
+            await asyncio.sleep(0.3)
+
         # ===== 第一轮：各Agent独立分析 =====
         yield f"event: round_start\ndata: {json.dumps({'round': 1, 'type': 'independent', 'title': '📊 第一轮：独立分析'})}\n\n"
         
@@ -614,6 +669,8 @@ async def generate_sse_events(stock_code: str, stock_name: str):
             # 准备分析提示词
             raw_data = analysis_data["role_payloads"].get(role, {})
             rule_reference = analysis_data["rule_reference"].get(role, {})
+            # 情报分析员角色注入缓存情报
+            web_intel_for_prompt = analysis_data.get('web_intelligence') if role == 'intelligence' else None
             prompt = _build_llm_agent_prompt(
                 agent_name=agent.name,
                 role_name=agent_configs.get(role, {}).get('name', role),
@@ -622,6 +679,7 @@ async def generate_sse_events(stock_code: str, stock_name: str):
                 current_price=analysis_data.get('current_price', 'N/A'),
                 raw_data=raw_data,
                 rule_reference=rule_reference,
+                web_intelligence=web_intel_for_prompt,
             )
             
             try:
@@ -854,7 +912,7 @@ async def analyze_stock_llm(request: AnalyzeRequest):
         
         # 返回SSE流
         return StreamingResponse(
-            generate_sse_events(stock_code, stock_name),
+            generate_sse_events(stock_code, stock_name, force_refresh=request.force_refresh),
             media_type="text/event-stream",
             headers={
                 "Cache-Control": "no-cache",

@@ -50,12 +50,17 @@ if os.path.exists(static_path):
     app.mount("/static", StaticFiles(directory=static_path), name="static")
 
 # 注册API路由
-from web.api import analyze, history, config, kline
+from web.api import analyze, history, config, kline, watchlist, intel, performance, charts, scheduler
 
 app.include_router(analyze.router, prefix="/api", tags=["股票分析"])
 app.include_router(history.router, prefix="/api", tags=["历史记录"])
 app.include_router(config.router, prefix="/api", tags=["配置管理"])
 app.include_router(kline.router, prefix="/api", tags=["K线数据"])
+app.include_router(watchlist.router, prefix="/api", tags=["观察池管理"])
+app.include_router(intel.router, prefix="/api", tags=["情报追踪"])
+app.include_router(performance.router, prefix="/api", tags=["历史表现"])
+app.include_router(charts.router, prefix="/api", tags=["图表数据"])
+app.include_router(scheduler.router, prefix="/api", tags=["定时任务"])
 
 
 @app.get("/", response_class=HTMLResponse)

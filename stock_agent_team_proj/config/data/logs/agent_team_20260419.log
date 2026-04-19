@@ -1,0 +1,362 @@
+2026-04-19 19:44:00,333 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 19:44:00,368 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 19:45:01,154 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-19 19:45:01,160 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-19 19:45:01,160 - intel_searcher - WARNING - 未配置搜索API，无法自动搜索
+2026-04-19 19:45:55,148 - data_fetcher - INFO - ✅ 新浪财经K线获取成功 (688234), 共 60 条
+2026-04-19 19:45:55,744 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-19 19:45:55,744 - StockAgentTeam - INFO - 开始分析: 688234(688234)
+2026-04-19 19:45:55,744 - agent.leader - INFO - 开始分析 688234(688234)
+2026-04-19 19:45:55,747 - agent.technical - INFO - 开始分析 688234(688234)
+2026-04-19 19:45:55,754 - agent.intelligence - INFO - 开始分析 688234(688234)
+2026-04-19 19:45:55,763 - agent.risk - INFO - 开始分析 688234(688234)
+2026-04-19 19:45:55,764 - agent.fundamental - INFO - 开始分析 688234(688234)
+2026-04-19 19:45:55,777 - agent.technical - INFO - 分析完成，评分: 6.6
+2026-04-19 19:45:55,777 - agent.leader - INFO - 技术分析员 分析完成，评分: 6.6
+2026-04-19 19:45:56,001 - data_fetcher - INFO - ✅ 新浪大盘指数获取成功: 上证4051.4254, 深证14885.416, 创业板3678.293
+2026-04-19 19:45:56,007 - agent.risk - INFO - 分析完成，评分: 8.9
+2026-04-19 19:45:56,008 - agent.leader - INFO - 风控官 分析完成，评分: 8.9
+2026-04-19 19:45:57,392 - agent.fundamental - INFO - 分析完成，评分: 7.1
+2026-04-19 19:45:57,393 - agent.leader - INFO - 基本面分析师 分析完成，评分: 7.1
+2026-04-19 19:45:57,619 - agent.intelligence - INFO - 分析完成，评分: 6.3
+2026-04-19 19:45:57,620 - agent.leader - INFO - 情报员 分析完成，评分: 6.3
+2026-04-19 19:45:57,628 - agent.leader - INFO - 分析完成 - 决策: buy, 评分: 7.05
+2026-04-19 19:45:57,997 - data_fetcher - INFO - ✅ 新浪实时行情获取成功 (688234): 天岳先进 ¥95.2
+2026-04-19 19:52:32,519 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 19:52:32,556 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 19:52:33,826 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 19:52:33,848 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 19:52:34,911 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 19:52:34,930 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 19:53:58,938 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 19:53:58,974 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 19:54:43,378 - intel_searcher - INFO - Serper搜索成功: 机构调研 2026年04月12日 2026年04月19日 -> 10条结果
+2026-04-19 19:54:44,609 - intel_searcher - INFO - Serper搜索成功: 上市公司调研 2026年04月12日 -> 10条结果
+2026-04-19 19:54:45,765 - intel_searcher - INFO - Serper搜索成功: 机构最新调研股票 -> 10条结果
+2026-04-19 19:56:17,829 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 19:56:17,870 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 19:58:12,606 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 19:58:12,639 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 20:03:04,578 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 20:03:04,607 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 20:03:19,941 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 20:03:19,972 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 20:03:25,323 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 20:03:25,348 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 20:03:45,852 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 20:03:45,879 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 20:04:33,560 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 20:04:33,586 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 21:26:27,404 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 21:26:27,454 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 21:26:29,101 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 21:26:29,145 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 21:26:50,340 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 21:26:50,371 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 21:27:46,155 - intel_searcher - INFO - Serper搜索成功: 机构调研 2026年04月12日 2026年04月19日 -> 10条结果
+2026-04-19 21:27:49,403 - intel_searcher - INFO - Serper搜索成功: 上市公司调研 2026年04月12日 -> 10条结果
+2026-04-19 21:27:50,645 - intel_searcher - INFO - Serper搜索成功: 机构最新调研股票 -> 10条结果
+2026-04-19 21:29:58,267 - intel_searcher - INFO - Serper搜索成功: 机构调研 2026年04月12日 2026年04月19日 -> 10条结果
+2026-04-19 21:29:59,430 - intel_searcher - INFO - Serper搜索成功: 上市公司调研 2026年04月12日 -> 10条结果
+2026-04-19 21:30:00,610 - intel_searcher - INFO - Serper搜索成功: 机构最新调研股票 -> 10条结果
+2026-04-19 21:32:46,034 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 21:32:46,075 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 21:36:12,425 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 21:36:12,470 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 21:36:40,200 - intel_searcher - INFO - Serper搜索成功: 688234 688234 最新消息 -> 5条结果
+2026-04-19 21:36:41,460 - intel_searcher - INFO - Serper搜索成功: 688234 研报 目标价 评级 -> 3条结果
+2026-04-19 21:36:42,652 - intel_searcher - INFO - Serper搜索成功: 688234 股吧 讨论 -> 3条结果
+2026-04-19 21:37:03,867 - intel_searcher - INFO - Serper搜索成功: 002202 002202 最新消息 -> 5条结果
+2026-04-19 21:37:05,007 - intel_searcher - INFO - Serper搜索成功: 002202 研报 目标价 评级 -> 3条结果
+2026-04-19 21:37:06,731 - intel_searcher - INFO - Serper搜索成功: 002202 股吧 讨论 -> 3条结果
+2026-04-19 21:37:39,914 - intel_searcher - INFO - Serper搜索成功: 机构调研 2026年04月12日 2026年04月19日 -> 10条结果
+2026-04-19 21:37:41,262 - intel_searcher - INFO - Serper搜索成功: 上市公司调研 2026年04月12日 -> 10条结果
+2026-04-19 21:37:42,613 - intel_searcher - INFO - Serper搜索成功: 机构最新调研股票 -> 10条结果
+2026-04-19 21:37:59,823 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 21:37:59,859 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 21:42:32,148 - intel_searcher - INFO - Serper搜索成功: 宁德时代 300750 最新消息 -> 3条结果
+2026-04-19 21:42:43,218 - intel_searcher - INFO - Serper搜索成功: 宁德时代 300750 最新消息 -> 3条结果
+2026-04-19 21:43:02,091 - intel_searcher - INFO - Serper搜索成功: 300750 300750 最新消息 -> 5条结果
+2026-04-19 21:43:03,304 - intel_searcher - INFO - Serper搜索成功: 300750 研报 目标价 评级 -> 3条结果
+2026-04-19 21:43:04,520 - intel_searcher - INFO - Serper搜索成功: 300750 股吧 讨论 -> 3条结果
+2026-04-19 21:43:58,965 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-19 21:43:58,970 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-19 21:43:59,885 - intel_searcher - INFO - Serper搜索成功: 宁德时代 300750 最新消息 -> 5条结果
+2026-04-19 21:44:01,133 - intel_searcher - INFO - Serper搜索成功: 宁德时代 研报 目标价 评级 -> 3条结果
+2026-04-19 21:44:02,327 - intel_searcher - INFO - Serper搜索成功: 宁德时代 股吧 讨论 -> 3条结果
+2026-04-19 21:44:03,638 - intel_searcher - INFO - Serper搜索成功: 电池 行业 政策 最新动态 -> 3条结果
+2026-04-19 21:44:04,777 - intel_searcher - INFO - Serper搜索成功: A股 大盘 趋势 分析 -> 3条结果
+2026-04-19 21:44:04,780 - StockAgentTeam - INFO - 开始分析: 宁德时代(300750)
+2026-04-19 21:44:04,786 - web_intelligence - WARNING - [news] 低可信度来源(0.15): ⚠️ 低可信度来源(social) - 宁德时代(SZ300750)股票股价 - 雪球...
+2026-04-19 21:44:04,789 - web_intelligence - WARNING - [research] 过滤过期数据: 大摩：升宁德时代目标价至655港元评级“与大市同步” - 新... (年龄: 33天)
+2026-04-19 21:44:04,789 - web_intelligence - WARNING - [sentiment] 低可信度来源(0.10): ⚠️ 低可信度来源(social) - 情绪化词汇: 冲击 - 宁德时代(300750)股吧 - 东方财富...
+2026-04-19 21:44:04,789 - web_intelligence - WARNING - [sentiment] 低可信度来源(0.15): ⚠️ 低可信度来源(social) - 宁德时代怎么样_分析讨论社区—东方财富网 - 股吧...
+2026-04-19 21:44:04,789 - web_intelligence - WARNING - [sentiment] 低可信度来源(0.15): ⚠️ 低可信度来源(social) - 宁德时代怎么样_分析讨论社区 - 股吧- 东方财富网...
+2026-04-19 21:44:04,789 - web_intelligence - WARNING - [industry] 过滤过期数据: 重磅！2025年中国及31省市锂电池行业政策汇总及 ... ... (年龄: 131天)
+2026-04-19 21:44:04,789 - web_intelligence - WARNING - [industry] 过滤过期数据: 重磅！2025年中国及31省市锂电池行业政策汇总及解读 ..... (年龄: 131天)
+2026-04-19 21:44:04,789 - web_intelligence - WARNING - [industry] 过滤过期数据: 工业和信息化部印发《锂离子电池行业规范条件（2024年本 .... (年龄: 636天)
+2026-04-19 21:44:04,789 - StockAgentTeam - INFO - 已注入网络情报: 5 类
+2026-04-19 21:44:04,789 - agent.leader - INFO - 开始分析 宁德时代(300750)
+2026-04-19 21:44:04,790 - agent.technical - INFO - 开始分析 宁德时代(300750)
+2026-04-19 21:44:04,790 - agent.intelligence - INFO - 开始分析 宁德时代(300750)
+2026-04-19 21:44:04,790 - agent.risk - INFO - 开始分析 宁德时代(300750)
+2026-04-19 21:44:04,791 - agent.fundamental - INFO - 开始分析 宁德时代(300750)
+2026-04-19 21:44:04,794 - agent.intelligence - INFO - 加载存储情报: 300750 (采集于2026-04-19)
+2026-04-19 21:44:04,898 - data_fetcher - INFO - ✅ 新浪财经K线获取成功 (300750), 共 60 条
+2026-04-19 21:44:05,046 - data_fetcher - INFO - ✅ 新浪大盘指数获取成功: 上证4051.4254, 深证14885.416, 创业板3678.293
+2026-04-19 21:44:05,054 - agent.risk - INFO - 分析完成，评分: 8.9
+2026-04-19 21:44:05,054 - agent.leader - INFO - 风控官 分析完成，评分: 8.9
+2026-04-19 21:44:06,730 - agent.intelligence - INFO - 已合并存储情报: 5条新闻, 3条研报
+2026-04-19 21:44:06,730 - agent.intelligence - INFO - 已合并网络情报: 整体情绪=positive
+2026-04-19 21:44:06,730 - agent.technical - INFO - 分析完成，评分: 6.5
+2026-04-19 21:44:06,730 - agent.leader - INFO - 技术分析员 分析完成，评分: 6.5
+2026-04-19 21:44:06,731 - agent.intelligence - INFO - 分析完成，评分: 6.8
+2026-04-19 21:44:06,731 - agent.leader - INFO - 情报员 分析完成，评分: 6.8
+2026-04-19 21:44:09,558 - agent.fundamental - INFO - 分析完成，评分: 7.6
+2026-04-19 21:44:09,562 - agent.leader - INFO - 基本面分析师 分析完成，评分: 7.6
+2026-04-19 21:44:09,596 - agent.leader - INFO - 分析完成 - 决策: buy, 评分: 7.23
+2026-04-19 21:47:27,274 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-19 21:47:27,277 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-19 21:47:28,670 - intel_searcher - INFO - Serper搜索成功: 剑桥科技 603083 最新消息 -> 5条结果
+2026-04-19 21:47:31,883 - intel_searcher - INFO - Serper搜索成功: 剑桥科技 研报 目标价 评级 -> 3条结果
+2026-04-19 21:47:34,067 - intel_searcher - INFO - Serper搜索成功: 剑桥科技 股吧 讨论 -> 3条结果
+2026-04-19 21:47:35,663 - intel_searcher - INFO - Serper搜索成功: 相关行业 行业 政策 最新动态 -> 3条结果
+2026-04-19 21:47:37,144 - intel_searcher - INFO - Serper搜索成功: A股 大盘 趋势 分析 -> 3条结果
+2026-04-19 21:47:37,160 - StockAgentTeam - INFO - 开始分析: 剑桥科技(603083)
+2026-04-19 21:47:37,169 - web_intelligence - WARNING - [news] 低可信度来源(0.15): ⚠️ 低可信度来源(social) - 剑桥科技(SH603083)股票股价 - 雪球...
+2026-04-19 21:47:37,171 - web_intelligence - WARNING - [news] 低可信度来源(0.15): ⚠️ 低可信度来源(social) - 剑桥科技怎么样_分析讨论社区 - 股吧...
+2026-04-19 21:47:37,179 - web_intelligence - WARNING - [research] 过滤过期数据: 研报掘金丨国泰海通：予剑桥科技“增持”评级，目标价161元 ... (年龄: 87天)
+2026-04-19 21:47:37,180 - web_intelligence - WARNING - [research] 低可信度来源(0.15): ⚠️ 低可信度来源(social) - $剑桥科技(SH603083)$ 剑桥科技机构评级& 业绩&...
+2026-04-19 21:47:37,180 - web_intelligence - WARNING - [sentiment] 低可信度来源(0.15): ⚠️ 低可信度来源(social) - 剑桥科技(603083)股吧_剑桥科技怎么样_分析讨论社区—...
+2026-04-19 21:47:37,180 - web_intelligence - WARNING - [sentiment] 低可信度来源(0.15): ⚠️ 低可信度来源(social) - 剑桥科技怎么样_分析讨论社区—东方财富网 - 股吧...
+2026-04-19 21:47:37,180 - web_intelligence - WARNING - [sentiment] 低可信度来源(0.15): ⚠️ 低可信度来源(social) - 剑桥科技怎么样_分析讨论社区—东方财富网 - 股吧...
+2026-04-19 21:47:37,181 - web_intelligence - WARNING - [industry] 过滤过期数据: 新一轮十大重点行业稳增长工作方案将启动 - 新华网... (年龄: 453天)
+2026-04-19 21:47:37,183 - StockAgentTeam - INFO - 已注入网络情报: 5 类
+2026-04-19 21:47:37,184 - agent.leader - INFO - 开始分析 剑桥科技(603083)
+2026-04-19 21:47:37,191 - agent.technical - INFO - 开始分析 剑桥科技(603083)
+2026-04-19 21:47:37,198 - agent.intelligence - INFO - 开始分析 剑桥科技(603083)
+2026-04-19 21:47:37,200 - agent.risk - INFO - 开始分析 剑桥科技(603083)
+2026-04-19 21:47:37,209 - agent.fundamental - INFO - 开始分析 剑桥科技(603083)
+2026-04-19 21:47:37,239 - agent.risk - INFO - 分析完成，评分: 8.9
+2026-04-19 21:47:37,239 - agent.leader - INFO - 风控官 分析完成，评分: 8.9
+2026-04-19 21:47:37,683 - data_fetcher - INFO - ✅ 新浪财经K线获取成功 (603083), 共 60 条
+2026-04-19 21:47:37,928 - agent.intelligence - INFO - 已合并网络情报: 整体情绪=neutral
+2026-04-19 21:47:37,931 - agent.intelligence - INFO - 分析完成，评分: 7.5
+2026-04-19 21:47:37,931 - agent.leader - INFO - 情报员 分析完成，评分: 7.5
+2026-04-19 21:47:38,129 - agent.technical - INFO - 分析完成，评分: 5.9
+2026-04-19 21:47:38,129 - agent.leader - INFO - 技术分析员 分析完成，评分: 5.9
+2026-04-19 21:47:38,988 - agent.fundamental - INFO - 分析完成，评分: 7.1
+2026-04-19 21:47:38,988 - agent.leader - INFO - 基本面分析师 分析完成，评分: 7.1
+2026-04-19 21:47:38,994 - agent.leader - INFO - 分析完成 - 决策: buy, 评分: 7.16
+2026-04-19 21:48:09,998 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-19 21:48:10,002 - StockAgentTeam - INFO - 开始分析: 603083(603083)
+2026-04-19 21:48:10,003 - agent.leader - INFO - 开始分析 603083(603083)
+2026-04-19 21:48:10,006 - agent.technical - INFO - 开始分析 603083(603083)
+2026-04-19 21:48:10,016 - agent.intelligence - INFO - 开始分析 603083(603083)
+2026-04-19 21:48:10,016 - agent.risk - INFO - 开始分析 603083(603083)
+2026-04-19 21:48:10,017 - agent.fundamental - INFO - 开始分析 603083(603083)
+2026-04-19 21:48:10,028 - agent.intelligence - INFO - 分析完成，评分: 7.0
+2026-04-19 21:48:10,029 - agent.leader - INFO - 情报员 分析完成，评分: 7.0
+2026-04-19 21:48:10,031 - agent.fundamental - INFO - 分析完成，评分: 7.1
+2026-04-19 21:48:10,031 - agent.leader - INFO - 基本面分析师 分析完成，评分: 7.1
+2026-04-19 21:48:10,038 - agent.technical - INFO - 分析完成，评分: 5.9
+2026-04-19 21:48:10,038 - agent.leader - INFO - 技术分析员 分析完成，评分: 5.9
+2026-04-19 21:48:10,051 - agent.risk - INFO - 分析完成，评分: 8.9
+2026-04-19 21:48:10,052 - agent.leader - INFO - 风控官 分析完成，评分: 8.9
+2026-04-19 21:48:10,064 - agent.leader - INFO - 分析完成 - 决策: buy, 评分: 7.04
+2026-04-19 21:48:10,186 - data_fetcher - INFO - ✅ 新浪实时行情获取成功 (603083): 剑桥科技 ¥145.29
+2026-04-19 21:50:26,871 - intel_searcher - INFO - Serper搜索成功: 688234 688234 最新消息 -> 5条结果
+2026-04-19 21:50:28,063 - intel_searcher - INFO - Serper搜索成功: 688234 研报 目标价 评级 -> 3条结果
+2026-04-19 21:50:29,276 - intel_searcher - INFO - Serper搜索成功: 688234 股吧 讨论 -> 3条结果
+2026-04-19 21:54:53,378 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 21:54:53,447 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 21:56:36,757 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 21:56:36,799 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 21:57:33,911 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 21:57:33,947 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 21:57:53,598 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 21:57:53,629 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 21:58:53,861 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 21:58:53,902 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 21:59:13,438 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 21:59:13,478 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 21:59:14,464 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 21:59:14,483 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 21:59:22,063 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 21:59:22,088 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 21:59:23,114 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 21:59:23,133 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 22:00:27,031 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 22:00:27,212 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 22:01:02,306 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 22:01:02,515 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 22:02:07,441 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 22:02:07,480 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 22:02:08,725 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 22:02:08,747 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 22:06:17,424 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 22:06:17,489 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 22:06:20,080 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 22:06:20,114 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 22:07:07,511 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 22:07:07,566 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 22:07:10,052 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 22:07:10,082 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 22:07:53,396 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 22:07:53,492 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 22:07:55,952 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 22:07:56,118 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 22:08:34,502 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-19 22:08:34,505 - intel_cache - INFO - 使用新鲜缓存(0天): 002202
+2026-04-19 22:08:34,505 - StockAgentTeam - INFO - 开始分析: 金风科技(002202)
+2026-04-19 22:08:34,510 - web_intelligence - WARNING - [news] 过滤过期数据: 金风科技(002202) - 股票行情中心- 搜狐证券... (年龄: 87天)
+2026-04-19 22:08:34,511 - web_intelligence - WARNING - [news] 低可信度来源(0.15): ⚠️ 低可信度来源(social) - 金风科技(SZ002202)股票股价- 财报 - 雪球...
+2026-04-19 22:08:34,511 - web_intelligence - WARNING - [research] 过滤过期数据: [PDF] 金风科技（002202.SZ）——2025 年三... (年龄: 176天)
+2026-04-19 22:08:34,511 - web_intelligence - WARNING - [sentiment] 低可信度来源(0.15): ⚠️ 低可信度来源(social) - 金风科技怎么样_分析讨论社区—东方财富网 - 股吧...
+2026-04-19 22:08:34,511 - web_intelligence - WARNING - [sentiment] 低可信度来源(0.15): ⚠️ 低可信度来源(social) - 金风科技怎么样_分析讨论社区 - 股吧- 东方财富...
+2026-04-19 22:08:34,511 - web_intelligence - WARNING - [sentiment] 低可信度来源(0.15): ⚠️ 低可信度来源(social) - 金风科技怎么样_分析讨论社区 - 股吧- 东方财富网...
+2026-04-19 22:08:34,511 - StockAgentTeam - INFO - 已注入网络情报: 3 类
+2026-04-19 22:08:34,511 - agent.leader - INFO - 开始分析 金风科技(002202)
+2026-04-19 22:08:34,512 - agent.technical - INFO - 开始分析 金风科技(002202)
+2026-04-19 22:08:34,513 - agent.intelligence - INFO - 开始分析 金风科技(002202)
+2026-04-19 22:08:34,513 - agent.risk - INFO - 开始分析 金风科技(002202)
+2026-04-19 22:08:34,513 - agent.fundamental - INFO - 开始分析 金风科技(002202)
+2026-04-19 22:08:34,514 - agent.intelligence - INFO - 加载存储情报: 002202 (采集于2026-04-19)
+2026-04-19 22:08:34,669 - data_fetcher - INFO - ✅ 新浪财经K线获取成功 (002202), 共 60 条
+2026-04-19 22:08:34,853 - data_fetcher - INFO - ✅ 新浪大盘指数获取成功: 上证4051.4254, 深证14885.416, 创业板3678.293
+2026-04-19 22:08:34,856 - agent.risk - INFO - 分析完成，评分: 8.9
+2026-04-19 22:08:34,857 - agent.leader - INFO - 风控官 分析完成，评分: 8.9
+2026-04-19 22:08:35,521 - agent.technical - INFO - 分析完成，评分: 6.5
+2026-04-19 22:08:35,522 - agent.leader - INFO - 技术分析员 分析完成，评分: 6.5
+2026-04-19 22:08:35,890 - agent.fundamental - INFO - 分析完成，评分: 7.1
+2026-04-19 22:08:35,890 - agent.leader - INFO - 基本面分析师 分析完成，评分: 7.1
+2026-04-19 22:08:36,417 - agent.intelligence - INFO - 已合并存储情报: 5条新闻, 3条研报
+2026-04-19 22:08:36,417 - agent.intelligence - INFO - 已合并网络情报: 整体情绪=neutral
+2026-04-19 22:08:36,419 - agent.intelligence - INFO - 分析完成，评分: 7.1
+2026-04-19 22:08:36,419 - agent.leader - INFO - 情报员 分析完成，评分: 7.1
+2026-04-19 22:08:36,425 - agent.leader - INFO - 分析完成 - 决策: buy, 评分: 7.24
+2026-04-19 22:10:58,861 - intel_cache - INFO - 使用新鲜缓存(0天): 002202
+2026-04-19 22:11:37,182 - intel_cache - INFO - 使用新鲜缓存(0天): 002202
+2026-04-19 22:12:28,507 - intel_cache - INFO - 使用新鲜缓存(0天): 688234
+2026-04-19 22:13:01,977 - intel_cache - INFO - 使用新鲜缓存(0天): 002202
+2026-04-19 22:13:39,184 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 22:13:39,218 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 22:13:48,322 - intel_cache - INFO - 使用新鲜缓存(0天): 002202
+2026-04-19 22:14:36,809 - intel_cache - INFO - 使用新鲜缓存(0天): 002202
+2026-04-19 22:16:52,915 - intel_cache - INFO - 使用新鲜缓存(0天): 002202
+2026-04-19 22:17:02,471 - intel_cache - INFO - 使用新鲜缓存(0天): 002202
+2026-04-19 22:17:13,269 - intel_cache - INFO - 使用新鲜缓存(0天): 002202
+2026-04-19 22:17:23,989 - intel_cache - INFO - 执行情报搜索: 002202(002202)
+2026-04-19 22:17:25,779 - intel_searcher - INFO - Serper搜索成功: 002202 002202 最新消息 -> 5条结果
+2026-04-19 22:17:26,953 - intel_searcher - INFO - Serper搜索成功: 002202 研报 目标价 评级 -> 3条结果
+2026-04-19 22:17:28,608 - intel_searcher - INFO - Serper搜索成功: 002202 股吧 讨论 -> 3条结果
+2026-04-19 22:17:28,613 - intel_cache - INFO - 情报已缓存: 002202 -> data/intel/002202.json
+2026-04-19 22:19:43,768 - intel_cache - INFO - 使用新鲜缓存(0天): 002202
+2026-04-19 22:20:08,830 - data_fetcher - INFO - ✅ 新浪财经K线获取成功 (002202), 共 60 条
+2026-04-19 22:20:09,326 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-19 22:20:09,327 - StockAgentTeam - INFO - 开始分析: 002202(002202)
+2026-04-19 22:20:09,327 - agent.leader - INFO - 开始分析 002202(002202)
+2026-04-19 22:20:09,328 - agent.technical - INFO - 开始分析 002202(002202)
+2026-04-19 22:20:09,329 - agent.intelligence - INFO - 开始分析 002202(002202)
+2026-04-19 22:20:09,332 - agent.fundamental - INFO - 开始分析 002202(002202)
+2026-04-19 22:20:09,333 - agent.intelligence - INFO - 加载存储情报: 002202 (采集于2026-04-19)
+2026-04-19 22:20:09,330 - agent.risk - INFO - 开始分析 002202(002202)
+2026-04-19 22:20:09,345 - agent.technical - INFO - 分析完成，评分: 6.5
+2026-04-19 22:20:09,346 - agent.leader - INFO - 技术分析员 分析完成，评分: 6.5
+2026-04-19 22:20:09,557 - data_fetcher - INFO - ✅ 新浪大盘指数获取成功: 上证4051.4254, 深证14885.416, 创业板3678.293
+2026-04-19 22:20:09,559 - agent.risk - INFO - 分析完成，评分: 8.9
+2026-04-19 22:20:09,559 - agent.leader - INFO - 风控官 分析完成，评分: 8.9
+2026-04-19 22:20:10,450 - agent.fundamental - INFO - 分析完成，评分: 7.1
+2026-04-19 22:20:10,450 - agent.leader - INFO - 基本面分析师 分析完成，评分: 7.1
+2026-04-19 22:20:10,965 - agent.intelligence - INFO - 已合并存储情报: 5条新闻, 3条研报
+2026-04-19 22:20:10,967 - agent.intelligence - INFO - 分析完成，评分: 6.7
+2026-04-19 22:20:10,967 - agent.leader - INFO - 情报员 分析完成，评分: 6.7
+2026-04-19 22:20:10,972 - agent.leader - INFO - 分析完成 - 决策: buy, 评分: 7.12
+2026-04-19 22:20:11,039 - data_fetcher - INFO - ✅ 新浪实时行情获取成功 (002202): 金风科技 ¥25.39
+2026-04-19 22:20:11,542 - intel_cache - INFO - 使用新鲜缓存(0天): 002202
+2026-04-19 22:40:26,577 - data_fetcher - INFO - ✅ 新浪财经K线获取成功 (688361), 共 60 条
+2026-04-19 22:40:27,787 - StockAgentTeam - INFO - 开始分析: 688361(688361)
+2026-04-19 22:40:27,789 - agent.leader - INFO - 开始分析 688361(688361)
+2026-04-19 22:40:27,790 - agent.technical - INFO - 开始分析 688361(688361)
+2026-04-19 22:40:27,791 - agent.intelligence - INFO - 开始分析 688361(688361)
+2026-04-19 22:40:27,791 - agent.risk - INFO - 开始分析 688361(688361)
+2026-04-19 22:40:27,799 - agent.fundamental - INFO - 开始分析 688361(688361)
+2026-04-19 22:40:27,818 - agent.technical - INFO - 分析完成，评分: 6.8
+2026-04-19 22:40:27,819 - agent.leader - INFO - 技术分析员 分析完成，评分: 6.8
+2026-04-19 22:40:28,011 - data_fetcher - INFO - ✅ 新浪大盘指数获取成功: 上证4051.4254, 深证14885.416, 创业板3678.293
+2026-04-19 22:40:28,017 - agent.risk - INFO - 分析完成，评分: 8.9
+2026-04-19 22:40:28,017 - agent.leader - INFO - 风控官 分析完成，评分: 8.9
+2026-04-19 22:40:28,968 - agent.fundamental - INFO - 分析完成，评分: 7.3
+2026-04-19 22:40:28,968 - agent.leader - INFO - 基本面分析师 分析完成，评分: 7.3
+2026-04-19 22:40:29,470 - agent.intelligence - INFO - 分析完成，评分: 6.5
+2026-04-19 22:40:29,470 - agent.leader - INFO - 情报员 分析完成，评分: 6.5
+2026-04-19 22:40:29,476 - agent.leader - INFO - 分析完成 - 决策: buy, 评分: 7.19
+2026-04-19 22:40:29,526 - data_fetcher - INFO - ✅ 新浪实时行情获取成功 (688361): 中科飞测 ¥177.2
+2026-04-19 22:40:30,028 - intel_cache - INFO - 执行情报搜索: 688361(688361)
+2026-04-19 22:40:32,392 - intel_searcher - INFO - Serper搜索成功: 688361 688361 最新消息 -> 5条结果
+2026-04-19 22:40:34,026 - intel_searcher - INFO - Serper搜索成功: 688361 研报 目标价 评级 -> 3条结果
+2026-04-19 22:40:35,172 - intel_searcher - INFO - Serper搜索成功: 688361 股吧 讨论 -> 3条结果
+2026-04-19 22:40:35,174 - intel_cache - INFO - 情报已缓存: 688361 -> data/intel/688361.json
+2026-04-19 22:45:53,396 - intel_cache - INFO - 使用新鲜缓存(0天): 688361
+2026-04-19 22:47:01,749 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-19 22:47:01,751 - intel_cache - INFO - 执行情报搜索: 国电南瑞(600406)
+2026-04-19 22:47:11,438 - intel_searcher - INFO - Serper搜索成功: 国电南瑞 600406 最新消息 -> 5条结果
+2026-04-19 22:47:15,192 - intel_searcher - INFO - Serper搜索成功: 国电南瑞 研报 目标价 评级 -> 3条结果
+2026-04-19 22:47:17,384 - intel_searcher - INFO - Serper搜索成功: 国电南瑞 股吧 讨论 -> 3条结果
+2026-04-19 22:47:17,386 - intel_cache - INFO - 情报已缓存: 600406 -> data/intel/600406.json
+2026-04-19 22:47:17,386 - StockAgentTeam - INFO - 开始分析: 国电南瑞(600406)
+2026-04-19 22:47:17,399 - web_intelligence - WARNING - [news] 低可信度来源(0.15): ⚠️ 低可信度来源(social) - 国电南瑞(SH600406)股票股价 - 雪球...
+2026-04-19 22:47:17,410 - web_intelligence - WARNING - [research] 过滤过期数据: [PDF] 国电南瑞（600406.SH）... (年龄: 164天)
+2026-04-19 22:47:17,410 - web_intelligence - WARNING - [sentiment] 低可信度来源(0.10): ⚠️ 低可信度来源(social) - 情绪化词汇: 龙头 - 国电南瑞怎么样_分析讨论社区—东方财富网 - 股吧...
+2026-04-19 22:47:17,410 - web_intelligence - WARNING - [sentiment] 低可信度来源(0.10): ⚠️ 低可信度来源(social) - 情绪化词汇: 十倍, 百倍, 极端预期: 十倍, 百倍 - 国电南瑞(600406)股吧 - 东方财富...
+2026-04-19 22:47:17,410 - web_intelligence - WARNING - [sentiment] 低可信度来源(0.15): ⚠️ 低可信度来源(social) - 国电南瑞怎么样_分析讨论社区—东方财富网 - 股吧...
+2026-04-19 22:47:17,411 - StockAgentTeam - INFO - 已注入网络情报: 3 类
+2026-04-19 22:47:17,412 - agent.leader - INFO - 开始分析 国电南瑞(600406)
+2026-04-19 22:47:17,414 - agent.technical - INFO - 开始分析 国电南瑞(600406)
+2026-04-19 22:47:17,414 - agent.intelligence - INFO - 开始分析 国电南瑞(600406)
+2026-04-19 22:47:17,416 - agent.risk - INFO - 开始分析 国电南瑞(600406)
+2026-04-19 22:47:17,417 - agent.fundamental - INFO - 开始分析 国电南瑞(600406)
+2026-04-19 22:47:17,423 - agent.intelligence - INFO - 加载存储情报: 600406 (采集于2026-04-19)
+2026-04-19 22:47:17,603 - data_fetcher - INFO - ✅ 新浪大盘指数获取成功: 上证4051.4254, 深证14885.416, 创业板3678.293
+2026-04-19 22:47:17,665 - agent.risk - INFO - 分析完成，评分: 8.9
+2026-04-19 22:47:17,683 - data_fetcher - INFO - ✅ 新浪财经K线获取成功 (600406), 共 60 条
+2026-04-19 22:47:17,683 - agent.leader - INFO - 风控官 分析完成，评分: 8.9
+2026-04-19 22:47:18,219 - agent.technical - INFO - 分析完成，评分: 7.1
+2026-04-19 22:47:18,219 - agent.leader - INFO - 技术分析员 分析完成，评分: 7.1
+2026-04-19 22:47:18,801 - agent.fundamental - INFO - 分析完成，评分: 7.0
+2026-04-19 22:47:18,802 - agent.leader - INFO - 基本面分析师 分析完成，评分: 7.0
+2026-04-19 22:47:19,264 - agent.intelligence - INFO - 已合并存储情报: 5条新闻, 3条研报
+2026-04-19 22:47:19,265 - agent.intelligence - INFO - 已合并网络情报: 整体情绪=neutral
+2026-04-19 22:47:19,267 - agent.intelligence - INFO - 分析完成，评分: 6.8
+2026-04-19 22:47:19,267 - agent.leader - INFO - 情报员 分析完成，评分: 6.8
+2026-04-19 22:47:19,278 - agent.leader - INFO - 分析完成 - 决策: buy, 评分: 7.32
+2026-04-19 22:47:29,207 - intel_cache - INFO - 使用新鲜缓存(0天): 600406
+2026-04-19 22:47:42,582 - StockAgentTeam - INFO - 开始分析: 600406(600406)
+2026-04-19 22:47:42,582 - agent.leader - INFO - 开始分析 600406(600406)
+2026-04-19 22:47:42,583 - agent.technical - INFO - 开始分析 600406(600406)
+2026-04-19 22:47:42,584 - agent.intelligence - INFO - 开始分析 600406(600406)
+2026-04-19 22:47:42,585 - agent.risk - INFO - 开始分析 600406(600406)
+2026-04-19 22:47:42,587 - agent.fundamental - INFO - 开始分析 600406(600406)
+2026-04-19 22:47:42,591 - agent.intelligence - INFO - 加载存储情报: 600406 (采集于2026-04-19)
+2026-04-19 22:47:42,592 - agent.intelligence - INFO - 已合并存储情报: 5条新闻, 3条研报
+2026-04-19 22:47:42,595 - agent.fundamental - INFO - 分析完成，评分: 7.0
+2026-04-19 22:47:42,595 - agent.leader - INFO - 基本面分析师 分析完成，评分: 7.0
+2026-04-19 22:47:42,598 - agent.intelligence - INFO - 分析完成，评分: 6.4
+2026-04-19 22:47:42,601 - agent.leader - INFO - 情报员 分析完成，评分: 6.4
+2026-04-19 22:47:42,604 - agent.risk - INFO - 分析完成，评分: 8.9
+2026-04-19 22:47:42,604 - agent.leader - INFO - 风控官 分析完成，评分: 8.9
+2026-04-19 22:47:42,618 - agent.technical - INFO - 分析完成，评分: 7.1
+2026-04-19 22:47:42,619 - agent.leader - INFO - 技术分析员 分析完成，评分: 7.1
+2026-04-19 22:47:42,654 - agent.leader - INFO - 分析完成 - 决策: buy, 评分: 7.20
+2026-04-19 22:47:42,804 - data_fetcher - INFO - ✅ 新浪实时行情获取成功 (600406): 国电南瑞 ¥26.81
+2026-04-19 22:47:43,352 - intel_cache - INFO - 使用新鲜缓存(0天): 600406
+2026-04-19 23:07:18,678 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 23:07:18,728 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 23:07:21,404 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 23:07:21,430 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 23:07:22,595 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 23:07:22,615 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 23:07:56,949 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 23:07:57,010 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 23:07:58,905 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 23:07:58,926 - data_fetcher - INFO - efinance 数据源已加载
