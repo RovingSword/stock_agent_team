@@ -4,12 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a52f1baa-f3d7-4bab-a2d5-a0b3ecf59e11" name="Changes" comment="feat:prompt优化">
-      <change afterPath="$PROJECT_DIR$/../.omc/state/hud-stdin-cache.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../.omc/state/sessions/247a8eab-6c5b-420b-a0ec-add00d835cea/hud-state.json" afterDir="false" />
+    <list default="true" id="a52f1baa-f3d7-4bab-a2d5-a0b3ecf59e11" name="Changes" comment="feat:情报">
       <change afterPath="$PROJECT_DIR$/analyze_002202.log" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/analyze_002202.py" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/data/logs/agent_team_20260415.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/data/database.db" beforeDir="false" afterPath="$PROJECT_DIR$/config/data/database.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/data/logs/agent_team_20260419.log" beforeDir="false" afterPath="$PROJECT_DIR$/config/data/logs/agent_team_20260419.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/intel/600406.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/intel/600406.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/watchlist.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/watchlist.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -37,20 +39,20 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/jian/Documents/AI/stock_agent_team/stock_agent_team_proj&quot;,
-    &quot;mcopilot_agent_context_state_agent_view_container_tabs&quot;: &quot;[{\&quot;id\&quot;:\&quot;545bea80-4d63-420a-900b-77c928b86db0\&quot;,\&quot;displayName\&quot;:\&quot;我现在貌似看...\&quot;,\&quot;createdAt\&quot;:1776338540618,\&quot;closeable\&quot;:false,\&quot;conversationId\&quot;:\&quot;cc0fe594-ed8f-43dd-a983-757893a24fdb\&quot;,\&quot;tabType\&quot;:\&quot;AGENT\&quot;,\&quot;isActive\&quot;:true}]&quot;,
-    &quot;mcopilot_agent_context_state_deleteFileProtection&quot;: &quot;false&quot;,
-    &quot;mcopilot_agent_context_state_mc.agent.selectedModelType&quot;: &quot;59.0&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "/Users/jian/Documents/AI/stock_agent_team/stock_agent_team_proj",
+    "mcopilot_agent_context_state_agent_view_container_tabs": "[{\"id\":\"545bea80-4d63-420a-900b-77c928b86db0\",\"displayName\":\"我现在貌似看...\",\"createdAt\":1776598941663,\"closeable\":true,\"conversationId\":\"cc0fe594-ed8f-43dd-a983-757893a24fdb\",\"tabType\":\"AGENT\",\"isActive\":false},{\"id\":\"98695ca2-9178-4328-912e-ddc945e916a0\",\"displayName\":\"Agent评分规...\",\"createdAt\":1776599746546,\"closeable\":true,\"conversationId\":\"11c53ee2-2c84-4c01-86c4-73b4e1a17363\",\"tabType\":\"AGENT\",\"isActive\":true}]",
+    "mcopilot_agent_context_state_deleteFileProtection": "false",
+    "mcopilot_agent_context_state_mc.agent.selectedModelType": "51.0"
   }
-}</component>
+}]]></component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -122,7 +124,15 @@
       <option name="project" value="LOCAL" />
       <updated>1776416335301</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="feat:情报">
+      <option name="closed" value="true" />
+      <created>1776611316202</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1776611316202</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -142,6 +152,7 @@
     <MESSAGE value="fix" />
     <MESSAGE value="feat:增加k线" />
     <MESSAGE value="feat:prompt优化" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat:prompt优化" />
+    <MESSAGE value="feat:情报" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat:情报" />
   </component>
 </project>

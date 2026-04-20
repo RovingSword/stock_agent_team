@@ -1,5 +1,5 @@
 {
-  "update_time": "2026-04-19T22:47:19.279350",
+  "update_time": "2026-04-20T15:44:27.157178",
   "version": "1.0",
   "candidates": [
     {
@@ -37,48 +37,6 @@
         "with_intel": true
       },
       "composite_score": 7.232083333333334,
-      "is_buy_recommended": true,
-      "raw_data": null,
-      "price_change_5d": null,
-      "market_cap": null,
-      "is_st": false
-    },
-    {
-      "code": "603083",
-      "name": "剑桥科技",
-      "add_date": "2026-04-19",
-      "add_reason": "手动添加",
-      "source": "manual",
-      "source_score": 0.0,
-      "status": "watching",
-      "last_analysis_date": "2026-04-19T21:47:38.994835",
-      "added_by": "system",
-      "analysis_result": {
-        "mode": "llm",
-        "analyzed_at": "2026-04-19T21:47:38.994778",
-        "action": "buy",
-        "confidence": "medium",
-        "rationale": {
-          "buy_reasons": [
-            "[risk] 风控通过",
-            "[intelligence] 板块龙头，题材发酵期",
-            "[intelligence] 近5日主力净流入10.0亿",
-            "[technical] 趋势明确：上升趋势",
-            "[technical] MACD金叉确认",
-            "[fundamental] 业绩高增长",
-            "[fundamental] 行业龙头，护城河中等"
-          ],
-          "risk_warnings": [
-            "[risk] 大盘风险中等",
-            "[intelligence] 情报面风险可控",
-            "[technical] 位置偏高：高位偏离",
-            "[technical] KDJ超买",
-            "[fundamental] 估值偏高"
-          ]
-        },
-        "with_intel": true
-      },
-      "composite_score": 7.157638888888888,
       "is_buy_recommended": true,
       "raw_data": null,
       "price_change_5d": null,
@@ -135,11 +93,11 @@
       "source": "manual",
       "source_score": 0.0,
       "status": "watching",
-      "last_analysis_date": "2026-04-19T22:47:19.279333",
+      "last_analysis_date": "2026-04-19T23:11:52.017286",
       "added_by": "system",
       "analysis_result": {
         "mode": "llm",
-        "analyzed_at": "2026-04-19T22:47:19.279279",
+        "analyzed_at": "2026-04-19T23:11:52.017260",
         "action": "buy",
         "confidence": "medium",
         "rationale": {
@@ -147,22 +105,110 @@
             "[risk] 风控通过",
             "[technical] 趋势明确：上升趋势",
             "[technical] MACD金叉确认",
-            "[fundamental] 行业龙头，护城河中等",
             "[intelligence] 板块龙头，题材发酵期",
-            "[intelligence] 北向资金连续增持100.0%"
+            "[intelligence] 北向资金连续增持100.0%",
+            "[fundamental] 估值合理偏低",
+            "[fundamental] 行业龙头，护城河中等"
           ],
           "risk_warnings": [
             "[risk] 大盘风险中等",
             "[technical] 技术面风险可控",
-            "[fundamental] 基本面风险可控",
+            "[intelligence] 情报面风险可控",
+            "[fundamental] 基本面风险可控"
+          ]
+        },
+        "with_intel": true,
+        "intel_source": "cached(0d)"
+      },
+      "composite_score": 7.298833333333334,
+      "is_buy_recommended": true,
+      "raw_data": null,
+      "price_change_5d": null,
+      "market_cap": null,
+      "is_st": false
+    },
+    {
+      "code": "603083",
+      "name": "剑桥科技",
+      "add_date": "2026-04-19",
+      "add_reason": "手动添加",
+      "source": "manual",
+      "source_score": 0.0,
+      "status": "watching",
+      "last_analysis_date": "2026-04-19T23:11:31.719521",
+      "added_by": "system",
+      "analysis_result": {
+        "mode": "llm",
+        "analyzed_at": "2026-04-19T23:11:31.719507",
+        "action": "buy",
+        "confidence": "medium",
+        "rationale": {
+          "buy_reasons": [
+            "[risk] 风控通过",
+            "[technical] 趋势明确：上升趋势",
+            "[technical] MACD金叉确认",
+            "[fundamental] 业绩高增长",
+            "[fundamental] 行业龙头，护城河中等",
+            "[intelligence] 板块龙头，题材发酵期",
+            "[intelligence] 近5日主力净流入10.0亿"
+          ],
+          "risk_warnings": [
+            "[risk] 大盘风险中等",
+            "[technical] 位置偏高：高位偏离",
+            "[technical] KDJ超买",
+            "[fundamental] 估值偏高",
             "[intelligence] 情报面风险可控"
           ]
         },
         "with_intel": true,
         "intel_source": "cached(0d)"
       },
-      "composite_score": 7.321527777777778,
+      "composite_score": 7.447166666666666,
       "is_buy_recommended": true,
+      "raw_data": null,
+      "price_change_5d": null,
+      "market_cap": null,
+      "is_st": false
+    },
+    {
+      "code": "600118",
+      "name": "中国卫星",
+      "add_date": "2026-04-20",
+      "add_reason": "手动添加",
+      "source": "manual",
+      "source_score": 0.0,
+      "status": "watching",
+      "last_analysis_date": "2026-04-20T15:44:27.157164",
+      "added_by": "system",
+      "analysis_result": {
+        "mode": "llm",
+        "analyzed_at": "2026-04-20T15:44:27.157136",
+        "action": "watch",
+        "confidence": "low",
+        "rationale": {
+          "buy_reasons": [
+            "[risk] 风控通过",
+            "[technical] 趋势明确：上升趋势",
+            "[technical] MACD金叉确认",
+            "[intelligence] 板块龙头，题材发酵期",
+            "[intelligence] 北向资金连续增持100.0%",
+            "[fundamental] 业绩高增长",
+            "[fundamental] 行业龙头，护城河中等"
+          ],
+          "risk_warnings": [
+            "[risk] 大盘风险中等",
+            "[technical] 位置偏高：高位偏离",
+            "[technical] RSI超买",
+            "[technical] KDJ超买",
+            "[intelligence] 情报面风险可控",
+            "[fundamental] 估值偏高"
+          ]
+        },
+        "with_intel": true,
+        "intel_source": "cached(0d)"
+      },
+      "composite_score": 6.976833333333333,
+      "is_buy_recommended": false,
       "raw_data": null,
       "price_change_5d": null,
       "market_cap": null,
@@ -235,13 +281,55 @@
       "price_change_5d": null,
       "market_cap": null,
       "is_st": false
+    },
+    {
+      "code": "603083",
+      "name": "剑桥科技",
+      "add_date": "2026-04-19",
+      "add_reason": "手动添加 | 移除原因:用户手动移除",
+      "source": "manual",
+      "source_score": 0.0,
+      "status": "removed",
+      "last_analysis_date": "2026-04-19T21:47:38.994835",
+      "added_by": "system",
+      "analysis_result": {
+        "mode": "llm",
+        "analyzed_at": "2026-04-19T21:47:38.994778",
+        "action": "buy",
+        "confidence": "medium",
+        "rationale": {
+          "buy_reasons": [
+            "[risk] 风控通过",
+            "[intelligence] 板块龙头，题材发酵期",
+            "[intelligence] 近5日主力净流入10.0亿",
+            "[technical] 趋势明确：上升趋势",
+            "[technical] MACD金叉确认",
+            "[fundamental] 业绩高增长",
+            "[fundamental] 行业龙头，护城河中等"
+          ],
+          "risk_warnings": [
+            "[risk] 大盘风险中等",
+            "[intelligence] 情报面风险可控",
+            "[technical] 位置偏高：高位偏离",
+            "[technical] KDJ超买",
+            "[fundamental] 估值偏高"
+          ]
+        },
+        "with_intel": true
+      },
+      "composite_score": 7.157638888888888,
+      "is_buy_recommended": true,
+      "raw_data": null,
+      "price_change_5d": null,
+      "market_cap": null,
+      "is_st": false
     }
   ],
   "stats": {
-    "total": 4,
+    "total": 5,
     "pending": 0,
     "analyzing": 0,
-    "watching": 4,
+    "watching": 5,
     "archived": 0
   }
 }

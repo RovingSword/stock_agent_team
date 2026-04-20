@@ -360,3 +360,90 @@
 2026-04-19 23:07:57,010 - data_fetcher - INFO - efinance 数据源已加载
 2026-04-19 23:07:58,905 - data_fetcher - INFO - akshare 数据源已加载
 2026-04-19 23:07:58,926 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 23:10:49,496 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-19 23:10:49,542 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-19 23:11:24,930 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-19 23:11:24,932 - intel_cache - INFO - 执行情报搜索: 剑桥科技(603083)
+2026-04-19 23:11:26,702 - intel_searcher - INFO - Serper搜索成功: 剑桥科技 603083 最新消息 -> 5条结果
+2026-04-19 23:11:28,186 - intel_searcher - INFO - Serper搜索成功: 剑桥科技 研报 目标价 评级 -> 3条结果
+2026-04-19 23:11:29,941 - intel_searcher - INFO - Serper搜索成功: 剑桥科技 股吧 讨论 -> 3条结果
+2026-04-19 23:11:29,942 - intel_cache - INFO - 情报已缓存: 603083 -> data/intel/603083.json
+2026-04-19 23:11:29,942 - StockAgentTeam - INFO - 开始分析: 剑桥科技(603083)
+2026-04-19 23:11:29,946 - web_intelligence - WARNING - [news] 低可信度来源(0.15): ⚠️ 低可信度来源(social) - 剑桥科技(SH603083)股票股价 - 雪球...
+2026-04-19 23:11:29,947 - web_intelligence - WARNING - [news] 低可信度来源(0.15): ⚠️ 低可信度来源(social) - 剑桥科技怎么样_分析讨论社区 - 股吧...
+2026-04-19 23:11:29,948 - web_intelligence - WARNING - [research] 过滤过期数据: 研报掘金丨国泰海通：予剑桥科技“增持”评级，目标价161元 ... (年龄: 87天)
+2026-04-19 23:11:29,948 - web_intelligence - WARNING - [research] 低可信度来源(0.15): ⚠️ 低可信度来源(social) - $剑桥科技(SH603083)$ 剑桥科技机构评级& 业绩&...
+2026-04-19 23:11:29,948 - web_intelligence - WARNING - [sentiment] 低可信度来源(0.15): ⚠️ 低可信度来源(social) - 剑桥科技(603083)股吧_剑桥科技怎么样_分析讨论社区—...
+2026-04-19 23:11:29,948 - web_intelligence - WARNING - [sentiment] 低可信度来源(0.15): ⚠️ 低可信度来源(social) - 剑桥科技怎么样_分析讨论社区—东方财富网 - 股吧...
+2026-04-19 23:11:29,949 - web_intelligence - WARNING - [sentiment] 低可信度来源(0.15): ⚠️ 低可信度来源(social) - 剑桥科技怎么样_分析讨论社区—东方财富网 - 股吧...
+2026-04-19 23:11:29,949 - StockAgentTeam - INFO - 已注入网络情报: 3 类
+2026-04-19 23:11:29,949 - agent.leader - INFO - 开始分析 剑桥科技(603083)
+2026-04-19 23:11:29,949 - agent.technical - INFO - 开始分析 剑桥科技(603083)
+2026-04-19 23:11:29,950 - agent.intelligence - INFO - 开始分析 剑桥科技(603083)
+2026-04-19 23:11:29,950 - agent.risk - INFO - 开始分析 剑桥科技(603083)
+2026-04-19 23:11:29,951 - agent.fundamental - INFO - 开始分析 剑桥科技(603083)
+2026-04-19 23:11:29,952 - agent.intelligence - INFO - 加载存储情报: 603083 (采集于2026-04-19)
+2026-04-19 23:11:30,145 - data_fetcher - INFO - ✅ 新浪财经K线获取成功 (603083), 共 60 条
+2026-04-19 23:11:30,205 - data_fetcher - INFO - ✅ 新浪大盘指数获取成功: 上证4051.4254, 深证14885.416, 创业板3678.293
+2026-04-19 23:11:30,211 - agent.risk - INFO - 分析完成，评分: 9.0
+2026-04-19 23:11:30,211 - agent.leader - INFO - 风控官 分析完成，评分: 9.0
+2026-04-19 23:11:30,370 - agent.technical - INFO - 分析完成，评分: 6.7
+2026-04-19 23:11:30,371 - agent.leader - INFO - 技术分析员 分析完成，评分: 6.7
+2026-04-19 23:11:30,964 - agent.fundamental - INFO - 分析完成，评分: 7.1
+2026-04-19 23:11:30,965 - agent.leader - INFO - 基本面分析师 分析完成，评分: 7.1
+2026-04-19 23:11:31,710 - agent.intelligence - INFO - 已合并存储情报: 5条新闻, 3条研报
+2026-04-19 23:11:31,710 - agent.intelligence - INFO - 已合并网络情报: 整体情绪=neutral
+2026-04-19 23:11:31,713 - agent.intelligence - INFO - 分析完成，评分: 7.5
+2026-04-19 23:11:31,713 - agent.leader - INFO - 情报员 分析完成，评分: 7.5
+2026-04-19 23:11:31,719 - agent.leader - INFO - 分析完成 - 决策: buy, 评分: 7.45
+2026-04-19 23:11:50,999 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-19 23:11:51,003 - intel_cache - INFO - 使用新鲜缓存(0天): 600406
+2026-04-19 23:11:51,003 - StockAgentTeam - INFO - 开始分析: 国电南瑞(600406)
+2026-04-19 23:11:51,004 - web_intelligence - WARNING - [news] 低可信度来源(0.15): ⚠️ 低可信度来源(social) - 国电南瑞(SH600406)股票股价 - 雪球...
+2026-04-19 23:11:51,005 - web_intelligence - WARNING - [research] 过滤过期数据: [PDF] 国电南瑞（600406.SH）... (年龄: 164天)
+2026-04-19 23:11:51,005 - web_intelligence - WARNING - [sentiment] 低可信度来源(0.10): ⚠️ 低可信度来源(social) - 情绪化词汇: 龙头 - 国电南瑞怎么样_分析讨论社区—东方财富网 - 股吧...
+2026-04-19 23:11:51,005 - web_intelligence - WARNING - [sentiment] 低可信度来源(0.10): ⚠️ 低可信度来源(social) - 情绪化词汇: 十倍, 百倍, 极端预期: 十倍, 百倍 - 国电南瑞(600406)股吧 - 东方财富...
+2026-04-19 23:11:51,005 - web_intelligence - WARNING - [sentiment] 低可信度来源(0.15): ⚠️ 低可信度来源(social) - 国电南瑞怎么样_分析讨论社区—东方财富网 - 股吧...
+2026-04-19 23:11:51,005 - StockAgentTeam - INFO - 已注入网络情报: 3 类
+2026-04-19 23:11:51,006 - agent.leader - INFO - 开始分析 国电南瑞(600406)
+2026-04-19 23:11:51,006 - agent.technical - INFO - 开始分析 国电南瑞(600406)
+2026-04-19 23:11:51,006 - agent.intelligence - INFO - 开始分析 国电南瑞(600406)
+2026-04-19 23:11:51,007 - agent.risk - INFO - 开始分析 国电南瑞(600406)
+2026-04-19 23:11:51,008 - agent.fundamental - INFO - 开始分析 国电南瑞(600406)
+2026-04-19 23:11:51,010 - agent.intelligence - INFO - 加载存储情报: 600406 (采集于2026-04-19)
+2026-04-19 23:11:51,013 - agent.risk - INFO - 分析完成，评分: 9.0
+2026-04-19 23:11:51,013 - agent.leader - INFO - 风控官 分析完成，评分: 9.0
+2026-04-19 23:11:51,103 - data_fetcher - INFO - ✅ 新浪财经K线获取成功 (600406), 共 60 条
+2026-04-19 23:11:51,358 - agent.technical - INFO - 分析完成，评分: 6.9
+2026-04-19 23:11:51,358 - agent.leader - INFO - 技术分析员 分析完成，评分: 6.9
+2026-04-19 23:11:51,382 - agent.intelligence - INFO - 已合并存储情报: 5条新闻, 3条研报
+2026-04-19 23:11:51,382 - agent.intelligence - INFO - 已合并网络情报: 整体情绪=neutral
+2026-04-19 23:11:51,384 - agent.intelligence - INFO - 分析完成，评分: 6.7
+2026-04-19 23:11:51,384 - agent.leader - INFO - 情报员 分析完成，评分: 6.7
+2026-04-19 23:11:52,012 - agent.fundamental - INFO - 分析完成，评分: 7.1
+2026-04-19 23:11:52,012 - agent.leader - INFO - 基本面分析师 分析完成，评分: 7.1
+2026-04-19 23:11:52,017 - agent.leader - INFO - 分析完成 - 决策: buy, 评分: 7.30
+2026-04-19 23:12:08,470 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-19 23:12:08,471 - StockAgentTeam - INFO - 开始分析: 600406(600406)
+2026-04-19 23:12:08,471 - agent.leader - INFO - 开始分析 600406(600406)
+2026-04-19 23:12:08,471 - agent.intelligence - INFO - 开始分析 600406(600406)
+2026-04-19 23:12:08,471 - agent.risk - INFO - 开始分析 600406(600406)
+2026-04-19 23:12:08,471 - agent.technical - INFO - 开始分析 600406(600406)
+2026-04-19 23:12:08,471 - agent.fundamental - INFO - 开始分析 600406(600406)
+2026-04-19 23:12:08,476 - agent.intelligence - INFO - 加载存储情报: 600406 (采集于2026-04-19)
+2026-04-19 23:12:08,478 - agent.intelligence - INFO - 已合并存储情报: 5条新闻, 3条研报
+2026-04-19 23:12:08,481 - agent.risk - INFO - 分析完成，评分: 9.0
+2026-04-19 23:12:08,481 - agent.leader - INFO - 风控官 分析完成，评分: 9.0
+2026-04-19 23:12:08,482 - agent.intelligence - INFO - 分析完成，评分: 6.4
+2026-04-19 23:12:08,482 - agent.leader - INFO - 情报员 分析完成，评分: 6.4
+2026-04-19 23:12:08,488 - agent.technical - INFO - 分析完成，评分: 6.9
+2026-04-19 23:12:08,488 - agent.leader - INFO - 技术分析员 分析完成，评分: 6.9
+2026-04-19 23:12:08,490 - agent.fundamental - INFO - 分析完成，评分: 7.1
+2026-04-19 23:12:08,490 - agent.leader - INFO - 基本面分析师 分析完成，评分: 7.1
+2026-04-19 23:12:08,498 - agent.leader - INFO - 分析完成 - 决策: buy, 评分: 7.20
+2026-04-19 23:12:08,675 - data_fetcher - INFO - ✅ 新浪实时行情获取成功 (600406): 国电南瑞 ¥26.81
+2026-04-19 23:12:09,189 - intel_cache - INFO - 执行情报搜索: 600406(600406)
+2026-04-19 23:12:11,615 - intel_searcher - INFO - Serper搜索成功: 600406 600406 最新消息 -> 5条结果
+2026-04-19 23:12:12,955 - intel_searcher - INFO - Serper搜索成功: 600406 研报 目标价 评级 -> 3条结果
+2026-04-19 23:12:14,487 - intel_searcher - INFO - Serper搜索成功: 600406 股吧 讨论 -> 3条结果
+2026-04-19 23:12:14,490 - intel_cache - INFO - 情报已缓存: 600406 -> data/intel/600406.json

@@ -1,0 +1,256 @@
+2026-04-15 10:29:03,173 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-15 10:29:03,173 - StockAgentTeam - INFO - 开始分析: 比亚迪(002594)
+2026-04-15 10:29:03,173 - agent.leader - INFO - 开始分析 比亚迪(002594)
+2026-04-15 10:29:03,173 - agent.technical - INFO - 开始分析 比亚迪(002594)
+2026-04-15 10:29:03,179 - agent.intelligence - INFO - 开始分析 比亚迪(002594)
+2026-04-15 10:29:03,180 - agent.intelligence - ERROR - 分析失败: object of type 'float' has no len()
+2026-04-15 10:29:03,180 - agent.risk - INFO - 开始分析 比亚迪(002594)
+2026-04-15 10:29:03,181 - agent.leader - ERROR - 情报员 分析失败: object of type 'float' has no len()
+2026-04-15 10:29:03,181 - agent.fundamental - INFO - 开始分析 比亚迪(002594)
+2026-04-15 10:29:03,586 - agent.risk - INFO - 分析完成，评分: 9.0
+2026-04-15 10:29:03,586 - agent.leader - INFO - 风控官 分析完成，评分: 9.0
+2026-04-15 10:29:03,876 - agent.fundamental - INFO - 分析完成，评分: 8.7
+2026-04-15 10:29:03,877 - agent.leader - INFO - 基本面分析师 分析完成，评分: 8.7
+2026-04-15 10:29:04,098 - agent.technical - INFO - 分析完成，评分: 7.2
+2026-04-15 10:29:04,098 - agent.leader - INFO - 技术分析员 分析完成，评分: 7.2
+2026-04-15 10:29:04,931 - agent.leader - INFO - 分析完成 - 决策: watch, 评分: 5.60
+2026-04-15 10:29:04,931 - StockAgentTeam - INFO - 开始复盘: weekly
+2026-04-15 10:29:04,931 - agent.review - INFO - 开始分析 ()
+2026-04-15 10:29:05,500 - agent.review - INFO - 分析完成，评分: 0.0
+2026-04-15 10:30:09,399 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-15 10:30:09,399 - StockAgentTeam - INFO - 开始分析: 五洲新春(603667)
+2026-04-15 10:30:09,399 - agent.leader - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:30:09,399 - agent.technical - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:30:09,403 - agent.intelligence - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:30:09,409 - agent.risk - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:30:09,415 - agent.fundamental - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:30:10,062 - agent.risk - INFO - 分析完成，评分: 9.0
+2026-04-15 10:30:10,063 - agent.leader - INFO - 风控官 分析完成，评分: 9.0
+2026-04-15 10:30:10,401 - agent.technical - INFO - 分析完成，评分: 7.2
+2026-04-15 10:30:10,402 - agent.leader - INFO - 技术分析员 分析完成，评分: 7.2
+2026-04-15 10:30:10,657 - agent.intelligence - INFO - 分析完成，评分: 7.3
+2026-04-15 10:30:10,657 - agent.leader - INFO - 情报员 分析完成，评分: 7.3
+2026-04-15 10:30:10,857 - agent.fundamental - INFO - 分析完成，评分: 8.7
+2026-04-15 10:30:10,858 - agent.leader - INFO - 基本面分析师 分析完成，评分: 8.7
+2026-04-15 10:31:16,961 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-15 10:31:16,961 - StockAgentTeam - INFO - 开始分析: 五洲新春(603667)
+2026-04-15 10:31:16,961 - agent.leader - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:31:16,963 - agent.technical - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:31:16,964 - agent.intelligence - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:31:16,965 - agent.risk - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:31:16,966 - agent.fundamental - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:31:17,548 - agent.risk - INFO - 分析完成，评分: 9.0
+2026-04-15 10:31:17,549 - agent.leader - INFO - 风控官 分析完成，评分: 9.0
+2026-04-15 10:31:17,862 - agent.fundamental - INFO - 分析完成，评分: 8.7
+2026-04-15 10:31:17,863 - agent.leader - INFO - 基本面分析师 分析完成，评分: 8.7
+2026-04-15 10:31:18,087 - agent.intelligence - INFO - 分析完成，评分: 7.3
+2026-04-15 10:31:18,087 - agent.leader - INFO - 情报员 分析完成，评分: 7.3
+2026-04-15 10:31:18,302 - agent.technical - INFO - 分析完成，评分: 7.2
+2026-04-15 10:31:18,303 - agent.leader - INFO - 技术分析员 分析完成，评分: 7.2
+2026-04-15 10:31:19,755 - agent.leader - INFO - 分析完成 - 决策: buy, 评分: 7.80
+2026-04-15 10:31:19,756 - StockAgentTeam - INFO - 开始复盘: weekly
+2026-04-15 10:31:19,756 - agent.review - INFO - 开始分析 ()
+2026-04-15 10:31:19,882 - agent.review - ERROR - 分析失败: '>' not supported between instances of 'NoneType' and 'int'
+2026-04-15 10:31:42,440 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-15 10:31:42,441 - StockAgentTeam - INFO - 开始分析: 五洲新春(603667)
+2026-04-15 10:31:42,441 - agent.leader - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:31:42,442 - agent.technical - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:31:42,444 - agent.intelligence - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:31:42,456 - agent.fundamental - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:31:42,456 - agent.risk - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:31:43,060 - agent.technical - INFO - 分析完成，评分: 7.2
+2026-04-15 10:31:43,061 - agent.leader - INFO - 技术分析员 分析完成，评分: 7.2
+2026-04-15 10:31:43,557 - agent.fundamental - INFO - 分析完成，评分: 8.7
+2026-04-15 10:31:43,557 - agent.leader - INFO - 基本面分析师 分析完成，评分: 8.7
+2026-04-15 10:31:43,797 - agent.intelligence - INFO - 分析完成，评分: 7.3
+2026-04-15 10:31:43,798 - agent.leader - INFO - 情报员 分析完成，评分: 7.3
+2026-04-15 10:31:43,993 - agent.risk - INFO - 分析完成，评分: 9.0
+2026-04-15 10:31:43,994 - agent.leader - INFO - 风控官 分析完成，评分: 9.0
+2026-04-15 10:31:45,361 - agent.leader - INFO - 分析完成 - 决策: buy, 评分: 7.80
+2026-04-15 10:31:45,363 - StockAgentTeam - INFO - 开始复盘: weekly
+2026-04-15 10:31:45,363 - agent.review - INFO - 开始分析 ()
+2026-04-15 10:31:45,492 - agent.review - ERROR - 分析失败: '>' not supported between instances of 'NoneType' and 'int'
+2026-04-15 10:31:59,737 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-15 10:31:59,737 - StockAgentTeam - INFO - 开始分析: 五洲新春(603667)
+2026-04-15 10:31:59,738 - agent.leader - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:31:59,739 - agent.technical - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:31:59,746 - agent.intelligence - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:31:59,756 - agent.risk - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:31:59,757 - agent.fundamental - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:32:00,519 - agent.technical - INFO - 分析完成，评分: 7.2
+2026-04-15 10:32:00,520 - agent.leader - INFO - 技术分析员 分析完成，评分: 7.2
+2026-04-15 10:32:00,941 - agent.fundamental - INFO - 分析完成，评分: 8.7
+2026-04-15 10:32:00,942 - agent.leader - INFO - 基本面分析师 分析完成，评分: 8.7
+2026-04-15 10:32:01,188 - agent.intelligence - INFO - 分析完成，评分: 7.3
+2026-04-15 10:32:01,189 - agent.leader - INFO - 情报员 分析完成，评分: 7.3
+2026-04-15 10:32:01,371 - agent.risk - INFO - 分析完成，评分: 9.0
+2026-04-15 10:32:01,372 - agent.leader - INFO - 风控官 分析完成，评分: 9.0
+2026-04-15 10:32:02,665 - agent.leader - INFO - 分析完成 - 决策: buy, 评分: 7.80
+2026-04-15 10:32:02,666 - StockAgentTeam - INFO - 开始复盘: weekly
+2026-04-15 10:32:02,666 - agent.review - INFO - 开始分析 ()
+2026-04-15 10:32:03,037 - agent.review - INFO - 分析完成，评分: 0.0
+2026-04-15 10:44:37,805 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-15 10:44:37,805 - StockAgentTeam - INFO - 开始分析: 五洲新春(603667)
+2026-04-15 10:44:37,806 - agent.leader - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:44:37,807 - agent.technical - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:44:37,807 - agent.intelligence - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:44:37,810 - agent.risk - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:44:37,817 - agent.fundamental - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:44:38,128 - data_fetcher - ERROR - 获取北向资金失败: module 'akshare' has no attribute 'stock_em_hsgt_north_net_flow_in'
+2026-04-15 10:44:38,286 - data_fetcher - ERROR - 获取K线数据失败: Length mismatch: Expected axis has 12 elements, new values have 11 elements
+2026-04-15 10:44:38,292 - agent.technical - WARNING - 无法获取 603667 的真实数据，使用模拟数据
+2026-04-15 10:44:38,318 - data_fetcher - ERROR - 获取新闻数据失败: Invalid regular expression: invalid escape sequence: \u
+2026-04-15 10:44:38,837 - agent.technical - INFO - 分析完成，评分: 7.2
+2026-04-15 10:44:38,838 - agent.leader - INFO - 技术分析员 分析完成，评分: 7.2
+2026-04-15 10:44:39,113 - agent.intelligence - INFO - 分析完成，评分: 5.8
+2026-04-15 10:44:39,114 - agent.leader - INFO - 情报员 分析完成，评分: 5.8
+2026-04-15 10:44:39,403 - agent.risk - INFO - 分析完成，评分: 8.9
+2026-04-15 10:44:39,404 - agent.leader - INFO - 风控官 分析完成，评分: 8.9
+2026-04-15 10:44:48,470 - data_fetcher - ERROR - 获取估值数据失败: HTTPSConnectionPool(host='82.push2.eastmoney.com', port=443): Max retries exceeded with url: /api/qt/clist/get?pn=3&pz=100&po=1&np=1&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2&fid=f12&fs=m%3A0+t%3A6%2Cm%3A0+t%3A80%2Cm%3A1+t%3A2%2Cm%3A1+t%3A23%2Cm%3A0+t%3A81+s%3A2048&fields=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6%2Cf7%2Cf8%2Cf9%2Cf10%2Cf12%2Cf13%2Cf14%2Cf15%2Cf16%2Cf17%2Cf18%2Cf20%2Cf21%2Cf23%2Cf24%2Cf25%2Cf22%2Cf11%2Cf62%2Cf128%2Cf136%2Cf115%2Cf152 (Caused by ProxyError('Cannot connect to proxy.', RemoteDisconnected('Remote end closed connection without response')))
+2026-04-15 10:44:48,780 - agent.fundamental - INFO - 分析完成，评分: 7.9
+2026-04-15 10:44:48,781 - agent.leader - INFO - 基本面分析师 分析完成，评分: 7.9
+2026-04-15 10:44:49,983 - agent.leader - INFO - 分析完成 - 决策: buy, 评分: 7.22
+2026-04-15 10:44:49,984 - StockAgentTeam - INFO - 开始复盘: weekly
+2026-04-15 10:44:49,984 - agent.review - INFO - 开始分析 ()
+2026-04-15 10:44:50,419 - agent.review - INFO - 分析完成，评分: 0.0
+2026-04-15 10:46:03,274 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-15 10:46:03,274 - StockAgentTeam - INFO - 开始分析: 五洲新春(603667)
+2026-04-15 10:46:03,274 - agent.leader - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:46:03,275 - agent.technical - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:46:03,276 - agent.risk - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:46:03,275 - agent.intelligence - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:46:03,277 - agent.fundamental - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:46:03,525 - data_fetcher - ERROR - 获取K线数据失败: HTTPSConnectionPool(host='push2his.eastmoney.com', port=443): Max retries exceeded with url: /api/qt/stock/kline/get?fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61%2Cf116&ut=7eea3edcaed734bea9cbfc24409ed989&klt=101&fqt=1&secid=1.603667&beg=20251216&end=20260415 (Caused by ProxyError('Cannot connect to proxy.', RemoteDisconnected('Remote end closed connection without response')))
+2026-04-15 10:46:03,527 - agent.technical - WARNING - 无法获取 603667 的真实数据，使用模拟数据
+2026-04-15 10:46:03,545 - data_fetcher - ERROR - 获取北向资金失败: module 'akshare' has no attribute 'stock_hsgt_north_net_flow_in_em'
+2026-04-15 10:46:03,655 - data_fetcher - ERROR - 获取新闻数据失败: Invalid regular expression: invalid escape sequence: \u
+2026-04-15 10:46:03,838 - agent.technical - INFO - 分析完成，评分: 7.2
+2026-04-15 10:46:03,839 - agent.leader - INFO - 技术分析员 分析完成，评分: 7.2
+2026-04-15 10:46:04,024 - agent.intelligence - INFO - 分析完成，评分: 5.8
+2026-04-15 10:46:04,024 - agent.leader - INFO - 情报员 分析完成，评分: 5.8
+2026-04-15 10:46:04,813 - agent.risk - INFO - 分析完成，评分: 8.9
+2026-04-15 10:46:04,814 - agent.leader - INFO - 风控官 分析完成，评分: 8.9
+2026-04-15 10:46:12,707 - data_fetcher - ERROR - 获取估值数据失败: HTTPSConnectionPool(host='82.push2.eastmoney.com', port=443): Max retries exceeded with url: /api/qt/clist/get?pn=3&pz=100&po=1&np=1&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2&fid=f12&fs=m%3A0+t%3A6%2Cm%3A0+t%3A80%2Cm%3A1+t%3A2%2Cm%3A1+t%3A23%2Cm%3A0+t%3A81+s%3A2048&fields=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6%2Cf7%2Cf8%2Cf9%2Cf10%2Cf12%2Cf13%2Cf14%2Cf15%2Cf16%2Cf17%2Cf18%2Cf20%2Cf21%2Cf23%2Cf24%2Cf25%2Cf22%2Cf11%2Cf62%2Cf128%2Cf136%2Cf115%2Cf152 (Caused by ProxyError('Cannot connect to proxy.', RemoteDisconnected('Remote end closed connection without response')))
+2026-04-15 10:46:13,105 - agent.fundamental - INFO - 分析完成，评分: 7.9
+2026-04-15 10:46:13,106 - agent.leader - INFO - 基本面分析师 分析完成，评分: 7.9
+2026-04-15 10:46:14,446 - agent.leader - INFO - 分析完成 - 决策: buy, 评分: 7.22
+2026-04-15 10:46:14,446 - StockAgentTeam - INFO - 开始复盘: weekly
+2026-04-15 10:46:14,446 - agent.review - INFO - 开始分析 ()
+2026-04-15 10:46:14,901 - agent.review - INFO - 分析完成，评分: 0.0
+2026-04-15 10:46:47,014 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-15 10:46:47,015 - StockAgentTeam - INFO - 开始分析: 五洲新春(603667)
+2026-04-15 10:46:47,015 - agent.leader - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:46:47,018 - agent.technical - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:46:47,026 - agent.intelligence - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:46:47,051 - agent.risk - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:46:47,052 - agent.fundamental - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:46:47,835 - agent.technical - INFO - 分析完成，评分: 6.1
+2026-04-15 10:46:47,836 - agent.leader - INFO - 技术分析员 分析完成，评分: 6.1
+2026-04-15 10:46:48,471 - agent.risk - INFO - 分析完成，评分: 8.9
+2026-04-15 10:46:48,472 - agent.leader - INFO - 风控官 分析完成，评分: 8.9
+2026-04-15 10:46:48,890 - data_fetcher - ERROR - 获取北向资金失败: '北向资金-净流入'
+2026-04-15 10:46:49,027 - data_fetcher - ERROR - 获取新闻数据失败: Invalid regular expression: invalid escape sequence: \u
+2026-04-15 10:46:49,321 - agent.intelligence - INFO - 分析完成，评分: 5.8
+2026-04-15 10:46:49,321 - agent.leader - INFO - 情报员 分析完成，评分: 5.8
+2026-04-15 10:46:52,313 - data_fetcher - ERROR - 获取估值数据失败: HTTPSConnectionPool(host='82.push2.eastmoney.com', port=443): Max retries exceeded with url: /api/qt/clist/get?pn=1&pz=100&po=1&np=1&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2&fid=f12&fs=m%3A0+t%3A6%2Cm%3A0+t%3A80%2Cm%3A1+t%3A2%2Cm%3A1+t%3A23%2Cm%3A0+t%3A81+s%3A2048&fields=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6%2Cf7%2Cf8%2Cf9%2Cf10%2Cf12%2Cf13%2Cf14%2Cf15%2Cf16%2Cf17%2Cf18%2Cf20%2Cf21%2Cf23%2Cf24%2Cf25%2Cf22%2Cf11%2Cf62%2Cf128%2Cf136%2Cf115%2Cf152 (Caused by ProxyError('Cannot connect to proxy.', RemoteDisconnected('Remote end closed connection without response')))
+2026-04-15 10:46:52,622 - agent.fundamental - INFO - 分析完成，评分: 7.9
+2026-04-15 10:46:52,622 - agent.leader - INFO - 基本面分析师 分析完成，评分: 7.9
+2026-04-15 10:46:53,394 - agent.leader - INFO - 分析完成 - 决策: watch, 评分: 6.83
+2026-04-15 10:46:53,394 - StockAgentTeam - INFO - 开始复盘: weekly
+2026-04-15 10:46:53,395 - agent.review - INFO - 开始分析 ()
+2026-04-15 10:46:53,787 - agent.review - INFO - 分析完成，评分: 0.0
+2026-04-15 10:47:47,373 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-15 10:47:47,374 - StockAgentTeam - INFO - 开始分析: 五洲新春(603667)
+2026-04-15 10:47:47,374 - agent.leader - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:47:47,374 - agent.technical - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:47:47,378 - agent.intelligence - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:47:47,384 - agent.risk - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:47:47,393 - agent.fundamental - INFO - 开始分析 五洲新春(603667)
+2026-04-15 10:47:47,614 - data_fetcher - ERROR - 获取K线数据失败: HTTPSConnectionPool(host='push2his.eastmoney.com', port=443): Max retries exceeded with url: /api/qt/stock/kline/get?fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61%2Cf116&ut=7eea3edcaed734bea9cbfc24409ed989&klt=101&fqt=1&secid=1.603667&beg=20251216&end=20260415 (Caused by ProxyError('Cannot connect to proxy.', RemoteDisconnected('Remote end closed connection without response')))
+2026-04-15 10:47:47,616 - agent.technical - WARNING - 无法获取 603667 的真实数据，使用模拟数据
+2026-04-15 10:47:47,637 - data_fetcher - ERROR - 获取资金流向失败: HTTPSConnectionPool(host='push2his.eastmoney.com', port=443): Max retries exceeded with url: /api/qt/stock/fflow/daykline/get?lmt=0&klt=101&secid=1.603667&fields1=f1%2Cf2%2Cf3%2Cf7&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61%2Cf62%2Cf63%2Cf64%2Cf65&ut=b2884a393a59ad64002292a3e90d46a5&_=1776221267382 (Caused by ProxyError('Cannot connect to proxy.', RemoteDisconnected('Remote end closed connection without response')))
+2026-04-15 10:47:47,946 - agent.technical - INFO - 分析完成，评分: 7.2
+2026-04-15 10:47:47,946 - agent.leader - INFO - 技术分析员 分析完成，评分: 7.2
+2026-04-15 10:47:48,918 - agent.risk - INFO - 分析完成，评分: 8.9
+2026-04-15 10:47:48,919 - agent.leader - INFO - 风控官 分析完成，评分: 8.9
+2026-04-15 10:47:49,282 - data_fetcher - WARNING - 新闻获取跳过: Invalid regular expression: invalid escape sequence: \u
+2026-04-15 10:47:49,590 - agent.intelligence - INFO - 分析完成，评分: 6.3
+2026-04-15 10:47:49,591 - agent.leader - INFO - 情报员 分析完成，评分: 6.3
+2026-04-15 10:47:55,125 - data_fetcher - ERROR - 获取估值数据失败: HTTPSConnectionPool(host='82.push2.eastmoney.com', port=443): Max retries exceeded with url: /api/qt/clist/get?pn=2&pz=100&po=1&np=1&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2&fid=f12&fs=m%3A0+t%3A6%2Cm%3A0+t%3A80%2Cm%3A1+t%3A2%2Cm%3A1+t%3A23%2Cm%3A0+t%3A81+s%3A2048&fields=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6%2Cf7%2Cf8%2Cf9%2Cf10%2Cf12%2Cf13%2Cf14%2Cf15%2Cf16%2Cf17%2Cf18%2Cf20%2Cf21%2Cf23%2Cf24%2Cf25%2Cf22%2Cf11%2Cf62%2Cf128%2Cf136%2Cf115%2Cf152 (Caused by ProxyError('Cannot connect to proxy.', RemoteDisconnected('Remote end closed connection without response')))
+2026-04-15 10:47:55,474 - agent.fundamental - INFO - 分析完成，评分: 7.9
+2026-04-15 10:47:55,475 - agent.leader - INFO - 基本面分析师 分析完成，评分: 7.9
+2026-04-15 10:47:56,852 - agent.leader - INFO - 分析完成 - 决策: buy, 评分: 7.37
+2026-04-15 10:47:56,854 - StockAgentTeam - INFO - 开始复盘: weekly
+2026-04-15 10:47:56,854 - agent.review - INFO - 开始分析 ()
+2026-04-15 10:47:57,261 - agent.review - INFO - 分析完成，评分: 0.0
+2026-04-15 10:48:18,686 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-15 10:48:18,686 - StockAgentTeam - INFO - 开始分析: 宁德时代(300750)
+2026-04-15 10:48:18,686 - agent.leader - INFO - 开始分析 宁德时代(300750)
+2026-04-15 10:48:18,687 - agent.technical - INFO - 开始分析 宁德时代(300750)
+2026-04-15 10:48:18,700 - agent.intelligence - INFO - 开始分析 宁德时代(300750)
+2026-04-15 10:48:18,703 - agent.risk - INFO - 开始分析 宁德时代(300750)
+2026-04-15 10:48:18,711 - agent.fundamental - INFO - 开始分析 宁德时代(300750)
+2026-04-15 10:48:18,881 - data_fetcher - ERROR - 获取K线数据失败: HTTPSConnectionPool(host='push2his.eastmoney.com', port=443): Max retries exceeded with url: /api/qt/stock/kline/get?fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61%2Cf116&ut=7eea3edcaed734bea9cbfc24409ed989&klt=101&fqt=1&secid=0.300750&beg=20251216&end=20260415 (Caused by ProxyError('Cannot connect to proxy.', RemoteDisconnected('Remote end closed connection without response')))
+2026-04-15 10:48:18,882 - agent.technical - WARNING - 无法获取 300750 的真实数据，使用模拟数据
+2026-04-15 10:48:19,229 - agent.technical - INFO - 分析完成，评分: 7.2
+2026-04-15 10:48:19,229 - agent.leader - INFO - 技术分析员 分析完成，评分: 7.2
+2026-04-15 10:48:20,093 - agent.risk - INFO - 分析完成，评分: 8.9
+2026-04-15 10:48:20,094 - agent.leader - INFO - 风控官 分析完成，评分: 8.9
+2026-04-15 10:48:20,692 - data_fetcher - WARNING - 新闻获取跳过: Invalid regular expression: invalid escape sequence: \u
+2026-04-15 10:48:20,987 - agent.intelligence - INFO - 分析完成，评分: 6.0
+2026-04-15 10:48:20,988 - agent.leader - INFO - 情报员 分析完成，评分: 6.0
+2026-04-15 10:48:24,529 - data_fetcher - ERROR - 获取估值数据失败: HTTPSConnectionPool(host='82.push2.eastmoney.com', port=443): Max retries exceeded with url: /api/qt/clist/get?pn=1&pz=100&po=1&np=1&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2&fid=f12&fs=m%3A0+t%3A6%2Cm%3A0+t%3A80%2Cm%3A1+t%3A2%2Cm%3A1+t%3A23%2Cm%3A0+t%3A81+s%3A2048&fields=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6%2Cf7%2Cf8%2Cf9%2Cf10%2Cf12%2Cf13%2Cf14%2Cf15%2Cf16%2Cf17%2Cf18%2Cf20%2Cf21%2Cf23%2Cf24%2Cf25%2Cf22%2Cf11%2Cf62%2Cf128%2Cf136%2Cf115%2Cf152 (Caused by ProxyError('Cannot connect to proxy.', RemoteDisconnected('Remote end closed connection without response')))
+2026-04-15 10:48:24,833 - agent.fundamental - INFO - 分析完成，评分: 7.9
+2026-04-15 10:48:24,833 - agent.leader - INFO - 基本面分析师 分析完成，评分: 7.9
+2026-04-15 10:48:26,610 - agent.leader - INFO - 分析完成 - 决策: buy, 评分: 7.28
+2026-04-15 10:48:26,610 - StockAgentTeam - INFO - 开始复盘: weekly
+2026-04-15 10:48:26,611 - agent.review - INFO - 开始分析 ()
+2026-04-15 10:48:26,981 - agent.review - INFO - 分析完成，评分: 0.0
+2026-04-15 11:09:12,600 - data_fetcher - WARNING - akshare 加载失败: No module named 'akshare'
+2026-04-15 11:09:13,104 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-15 11:11:06,538 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-15 11:11:06,636 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-15 11:12:44,646 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-15 11:12:44,812 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-15 11:12:44,987 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-15 11:12:44,988 - StockAgentTeam - INFO - 开始分析: 宁德时代(300750)
+2026-04-15 11:12:44,990 - agent.leader - INFO - 开始分析 宁德时代(300750)
+2026-04-15 11:12:44,999 - agent.intelligence - INFO - 开始分析 宁德时代(300750)
+2026-04-15 11:12:45,003 - agent.risk - INFO - 开始分析 宁德时代(300750)
+2026-04-15 11:12:44,995 - agent.technical - INFO - 开始分析 宁德时代(300750)
+2026-04-15 11:12:45,009 - agent.fundamental - INFO - 开始分析 宁德时代(300750)
+2026-04-15 11:12:45,822 - data_fetcher - WARNING - 无法获取 300750 的真实K线数据，使用模拟数据
+2026-04-15 11:12:46,215 - agent.technical - INFO - 分析完成，评分: 5.9
+2026-04-15 11:12:46,216 - agent.leader - INFO - 技术分析员 分析完成，评分: 5.9
+2026-04-15 11:12:46,409 - agent.risk - INFO - 分析完成，评分: 8.9
+2026-04-15 11:12:46,410 - agent.leader - INFO - 风控官 分析完成，评分: 8.9
+2026-04-15 11:12:46,476 - agent.intelligence - ERROR - 分析失败: 'DataFetcher' object has no attribute 'get_news'
+2026-04-15 11:12:46,477 - agent.leader - ERROR - 情报员 分析失败: 'DataFetcher' object has no attribute 'get_news'
+2026-04-15 11:12:56,828 - agent.fundamental - INFO - 分析完成，评分: 7.9
+2026-04-15 11:12:56,829 - agent.leader - INFO - 基本面分析师 分析完成，评分: 7.9
+2026-04-15 11:12:57,635 - agent.leader - INFO - 分析完成 - 决策: watch, 评分: 5.03
+2026-04-15 11:12:57,636 - StockAgentTeam - INFO - 开始复盘: weekly
+2026-04-15 11:12:57,636 - agent.review - INFO - 开始分析 ()
+2026-04-15 11:12:58,024 - agent.review - INFO - 分析完成，评分: 0.0
+2026-04-15 11:13:23,922 - data_fetcher - INFO - akshare 数据源已加载
+2026-04-15 11:13:24,008 - data_fetcher - INFO - efinance 数据源已加载
+2026-04-15 11:13:24,127 - StockAgentTeam - INFO - Stock Agent Team 系统初始化完成
+2026-04-15 11:13:24,127 - StockAgentTeam - INFO - 开始分析: 宁德时代(300750)
+2026-04-15 11:13:24,127 - agent.leader - INFO - 开始分析 宁德时代(300750)
+2026-04-15 11:13:24,135 - agent.technical - INFO - 开始分析 宁德时代(300750)
+2026-04-15 11:13:24,140 - agent.intelligence - INFO - 开始分析 宁德时代(300750)
+2026-04-15 11:13:24,146 - agent.risk - INFO - 开始分析 宁德时代(300750)
+2026-04-15 11:13:24,151 - agent.fundamental - INFO - 开始分析 宁德时代(300750)
+2026-04-15 11:13:24,712 - data_fetcher - WARNING - 无法获取 300750 的真实K线数据，使用模拟数据
+2026-04-15 11:13:25,000 - agent.technical - INFO - 分析完成，评分: 5.9
+2026-04-15 11:13:25,001 - agent.leader - INFO - 技术分析员 分析完成，评分: 5.9
+2026-04-15 11:13:25,640 - agent.risk - INFO - 分析完成，评分: 8.9
+2026-04-15 11:13:25,640 - agent.leader - INFO - 风控官 分析完成，评分: 8.9
+2026-04-15 11:13:25,966 - agent.intelligence - INFO - 分析完成，评分: 6.0
+2026-04-15 11:13:25,967 - agent.leader - INFO - 情报员 分析完成，评分: 6.0
+2026-04-15 11:13:41,052 - agent.fundamental - INFO - 分析完成，评分: 7.9
+2026-04-15 11:13:41,053 - agent.leader - INFO - 基本面分析师 分析完成，评分: 7.9
+2026-04-15 11:13:41,796 - agent.leader - INFO - 分析完成 - 决策: watch, 评分: 6.84
+2026-04-15 11:13:41,797 - StockAgentTeam - INFO - 开始复盘: weekly
+2026-04-15 11:13:41,797 - agent.review - INFO - 开始分析 ()
+2026-04-15 11:13:42,293 - agent.review - INFO - 分析完成，评分: 0.0

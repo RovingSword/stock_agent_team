@@ -81,4 +81,4 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("stock_agent_team.web.app:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("web.app:app", host="0.0.0.0", port=8000, reload=True)

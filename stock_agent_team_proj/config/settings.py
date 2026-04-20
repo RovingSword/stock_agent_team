@@ -8,11 +8,21 @@ from typing import Dict, List
 # ============================================================
 # 基础路径配置
 # ============================================================
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(BASE_DIR, 'data')
-DATABASE_PATH = os.path.join(DATA_DIR, 'database.db')
-REPORTS_DIR = os.path.join(DATA_DIR, 'reports')
-LOGS_DIR = os.path.join(DATA_DIR, 'logs')
+# 项目根目录（config/ 的上一级）
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Vercel Serverless 运行时文件系统是只读的（除 /tmp 外），
+# 需要把 SQLite / 日志等可写内容落在 /tmp（注意：/tmp 不保证持久化）。
+_IS_VERCEL = bool(os.getenv("VERCEL") or os.getenv("VERCEL_ENV"))
+
+if _IS_VERCEL:
+    DATA_DIR = os.path.join("/tmp", "stock_agent_team_data")
+else:
+    DATA_DIR = os.path.join(BASE_DIR, "data")
+
+DATABASE_PATH = os.path.join(DATA_DIR, "database.db")
+REPORTS_DIR = os.path.join(DATA_DIR, "reports")
+LOGS_DIR = os.path.join(DATA_DIR, "logs")
 
 # 确保目录存在
 for dir_path in [DATA_DIR, REPORTS_DIR, LOGS_DIR]:

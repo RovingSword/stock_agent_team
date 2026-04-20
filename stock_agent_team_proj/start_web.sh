@@ -30,4 +30,4 @@ echo "按 Ctrl+C 停止服务"
 echo "=========================================="
 
 # 使用uvicorn启动
-python3 -m uvicorn stock_agent_team.web.app:app --host 0.0.0.0 --port 8000 --reload
+python3 -m uvicorn web.app:app --host 0.0.0.0 --port 8000 --reload

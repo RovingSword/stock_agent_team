@@ -149,3 +149,29 @@ team.review()
 - 总仓位上限：80%
 - 默认止损幅度：5%-7%
 - 最小盈亏比：1:1.5
+
+---
+
+## 部署到 Vercel（FastAPI）
+
+本项目包含 FastAPI Web（见 `web/app.py`），可以部署到 Vercel 的 Python Functions。
+
+### 已做的适配
+
+- Vercel 入口：`api/index.py`
+- 路由配置：`vercel.json`（把所有路径转发到同一个 Function）
+- 可写目录：在 Vercel 运行时将 `SQLite/日志/报告` 写到 `/tmp`（见 `config/settings.py`）
+
+### 你需要做的事
+
+1. 在 Vercel 项目里配置环境变量（从 `.env.example` 迁移，别把 `.env` 提交到公网）
+2. 如果需要“持久化”的数据（历史分析/观察池/交易记录），不要依赖 SQLite：
+   - Vercel 的 `/tmp` 不保证持久化；建议接入外部数据库（如 Postgres）或其他持久化存储
+3. 定时任务不要依赖进程内调度器常驻：
+   - 建议用 Vercel Cron Jobs 定时调用 `POST /api/scheduler/run`
+
+### 本地启动 Web
+
+```bash
+./start_web.sh
+```
