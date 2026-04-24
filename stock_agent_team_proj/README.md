@@ -10,86 +10,131 @@
 - 网络故障时自动切换模拟数据
 - 重试和缓存机制保证稳定性
 
-## 系统架构
+## 系统架构（更新后）
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        用户层                                │
-│                    (CLI / Web / API)                        │
-└─────────────────────────┬───────────────────────────────────┘
-                          │
-┌─────────────────────────▼───────────────────────────────────┐
-│                      Leader Agent                            │
-│                    (决策中枢)                                │
-│  - 接收用户请求                                              │
-│  - 分发任务给各Worker                                        │
-│  - 汇总各角色报告                                            │
-│  - 输出最终交易指令                                          │
-└─────────────────────────┬───────────────────────────────────┘
-                          │
-        ┌─────────────────┼─────────────────┐
-        │                 │                 │
-        ▼                 ▼                 ▼
-┌───────────────┐ ┌───────────────┐ ┌───────────────┐ ┌───────────────┐
-│技术分析员     │ │  情报员       │ │基本面分析师   │ │  风控官       │
-│ Worker        │ │ Worker        │ │ Worker        │ │ Worker        │
-└───────────────┘ └───────────────┘ └───────────────┘ └───────────────┘
-        │                 │                 │                 │
-        └─────────────────┴─────────────────┴─────────────────┘
-                                   │
-                                   ▼
-                        ┌───────────────────┐
-                        │   复盘分析师       │
-                        │   (独立运行)       │
-                        └───────────────────┘
-                                   │
-                                   ▼
-                        ┌───────────────────┐
-                        │   数据存储层       │
-                        │ (SQLite + 文件)    │
-                        └───────────────────┘
+系统支持**两条并行分析路径**：
+1. **规则引擎路径**：确定性强、解释性好（leader + 4个Worker并行）。
+2. **LLM增强路径**：通过`agents/llm/`和`conversation/discussion_manager.py`实现多轮讨论和结构化输出。
+
+```mermaid
+graph TD
+    User[用户 / Web请求] --> Main[main.py / web/app.py]
+    Main --> RulePath[规则引擎路径\nagents/leader.py]
+    Main --> LLMPath[LLM增强路径\nagents/llm/create_team + conversation/discussion_manager.py]
+    
+    RulePath --> Parallel[并行执行 4 Worker\n- technical_analyst.py\n- intelligence_officer.py\n- fundamental_analyst.py\n- risk_controller.py]
+    Parallel --> LeaderAggregate[Leader汇总\n加权评分 + 风控否决\nprotocols/message_protocol.py]
+    
+    LLMPath --> LLMAgents[LLM Agents\nBaseLLMAgent + 多Provider\nllm/llm_factory.py]
+    LLMAgents --> Discussion[多轮讨论\n3轮共识]
+    
+    LeaderAggregate --> Decision[TradeDecisionMessage]
+    Discussion --> Decision
+    
+    Decision --> Storage[storage/database.py\n+ data/*.json 缓存]
+    Storage --> Watchlist[watchlist/ 观察池\n性能跟踪 + 自动调度]
+    Storage --> WebUI[Web界面\nFastAPI + charts + history\nweb/api/*]
+    
+    subgraph 数据层 [数据层 utils/ + config/]
+    Fetcher[utils/data_fetcher.py\nakshare/efinance + 缓存 + Mock回退] 
+    IntelCache[utils/intel_cache.py + web_intelligence/]
+    Config[config/settings.py + llm_config.yaml\n.env 密钥管理]
+    end
+    
+    Fetcher --> IntelCache
+    Config --> RulePath
+    Config --> LLMPath
 ```
 
-## 目录结构
+**关键改进点**：
+- 安全：所有密钥通过 `.env` + `api_key_env` 机制（已清理明文密钥）
+- 鲁棒性：数据获取失败自动mock，Worker异常有日志
+- 可扩展：Web API、Watchlist定时任务、Vercel Serverless支持
+```
+
+## 安全与配置（新增）
+
+**API Key 配置（必须）**：
+
+1. 复制模板：
+   ```bash
+   cp .env.example .env
+   ```
+
+2. 编辑 `.env` 填入您的密钥（从DMXAPI或其他提供商获取）：
+   ```
+   OPENAI_API_KEY=sk-your-key-here
+   # 其他如 ZHIPU_API_KEY, QWEN_API_KEY 等
+   ```
+
+3. 系统会自动加载（`python-dotenv` + `config/config_loader.py`）。
+
+**注意**：`.env` 已加入 `.gitignore`，**绝不提交到Git**。历史中出现的密钥已在当前代码中完全移除。
+
+## 目录结构（当前实际结构）
 
 ```
-stock_agent_team/
-├── README.md                    # 系统说明
-├── main.py                      # 主程序入口
-├── config.py                    # 配置文件
-├── models/                      # 数据模型
-│   ├── __init__.py
-│   ├── base.py                  # 基础模型
-│   ├── message.py               # 消息模型
-│   ├── trade.py                 # 交易模型
-│   └── report.py                # 报告模型
-├── agents/                      # Agent实现
-│   ├── __init__.py
-│   ├── base_agent.py            # Agent基类
-│   ├── leader.py                # Leader Agent
-│   ├── technical_analyst.py     # 技术分析员
-│   ├── intelligence_officer.py  # 情报员
-│   ├── fundamental_analyst.py   # 基本面分析师
-│   ├── risk_controller.py       # 风控官
-│   └── review_analyst.py        # 复盘分析师
-├── storage/                     # 数据存储
-│   ├── __init__.py
-│   ├── database.py              # 数据库操作
-│   ├── file_storage.py          # 文件存储
-│   └── schema.sql               # 数据库表结构
-├── utils/                       # 工具函数
-│   ├── __init__.py
-│   ├── logger.py                # 日志
-│   ├── helpers.py               # 辅助函数
-│   └── data_fetcher.py          # 数据获取
-├── protocols/                   # 协议定义
-│   ├── __init__.py
-│   └── message_protocol.py      # 消息协议
-└── data/                        # 数据目录
-    ├── database.db              # SQLite数据库
-    ├── reports/                 # 报告存储
-    └── logs/                    # 日志存储
+stock_agent_team_proj/
+├── README.md                    # 系统说明（已更新）
+├── main.py                      # CLI入口与StockAgentTeam
+├── requirements.txt             # 依赖清单（新增 python-dotenv）
+├── .env.example                 # API密钥模板（**不要提交真实密钥**）
+├── .env                         # 本地配置（已加入 .gitignore）
+├── config/                      # 配置模块
+│   ├── settings.py              # 权重、阈值、路径配置
+│   ├── llm_config.yaml          # LLM提供商配置（使用 api_key_env）
+│   ├── intel_config.py
+│   ├── config_loader.py         # 智能配置加载器
+│   └── __init__.py
+├── agents/                      # Agent核心
+│   ├── base_agent.py
+│   ├── leader.py                # 规则引擎决策中枢
+│   ├── technical_analyst.py
+│   ├── intelligence_officer.py
+│   ├── fundamental_analyst.py
+│   ├── risk_controller.py
+│   ├── review_analyst.py
+│   ├── llm/                     # LLM Agent实现（parallel to rule-based）
+│   └── web_intelligence/        # 网络情报采集
+├── llm/                         # LLM基础设施
+│   ├── llm_factory.py
+│   ├── base_provider.py
+│   ├── providers/               # 多厂商适配（qwen, zhipu, deepseek, moonshot, openai_compatible）
+│   └── examples.py
+├── web/                         # Web界面与API
+│   ├── app.py                   # FastAPI应用
+│   ├── api/                     # REST路由（analyze, watchlist, history, charts, scheduler, intel, performance, kline）
+│   └── static/                  # 前端JS和HTML
+├── watchlist/                   # 观察池系统
+│   ├── watchlist_manager.py
+│   ├── data_collector.py
+│   ├── performance_tracker.py
+│   ├── auto_scheduler.py
+│   ├── stock_screener.py
+│   └── test_watchlist.py
+├── conversation/                # 多轮讨论管理
+│   ├── discussion_manager.py
+│   ├── prompts.py
+│   └── message.py
+├── protocols/                   # 消息协议
+│   └── message_protocol.py
+├── storage/                     # 存储
+│   └── database.py              # SQLite操作（schema.sql）
+├── utils/                       # 工具
+│   ├── data_fetcher.py          # 多源数据+缓存+mock（核心模块）
+│   ├── intel_cache.py
+│   ├── logger.py
+│   ├── freshness_checker.py
+│   └── intel_searcher.py
+├── models/                      # 基础模型
+│   └── base.py
+├── tests/                       # 测试
+├── deploy/                      # 部署（docker-compose.yml）
+├── docs/                        # 文档（LOCAL_DEPLOYMENT.md 已同步）
+└── data/                        # 缓存、报告、情报JSON、watchlist.json
 ```
+
+**安全注意**：所有API Key现在**必须通过环境变量**（.env文件）配置。`config/llm_config.yaml` 已更新为使用 `api_key_env` 字段，`config/config_loader.py` 负责从环境变量安全读取。真实密钥已从代码和 .env 中移除，并加入 `.gitignore`。
 
 ## 数据源配置
 
@@ -109,21 +154,31 @@ stock_agent_team/
 
 ## 快速开始
 
-```python
-# 初始化系统
-from main import StockAgentTeam
-
-team = StockAgentTeam()
-
-# 分析股票
-result = team.analyze("002594", "比亚迪")
-
-# 查看决策
-print(result.decision)
-
-# 执行复盘
-team.review()
+**1. 准备配置（重要）**
+```bash
+cp .env.example .env
+# 编辑.env填入您的API Key
+pip install -r requirements.txt
 ```
+
+**2. CLI 使用**
+```bash
+python main.py --code 300750
+```
+
+**3. Web界面**
+```bash
+uvicorn web.app:app --reload
+# 浏览器打开 http://localhost:8000
+```
+
+**4. Watchlist和LLM测试**
+```bash
+python test_llm_api.py
+python run_watchlist.py --help
+```
+
+详见上方「安全与配置」和「系统架构」部分。
 
 ## 权重配置
 
@@ -172,6 +227,8 @@ team.review()
 
 ### 本地启动 Web
 
+虚拟环境：stock_agent_team(项目上一级路径下)
 ```bash
+source ../stock_agent_team/bin/activate
 ./start_web.sh
 ```

@@ -6,10 +6,19 @@ import os
 import sys
 import json
 from datetime import datetime
+from pathlib import Path
 
-# 设置环境变量
-os.environ["OPENAI_API_KEY"] = "sk-mgzorsYLeEFnIJHrK2B1LQurNOn5VCj3nrSAtXymUGToTzcb"
-os.environ["OPENAI_BASE_URL"] = "https://www.dmxapi.cn/v1"
+# 安全加载配置：优先使用 .env 文件（不要在源码中硬编码密钥）
+try:
+    from dotenv import load_dotenv
+    env_path = Path(".env")
+    if env_path.exists():
+        load_dotenv(env_path)
+        print("✅ 已从 .env 加载 LLM 配置")
+    else:
+        print("⚠️  未找到 .env，请复制 .env.example 并配置密钥")
+except ImportError:
+    print("⚠️  python-dotenv 未安装，建议: pip install python-dotenv")
 
 # 添加项目路径
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

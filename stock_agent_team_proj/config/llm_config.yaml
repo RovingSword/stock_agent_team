@@ -10,7 +10,8 @@ llm:
   # 各模型提供商配置
   providers:
     openai_compatible:
-      api_key: "sk-mgzorsYLeEFnIJHrK2B1LQurNOn5VCj3nrSAtXymUGToTzcb"
+      # 使用环境变量 OPENAI_API_KEY (推荐在 .env 中设置)
+      api_key_env: "OPENAI_API_KEY"
       base_url: "https://www.dmxapi.cn/v1"
       model: "doubao-seed-2-0-pro-260215"
       temperature: 0.7

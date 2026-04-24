@@ -1,7 +1,12 @@
 """
 讨论引擎使用示例
 
-展示如何初始化 Agent 并运行多轮讨论
+展示如何初始化 Agent 并运行多轮讨论。
+
+注意：本目录示例若使用 `from stock_agent_team.conversation import ...`，
+需与已安装的包名一致；在本文仓根目录开发时可改为
+`from conversation import ...`。
+生产环境 LLM 请通过 `llm/llm_factory.py` 与 `agents/llm/` 接入，勿仅依赖下方模拟输出。
 """
 
 from stock_agent_team.conversation import (
@@ -174,13 +179,8 @@ class CustomStockAgent(BaseLLMAgent):
         Returns:
             LLM 响应文本
         """
-        # TODO: 实现真实的 LLM 调用
-        # 示例：
-        # response = await self.llm_client.generate(prompt)
-        # return response
-        
-        # 模拟响应
-        return f"[{self.name}] 已完成分析"
+        # 真实 LLM 请用 llm/llm_factory 创建 provider 并在此调用；此处为可读性的模拟结果。
+        return f"[{self.name}] 模拟分析（未接 LLM，仅示例用）"
 
 
 class TradingSignalAgent(CustomStockAgent):

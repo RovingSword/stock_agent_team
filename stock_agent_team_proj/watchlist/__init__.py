@@ -22,6 +22,7 @@ from .watchlist_manager import WatchlistManager
 from .performance_tracker import PerformanceTracker
 from .performance_reporter import PerformanceReporter
 from .auto_scheduler import AutoScheduler
+from .signal_backtest import build_signal_outcome_summary
 
 __all__ = [
     'StockCandidate',
@@ -39,6 +40,7 @@ __all__ = [
     'PerformanceTracker',
     'PerformanceReporter',
     'AutoScheduler',
+    'build_signal_outcome_summary',
 ]
 
 __version__ = '1.1.0'

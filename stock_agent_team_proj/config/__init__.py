@@ -1,11 +1,11 @@
 """配置模块"""
 import os
-import sys
 
-# 添加项目根目录到路径
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if BASE_DIR not in sys.path:
-    sys.path.insert(0, BASE_DIR)
+from .project_paths import PROJECT_ROOT, ensure_project_root_on_path
+
+# 单点将项目根加入 path（供 import agents / utils 等顶级包）
+ensure_project_root_on_path()
+BASE_DIR = str(PROJECT_ROOT)
 
 # 从settings导入所有配置
 from .settings import *

@@ -3,16 +3,16 @@
 提供K线图、观察池汇总图和表现统计图的数据
 """
 
-import sys
 import os
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, List
 
+from config.project_paths import ensure_project_root_on_path
+
+ensure_project_root_on_path()
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
-
-# 添加项目根目录到路径
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from watchlist import WatchlistManager, PerformanceTracker
 from utils.data_fetcher import data_fetcher

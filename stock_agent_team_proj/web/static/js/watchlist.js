@@ -128,32 +128,38 @@ async function loadWatchlistList() {
     }
 }
 
-// 渲染观察池表格
+// 渲染观察池表格（7 列，次要列通过 tooltip / title 承载）
 function renderWatchlistTable(candidates) {
     const tbody = document.getElementById('wlTableBody');
-    
+
     if (!candidates || candidates.length === 0) {
-        tbody.innerHTML = '<tr class="empty-row"><td colspan="10">暂无候选股票</td></tr>';
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="7">暂无候选股票</td></tr>';
         return;
     }
-    
-    tbody.innerHTML = candidates.map(c => `
-        <tr class="candidate-row" data-code="${c.code}">
-            <td>${c.code}</td>
-            <td>${c.name}</td>
-            <td>${getSourceLabel(c.source)}</td>
-            <td>${c.score.toFixed(1)}</td>
-            <td>${c.composite_score ? c.composite_score.toFixed(1) : '--'}</td>
-            <td><span class="status-badge status-${c.status}">${getStatusLabel(c.status)}</span></td>
-            <td>${c.is_buy_recommended ? '✅' : '❌'}</td>
-            <td>${formatDate(c.add_date)}</td>
-            <td>${formatDate(c.last_analysis_date)}</td>
-            <td>
-                <button class="btn-tiny btn-analyze" onclick="handleAnalyzeOne('${c.code}')">🤖 LLM分析</button>
-                <button class="btn-tiny btn-danger" onclick="handleRemoveStock('${c.code}')">移除</button>
-            </td>
-        </tr>
-    `).join('');
+
+    tbody.innerHTML = candidates.map(c => {
+        const sourceLabel = getSourceLabel(c.source);
+        const addDate = formatDate(c.add_date);
+        const lastDate = formatDate(c.last_analysis_date);
+        const rowTitle = `来源：${sourceLabel} · 添加：${addDate} · 最后分析：${lastDate}`;
+        const recBadge = c.is_buy_recommended
+            ? '<span class="badge badge-success">推荐</span>'
+            : '<span class="badge">-</span>';
+        return `
+            <tr class="candidate-row" data-code="${c.code}" title="${rowTitle}">
+                <td data-label="代码">${c.code}</td>
+                <td data-label="名称">${c.name}</td>
+                <td data-label="评分" class="num">${c.score.toFixed(1)}</td>
+                <td data-label="综合" class="num">${c.composite_score ? c.composite_score.toFixed(1) : '--'}</td>
+                <td data-label="状态"><span class="status-badge status-${c.status}">${getStatusLabel(c.status)}</span></td>
+                <td data-label="推荐">${recBadge}</td>
+                <td data-label="操作">
+                    <button class="btn-tiny btn-analyze" onclick="handleAnalyzeOne('${c.code}')">LLM 分析</button>
+                    <button class="btn-tiny btn-danger" onclick="handleRemoveStock('${c.code}')">移除</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
 // 添加股票
@@ -400,66 +406,56 @@ async function handleTrackIntel(forceRefresh = false) {
             const meta = result.cache_meta || {};
             document.getElementById('intelBriefSection').classList.remove('hidden');
 
-            // 构建缓存状态标签
+            // 缓存状态徽标
             let cacheLabel = '';
             if (meta.is_fresh) {
-                cacheLabel = `<span class="cache-badge cache-fresh">✅ 新鲜缓存(${meta.age_days}天前)</span>`;
+                cacheLabel = `<span class="badge badge-success">新鲜缓存 · ${meta.age_days} 天前</span>`;
             } else if (meta.is_stale) {
-                cacheLabel = `<span class="cache-badge cache-stale">⚠️ 缓存过时(${meta.age_days}天前)</span> <button class="btn-tiny btn-secondary" onclick="handleTrackIntel(true)">🔄 强制刷新</button>`;
+                cacheLabel = `<span class="badge badge-warn">缓存过时 · ${meta.age_days} 天前</span>
+                    <button class="btn-tiny btn-secondary" onclick="handleTrackIntel(true)">强制刷新</button>`;
             } else if (meta.is_expired) {
-                cacheLabel = `<span class="cache-badge cache-expired">❌ 缓存已过期</span>`;
+                cacheLabel = `<span class="badge badge-danger">缓存已过期</span>`;
             } else {
-                cacheLabel = `<span class="cache-badge cache-new">🔍 全新搜索</span>`;
+                cacheLabel = `<span class="badge badge-brand">全新搜索</span>`;
             }
 
-            // 构建情报展示
-            let html = `
-                <div class="intel-item"><strong>股票:</strong> ${data.stock_name}(${data.stock_code})</div>
-                <div class="intel-item"><strong>追踪时间:</strong> ${data.tracked_at}</div>
-                <div class="intel-item"><strong>搜索引擎:</strong> ${data.search_stats?.search_provider || '未配置'}</div>
-                <div class="intel-item"><strong>缓存状态:</strong> ${cacheLabel}</div>
+            // 顶部元信息
+            const metaHtml = `
+                <div class="intel-meta">
+                    <div><span class="label">股票</span> <strong>${data.stock_name}</strong> (${data.stock_code})</div>
+                    <div><span class="label">追踪时间</span> ${data.tracked_at || '--'}</div>
+                    <div><span class="label">搜索引擎</span> ${data.search_stats?.search_provider || '未配置'}</div>
+                    <div><span class="label">缓存状态</span> ${cacheLabel}</div>
+                </div>
             `;
 
-            // 新闻列表
-            if (data.news && data.news.length > 0) {
-                html += '<div class="intel-category"><strong>📰 新闻 (' + data.news.length + '条)</strong></div>';
-                data.news.forEach(n => {
-                    html += `<div class="intel-news-item">
-                        <a href="${n.url || '#'}" target="_blank">${n.title}</a>
-                        <span class="intel-snippet">${n.summary || ''}</span>
-                    </div>`;
-                });
-            } else {
-                html += '<div class="intel-category"><strong>📰 新闻</strong> 暂无</div>';
-            }
+            const renderGroup = (iconId, title, items) => {
+                const count = items && items.length ? items.length : 0;
+                const header = `
+                    <h5>
+                        <svg class="icon icon-sm" aria-hidden="true"><use href="#${iconId}"/></svg>
+                        ${title}
+                        <span class="badge">${count}</span>
+                    </h5>
+                `;
+                if (!count) {
+                    return `<div class="intel-group">${header}<p class="intel-empty">暂无数据</p></div>`;
+                }
+                const listItems = items.map(it => `
+                    <li>
+                        <a href="${it.url || '#'}" target="_blank" rel="noopener">${it.title || '(无标题)'}</a>
+                        ${it.summary ? `<div class="intel-snippet">${it.summary}</div>` : ''}
+                    </li>
+                `).join('');
+                return `<div class="intel-group">${header}<ul class="intel-list">${listItems}</ul></div>`;
+            };
 
-            // 研报列表
-            if (data.research && data.research.length > 0) {
-                html += '<div class="intel-category"><strong>📋 研报 (' + data.research.length + '条)</strong></div>';
-                data.research.forEach(r => {
-                    html += `<div class="intel-news-item">
-                        <a href="${r.url || '#'}" target="_blank">${r.title}</a>
-                        <span class="intel-snippet">${r.summary || ''}</span>
-                    </div>`;
-                });
-            } else {
-                html += '<div class="intel-category"><strong>📋 研报</strong> 暂无</div>';
-            }
+            const groupsHtml =
+                renderGroup('i-news', '新闻', data.news) +
+                renderGroup('i-book', '研报', data.research) +
+                renderGroup('i-msg',  '舆情', data.sentiment);
 
-            // 舆情列表
-            if (data.sentiment && data.sentiment.length > 0) {
-                html += '<div class="intel-category"><strong>💬 舆情 (' + data.sentiment.length + '条)</strong></div>';
-                data.sentiment.forEach(s => {
-                    html += `<div class="intel-news-item">
-                        <a href="${s.url || '#'}" target="_blank">${s.title}</a>
-                        <span class="intel-snippet">${s.summary || ''}</span>
-                    </div>`;
-                });
-            } else {
-                html += '<div class="intel-category"><strong>💬 舆情</strong> 暂无</div>';
-            }
-
-            document.getElementById('intelBriefContent').innerHTML = html;
+            document.getElementById('intelBriefContent').innerHTML = metaHtml + groupsHtml;
         } else {
             alert(result.message);
         }
@@ -502,23 +498,20 @@ async function loadSchedulerStatus() {
             const statusDiv = document.getElementById('schedulerStatus');
             const tasksDiv = document.getElementById('schedulerTasks');
             
+            const running = result.data.scheduler_running;
             statusDiv.innerHTML = `
-                <p>调度器状态: <span class="${result.data.scheduler_running ? 'text-success' : 'text-muted'}">
-                    ${result.data.scheduler_running ? '运行中' : '已停止'}
-                </span></p>
-                <p>最后检查: ${result.data.last_check}</p>
+                <p>调度器：<span class="badge ${running ? 'badge-success' : ''}">${running ? '运行中' : '已停止'}</span>
+                <span class="timeline-subtle">最后检查 ${result.data.last_check || '--'}</span></p>
             `;
-            
+
             // 渲染任务列表
             const tasks = result.data.predefined_tasks || {};
             tasksDiv.innerHTML = Object.values(tasks).map(task => `
                 <div class="task-item">
-                    <div class="task-info">
-                        <strong>${task.display_name}</strong>
-                        <p>${task.description}</p>
-                        <p class="task-schedule">执行时间: ${task.default_time}</p>
-                    </div>
-                    <button class="btn-tiny btn-secondary" onclick="handleRunTask('${task.name}')">执行</button>
+                    <h5>${task.display_name}</h5>
+                    <p>${task.description}</p>
+                    <p class="timeline-subtle">执行时间 ${task.default_time}</p>
+                    <button class="btn-tiny" onclick="handleRunTask('${task.name}')">立即执行</button>
                 </div>
             `).join('');
         }
@@ -609,35 +602,44 @@ function renderPerfPieChart(winRate) {
     }
     
     const option = {
+        textStyle: { color: '#6B7280', fontFamily: 'inherit' },
         tooltip: {
             trigger: 'item',
-            formatter: '{b}: {c} ({d}%)'
+            formatter: '{b}: {c} ({d}%)',
+            backgroundColor: '#FFFFFF',
+            borderColor: '#E5E7EB',
+            borderWidth: 1,
+            textStyle: { color: '#111827' },
+            extraCssText: 'box-shadow: 0 4px 12px rgba(16,24,40,.08); border-radius: 8px;'
         },
         legend: {
             orient: 'vertical',
-            left: 'left'
+            left: 'left',
+            textStyle: { color: '#6B7280' }
         },
         series: [{
             type: 'pie',
-            radius: ['40%', '70%'],
+            radius: ['52%', '72%'],
             avoidLabelOverlap: false,
             itemStyle: {
-                borderRadius: 10,
-                borderColor: '#fff',
+                borderRadius: 6,
+                borderColor: '#FFFFFF',
                 borderWidth: 2
             },
             label: {
                 show: true,
-                formatter: '{b}\n{d}%'
+                formatter: '{b}\n{d}%',
+                color: '#374151'
             },
             data: [
-                { value: Math.round(winRate * 100), name: '盈利', itemStyle: { color: '#38a169' } },
-                { value: Math.round((1 - winRate) * 100), name: '亏损', itemStyle: { color: '#e53e3e' } }
+                { value: Math.round(winRate * 100),       name: '盈利', itemStyle: { color: '#DC2626' } },
+                { value: Math.round((1 - winRate) * 100), name: '亏损', itemStyle: { color: '#16A34A' } }
             ]
         }]
     };
-    
+
     perfPieChartInstance.setOption(option);
+    window.addEventListener('resize', () => perfPieChartInstance && perfPieChartInstance.resize());
 }
 
 // 渲染累计收益曲线
@@ -654,54 +656,62 @@ function renderPerfLineChart(cumulativeData) {
     const values = cumulativeData.map(d => d.value * 100); // 转换为百分比
     
     const option = {
+        textStyle: { color: '#6B7280', fontFamily: 'inherit' },
         tooltip: {
             trigger: 'axis',
+            backgroundColor: '#FFFFFF',
+            borderColor: '#E5E7EB',
+            borderWidth: 1,
+            textStyle: { color: '#111827' },
+            extraCssText: 'box-shadow: 0 4px 12px rgba(16,24,40,.08); border-radius: 8px;',
             formatter: function(params) {
                 const p = params[0];
-                return `${p.axisValue}<br/>累计收益: ${p.value.toFixed(2)}%`;
+                return `${p.axisValue}<br/>累计收益 ${p.value.toFixed(2)}%`;
             }
         },
         xAxis: {
             type: 'category',
             data: dates,
-            boundaryGap: false
+            boundaryGap: false,
+            axisLine: { lineStyle: { color: '#E5E7EB' } },
+            axisTick: { show: false },
+            axisLabel: { color: '#6B7280' }
         },
         yAxis: {
             type: 'value',
-            axisLabel: {
-                formatter: '{value}%'
-            }
+            axisLabel: { formatter: '{value}%', color: '#6B7280' },
+            axisLine: { show: false },
+            splitLine: { lineStyle: { color: '#E5E7EB' } }
         },
         series: [{
             type: 'line',
             data: values,
             smooth: true,
-            lineStyle: {
-                width: 3
-            },
+            showSymbol: false,
+            lineStyle: { width: 2, color: '#1E40AF' },
             areaStyle: {
                 color: {
                     type: 'linear',
                     x: 0, y: 0, x2: 0, y2: 1,
                     colorStops: [
-                        { offset: 0, color: 'rgba(56, 161, 105, 0.3)' },
-                        { offset: 1, color: 'rgba(56, 161, 105, 0.05)' }
+                        { offset: 0, color: 'rgba(30, 64, 175, 0.20)' },
+                        { offset: 1, color: 'rgba(30, 64, 175, 0.02)' }
                     ]
                 }
             },
-            itemStyle: {
-                color: '#38a169'
-            }
+            itemStyle: { color: '#1E40AF' }
         }],
         grid: {
             left: '3%',
             right: '4%',
-            bottom: '3%',
+            bottom: '8%',
+            top: '8%',
             containLabel: true
         }
     };
-    
+
     perfLineChartInstance.setOption(option);
+    window.addEventListener('resize', () => perfLineChartInstance && perfLineChartInstance.resize());
 }
 
 // 加载持仓记录
@@ -718,34 +728,36 @@ async function loadPositions() {
     }
 }
 
-// 渲染持仓表格
+// 渲染持仓表格（7 列：代码/名称/入场价/股数/持仓天数/收益率/操作）
 function renderPositionsTable(positions) {
     const tbody = document.getElementById('positionsTableBody');
-    
+
     if (!positions || positions.length === 0) {
-        tbody.innerHTML = '<tr class="empty-row"><td colspan="9">暂无持仓记录</td></tr>';
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="7">暂无持仓记录</td></tr>';
         return;
     }
-    
-    tbody.innerHTML = positions.map(p => `
-        <tr>
-            <td>${p.stock_code}</td>
-            <td>${p.stock_name}</td>
-            <td>¥${p.entry_price.toFixed(2)}</td>
-            <td>${p.shares}</td>
-            <td>${p.entry_date}</td>
-            <td>${p.holding_days}天</td>
-            <td class="${p.profit_rate >= 0 ? 'text-success' : 'text-danger'}">
-                ${p.profit_rate >= 0 ? '+' : ''}¥${(p.profit_loss || 0).toFixed(2)}
-            </td>
-            <td class="${p.profit_rate >= 0 ? 'text-success' : 'text-danger'}">
-                ${p.profit_rate >= 0 ? '+' : ''}${(p.profit_rate * 100).toFixed(2)}%
-            </td>
-            <td>
-                <button class="btn-tiny btn-danger" onclick="handleClosePosition('${p.stock_code}')">平仓</button>
-            </td>
-        </tr>
-    `).join('');
+
+    tbody.innerHTML = positions.map(p => {
+        const isProfit = p.profit_rate >= 0;
+        const profitClass = isProfit ? 'profit-positive' : 'profit-negative';
+        const profitSign = isProfit ? '+' : '';
+        const rowTitle = `入场日期：${p.entry_date || '--'} · 盈亏金额：${profitSign}¥${(p.profit_loss || 0).toFixed(2)}`;
+        return `
+            <tr title="${rowTitle}">
+                <td data-label="代码">${p.stock_code}</td>
+                <td data-label="名称">${p.stock_name}</td>
+                <td data-label="入场价" class="num">¥${p.entry_price.toFixed(2)}</td>
+                <td data-label="股数" class="num">${p.shares}</td>
+                <td data-label="持仓天数" class="num">${p.holding_days} 天</td>
+                <td data-label="收益率" class="num ${profitClass}">
+                    ${profitSign}${(p.profit_rate * 100).toFixed(2)}%
+                </td>
+                <td data-label="操作">
+                    <button class="btn-tiny btn-danger" onclick="handleClosePosition('${p.stock_code}')">平仓</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
 // 平仓
@@ -792,31 +804,34 @@ async function loadSignals() {
     }
 }
 
-// 渲染信号表格
+// 渲染信号表格（7 列：代码/名称/类型/入场价/出场价/持仓天数/收益率）
 function renderSignalsTable(signals) {
     const tbody = document.getElementById('signalsTableBody');
-    
+
     if (!signals || signals.length === 0) {
-        tbody.innerHTML = '<tr class="empty-row"><td colspan="10">暂无历史信号</td></tr>';
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="7">暂无历史信号</td></tr>';
         return;
     }
-    
-    tbody.innerHTML = signals.map(s => `
-        <tr>
-            <td>${s.stock_code}</td>
-            <td>${s.stock_name}</td>
-            <td>${s.signal_type}</td>
-            <td>¥${s.entry_price.toFixed(2)}</td>
-            <td>${s.exit_price ? '¥' + s.exit_price.toFixed(2) : '--'}</td>
-            <td>${s.signal_date}</td>
-            <td>${s.close_date || '--'}</td>
-            <td>${s.holding_days || '--'}</td>
-            <td class="${s.profit_rate >= 0 ? 'text-success' : 'text-danger'}">
-                ${s.profit_rate >= 0 ? '+' : ''}${(s.profit_rate * 100).toFixed(2)}%
-            </td>
-            <td><span class="status-badge status-${s.status}">${s.status}</span></td>
-        </tr>
-    `).join('');
+
+    tbody.innerHTML = signals.map(s => {
+        const isProfit = s.profit_rate >= 0;
+        const profitClass = isProfit ? 'profit-positive' : 'profit-negative';
+        const profitSign = isProfit ? '+' : '';
+        const rowTitle = `信号日期：${s.signal_date || '--'} · 平仓日期：${s.close_date || '--'} · 状态：${s.status || '--'}`;
+        return `
+            <tr title="${rowTitle}">
+                <td data-label="代码">${s.stock_code}</td>
+                <td data-label="名称">${s.stock_name}</td>
+                <td data-label="类型"><span class="badge">${s.signal_type}</span></td>
+                <td data-label="入场价" class="num">¥${s.entry_price.toFixed(2)}</td>
+                <td data-label="出场价" class="num">${s.exit_price ? '¥' + s.exit_price.toFixed(2) : '--'}</td>
+                <td data-label="持仓天数" class="num">${s.holding_days || '--'}</td>
+                <td data-label="收益率" class="num ${profitClass}">
+                    ${profitSign}${(s.profit_rate * 100).toFixed(2)}%
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
 // 生成周报

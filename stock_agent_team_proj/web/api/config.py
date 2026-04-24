@@ -3,14 +3,14 @@
 GET /api/config - 获取权重配置
 """
 import os
-import sys
 from typing import Dict
+
+from config.project_paths import ensure_project_root_on_path
+
+ensure_project_root_on_path()
 
 from fastapi import APIRouter
 from pydantic import BaseModel
-
-# 添加项目根目录到路径
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from storage.database import Database
 import config as app_config

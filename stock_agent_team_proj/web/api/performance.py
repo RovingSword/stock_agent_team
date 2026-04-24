@@ -3,18 +3,18 @@
 提供表现统计、周报、月报和持仓记录功能
 """
 
-import sys
 import os
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, List
 
+from config.project_paths import ensure_project_root_on_path
+
+ensure_project_root_on_path()
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-# 添加项目根目录到路径
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
-from watchlist import PerformanceTracker, PerformanceReporter
+from watchlist import PerformanceTracker, PerformanceReporter, build_signal_outcome_summary
 
 router = APIRouter()
 
@@ -81,6 +81,19 @@ async def get_performance_stats():
             "success": False,
             "message": f"获取统计失败: {str(e)}"
         }
+
+
+@router.get("/performance/signal_outcomes")
+async def get_signal_outcome_summary(
+    limit_closed: int = 30,
+):
+    """已平仓/持仓中买入类信号的后验摘要（与当时 AI/规则建议对照用）。"""
+    try:
+        tracker = get_performance_tracker()
+        data = build_signal_outcome_summary(tracker, limit_closed=limit_closed)
+        return {"success": True, "data": data}
+    except Exception as e:
+        return {"success": False, "message": f"获取信号后验失败: {str(e)}"}
 
 
 @router.get("/performance/weekly")

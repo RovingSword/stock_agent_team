@@ -6,22 +6,24 @@ POST /api/analyze_llm - 执行 LLM Agent Team 分析（支持SSE）
 import asyncio
 import json
 import os
-import sys
 from datetime import datetime
 from typing import Optional, Dict, Any, List
+
+from config.project_paths import ensure_project_root_on_path
+
+ensure_project_root_on_path()
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-# 添加项目根目录到路径
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from main import StockAgentTeam
 from agents.llm import create_team, AgentReport
 from utils.data_fetcher import data_fetcher
+from utils.logger import get_logger
 
 router = APIRouter()
+_analyze_logger = get_logger("web.api.analyze")
 
 
 class AnalyzeRequest(BaseModel):
@@ -51,12 +53,9 @@ class AnalyzeResponse(BaseModel):
     data: Optional[dict] = None
 
 
-LLM_ROLE_WEIGHTS = {
-    "technical": 0.25,
-    "intelligence": 0.25,
-    "risk": 0.25,
-    "fundamental": 0.25,
-}
+from config.settings import LLM_ROLE_WEIGHTS
+
+# LLM_ROLE_WEIGHTS 已从 config/settings.py 统一导入（与规则引擎权重配置对齐）
 
 
 def get_team() -> StockAgentTeam:
@@ -209,10 +208,10 @@ def _build_rule_reference(rule_decision) -> Dict[str, Dict[str, Any]]:
     def get_reference(role: str) -> Dict[str, Any]:
         role_reference = score_breakdown.get(role, {}) or {}
         return {
-            "score": role_reference.get("score", 5),
-            "comment": role_reference.get("comment", ""),
-            "key_points": role_reference.get("key_points", []),
-            "risk_points": role_reference.get("risk_points", []),
+            "score": role_reference.get("score"),
+            "comment": role_reference.get("comment") or "",
+            "key_points": role_reference.get("key_points") or [],
+            "risk_points": role_reference.get("risk_points") or [],
         }
 
     references = {
@@ -234,6 +233,22 @@ def _build_rule_reference(rule_decision) -> Dict[str, Dict[str, Any]]:
     return references
 
 
+def _list_llm_data_gaps(full_data: Dict[str, Any], current_price: Any) -> List[str]:
+    """标出主要原始数据缺口，供日志与 API 元信息（不伪造事实）。"""
+    gaps: List[str] = []
+    if current_price in (None, ""):
+        gaps.append("current_price")
+    if not _as_dict(full_data.get("quote")):
+        gaps.append("quote")
+    if not _as_dict(full_data.get("technical")):
+        gaps.append("technical")
+    if not _as_dict(full_data.get("financial")):
+        gaps.append("financial")
+    if not _as_list(full_data.get("news")):
+        gaps.append("news")
+    return gaps
+
+
 def _build_llm_analysis_data(stock_code: str, rule_decision) -> Dict[str, Any]:
     execution = getattr(rule_decision, "execution", {}) or {}
     full_data = data_fetcher.get_full_data(stock_code) or {}
@@ -243,6 +258,7 @@ def _build_llm_analysis_data(stock_code: str, rule_decision) -> Dict[str, Any]:
     current_price = _resolve_current_price(full_data, execution)
     role_payloads = _build_role_payloads(stock_code, full_data, current_price)
     rule_reference = _build_rule_reference(rule_decision)
+    data_gaps = _list_llm_data_gaps(full_data, current_price)
 
     return {
         "stock_code": stock_code,
@@ -250,6 +266,7 @@ def _build_llm_analysis_data(stock_code: str, rule_decision) -> Dict[str, Any]:
         "full_data": full_data,
         "role_payloads": role_payloads,
         "rule_reference": rule_reference,
+        "data_gaps": data_gaps,
     }
 
 
@@ -258,6 +275,52 @@ def _serialize_agent_report(report: AgentReport, icon: str, round_number: int) -
     payload["icon"] = icon
     payload["round"] = round_number
     return payload
+
+
+def _round1_divergence_meta(reports: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    """从第一轮评分中提取最大分歧双方，供讨论引导与前端高亮。"""
+    if len(reports) < 2:
+        return None
+    scored: List[tuple] = []
+    for r in reports:
+        try:
+            sc = float(r.get("score") or 0)
+        except (TypeError, ValueError):
+            sc = 0.0
+        scored.append((r, sc))
+    scored.sort(key=lambda x: x[1], reverse=True)
+    hi_r, hi_s = scored[0]
+    lo_r, lo_s = scored[-1]
+    spread = hi_s - lo_s
+    if spread < 0.25:
+        return None
+    return {
+        "high_agent": hi_r.get("agent_name", ""),
+        "high_role": hi_r.get("agent_role", ""),
+        "high_score": round(hi_s, 1),
+        "low_agent": lo_r.get("agent_name", ""),
+        "low_role": lo_r.get("agent_role", ""),
+        "low_score": round(lo_s, 1),
+        "spread": round(spread, 1),
+    }
+
+
+def _divergence_prompt_suffix(meta: Optional[Dict[str, Any]]) -> str:
+    if not meta:
+        return ""
+    return (
+        "\n【程序标注·分歧焦点】"
+        f"{meta['high_agent']}（{meta['high_score']:.1f} 分）与 "
+        f"{meta['low_agent']}（{meta['low_score']:.1f} 分）差距最大（{meta['spread']:.1f} 分）。"
+        "请点名引导双方对齐依据，并邀请其他角色补充或表态。\n"
+    )
+
+
+def _clip_text(text: str, max_len: int = 500) -> str:
+    t = (text or "").strip()
+    if len(t) <= max_len:
+        return t
+    return t[: max_len - 1] + "…"
 
 
 def _normalize_final_action(action: Optional[str], score: float) -> str:
@@ -307,6 +370,9 @@ def _build_final_decision(
     rule_decision,
     round1_reports: List[Dict[str, Any]],
     leader_report: AgentReport,
+    current_price: Any = None,
+    data_uses_mock: bool = False,
+    data_gaps: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     leader_score = leader_report.score if leader_report.score is not None else 0.0
     final_action = _normalize_final_action(
@@ -317,6 +383,9 @@ def _build_final_decision(
     return {
         "stock_code": stock_code,
         "stock_name": stock_name,
+        "current_price": current_price,
+        "data_uses_mock": data_uses_mock,
+        "data_gaps": data_gaps or [],
         "final_action": final_action,
         "action_text": _get_action_text(final_action, leader_report),
         "composite_score": round(leader_score, 1),
@@ -346,7 +415,9 @@ def _build_final_decision(
                 "risks": r.get("risks", []),
                 "opportunities": r.get("opportunities", []),
                 "weight": LLM_ROLE_WEIGHTS.get(r["agent_role"], 0),
-                "weighted_score": round(r["score"] * LLM_ROLE_WEIGHTS.get(r["agent_role"], 0), 2),
+                "weighted_score": round(
+                    (r.get("score") or 0) * LLM_ROLE_WEIGHTS.get(r["agent_role"], 0), 2
+                ),
             }
             for r in round1_reports
         ],
@@ -461,6 +532,11 @@ async def analyze_stock(request: AnalyzeRequest):
             'agent_scores': [s.model_dump() for s in agent_scores],
             'timestamp': decision.header.timestamp,
         }
+        post_fd = data_fetcher.get_full_data(stock_code) or {}
+        ex = decision.execution or {}
+        result_data['current_price'] = _resolve_current_price(post_fd, ex)
+        result_data['data_uses_mock'] = data_fetcher.is_mock_data(stock_code)
+        result_data['data_gaps'] = _list_llm_data_gaps(post_fd, result_data['current_price'])
         
         return AnalyzeResponse(
             success=True,
@@ -481,55 +557,39 @@ async def analyze_stock(request: AnalyzeRequest):
 # ==================== LLM Agent Team SSE 分析接口 ====================
 
 def get_llm_config():
-    """获取LLM配置，优先从 llm_config.yaml 读取"""
-    import yaml
+    """获取 LLM 配置，统一复用正式配置加载器。
 
-    # 默认配置
-    config = {
-        "api_key": "",
-        "base_url": "https://www.dmxapi.cn/v1",
-        "provider": "openai_compatible",
-        "model": "gpt-3.5-turbo",
+    当 default_provider 为 openai_compatible 时，可用 .env 覆盖 YAML：
+    - OPENAI_BASE_URL：API 根地址（未设置则使用 llm_config.yaml 中的 base_url）
+    - OPENAI_MODEL：模型名（未设置则使用 yaml 中的 model）
+    API Key 仍由 yaml 的 api_key_env（一般为 OPENAI_API_KEY）从环境变量读取。
+    """
+    import os
+
+    from config.config_loader import get_llm_config as get_project_llm_config
+
+    loader = get_project_llm_config()
+    provider = loader.get_provider()
+    provider_name = loader.default_provider
+
+    base_url = provider.base_url
+    model = provider.model
+    if provider_name == "openai_compatible":
+        env_base = (os.environ.get("OPENAI_BASE_URL") or "").strip()
+        if env_base:
+            base_url = env_base
+        env_model = (os.environ.get("OPENAI_MODEL") or "").strip()
+        if env_model:
+            model = env_model
+
+    return {
+        "api_key": provider.api_key or "",
+        "base_url": base_url,
+        "provider": provider_name,
+        "model": model,
+        "temperature": provider.temperature,
+        "max_tokens": provider.max_tokens,
     }
-
-    # 尝试从 llm_config.yaml 读取
-    config_path = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-        "config", "llm_config.yaml"
-    )
-    if os.path.exists(config_path):
-        try:
-            with open(config_path, "r", encoding="utf-8") as f:
-                yaml_config = yaml.safe_load(f)
-
-            llm_section = yaml_config.get("llm", {})
-            providers = llm_section.get("providers", {})
-            default_provider = llm_section.get("default_provider", "openai_compatible")
-
-            provider_config = providers.get(default_provider, {})
-
-            config["provider"] = default_provider
-            config["api_key"] = provider_config.get("api_key", "")
-            config["base_url"] = provider_config.get("base_url", config["base_url"])
-            config["model"] = provider_config.get("model", config["model"])
-            config["temperature"] = provider_config.get("temperature", 0.7)
-            config["max_tokens"] = provider_config.get("max_tokens", 2000)
-        except Exception as e:
-            # YAML 读取失败，回退到环境变量
-            pass
-
-    # 环境变量覆盖（优先级更高）
-    env_key = os.environ.get("OPENAI_API_KEY")
-    if env_key:
-        config["api_key"] = env_key
-    env_url = os.environ.get("OPENAI_BASE_URL")
-    if env_url:
-        config["base_url"] = env_url
-    env_model = os.environ.get("OPENAI_MODEL")
-    if env_model:
-        config["model"] = env_model
-
-    return config
 
 
 async def generate_sse_events(stock_code: str, stock_name: str, force_refresh: bool = False):
@@ -579,7 +639,12 @@ async def generate_sse_events(stock_code: str, stock_name: str, force_refresh: b
         
         # 构建 LLM 使用的真实原始数据与规则引擎参考
         analysis_data = _build_llm_analysis_data(stock_code, rule_decision)
-        
+        uses_mock = data_fetcher.is_mock_data(stock_code)
+        if analysis_data.get("data_gaps"):
+            _analyze_logger.info(
+                "LLM 分析 %s 数据缺口: %s", stock_code, analysis_data.get("data_gaps")
+            )
+
         # 发送规则引擎分析完成事件
         rule_analysis_payload = {
             "status": "complete",
@@ -588,6 +653,8 @@ async def generate_sse_events(stock_code: str, stock_name: str, force_refresh: b
                 "stock_name": stock_name,
                 "composite_score": rule_decision.composite_score,
                 "final_action": rule_decision.final_action,
+                "data_uses_mock": uses_mock,
+                "data_gaps": analysis_data.get("data_gaps", []),
             },
         }
         yield f"event: rule_analysis\ndata: {json.dumps(rule_analysis_payload)}\n\n"
@@ -699,9 +766,13 @@ async def generate_sse_events(stock_code: str, stock_name: str, force_refresh: b
                         'agent_name': config.get('name', role),
                         'agent_role': role,
                         'icon': config.get('icon', '🤖'),
-                        'score': rule_reference.get('score', 0.0),
-                        'confidence': 0.5,
-                        'summary': analysis_text[:100] if len(analysis_text) > 100 else analysis_text,
+                        'score': 0.0,
+                        'confidence': 0.2,
+                        'summary': (
+                            f"[模型输出未解析为结构化结果] {analysis_text[:80]}"
+                            if analysis_text
+                            else "模型输出未解析为结构化结果"
+                        ),
                         'analysis': analysis_text,
                         'risks': [],
                         'opportunities': [],
@@ -725,22 +796,34 @@ async def generate_sse_events(stock_code: str, stock_name: str, force_refresh: b
         # ===== 第二轮：讨论 =====
         yield f"event: round_start\ndata: {json.dumps({'round': 2, 'type': 'discussion', 'title': '💬 第二轮：讨论'})}\n\n"
         
-        # Leader发起讨论
+        diverge_meta = _round1_divergence_meta(round1_reports)
+        if diverge_meta:
+            yield f"event: discussion_focus\ndata: {json.dumps(diverge_meta)}\n\n"
+            await asyncio.sleep(0.2)
+        
+        # Leader发起讨论（自然语言主持，与最终 JSON 决策分离）
         leader = team.get("leader")
         if leader:
             discussion_prompt = f"""股票 {stock_name}({stock_code}) 分析团队讨论开始。
 
 各分析师的初步意见：
-{chr(10).join([f"- {r['agent_name']}: 评分 {r['score']}分，{r['summary']}" for r in round1_reports])}
-
-请作为队长，引导讨论并总结各方观点。
+{chr(10).join([f"- {r['agent_name']}: 评分 {r.get('score') if r.get('score') is not None else 0}分，{r['summary']}" for r in round1_reports])}
+{_divergence_prompt_suffix(diverge_meta)}
+请主持本轮讨论：帮助团队对齐共识、澄清分歧，必要时提出追问。本环节仅输出可读中文，不要输出 JSON。
 """
             
             try:
-                leader_report = await asyncio.to_thread(leader.analyze, discussion_prompt)
-                
-                # 处理 AgentReport 返回值
-                leader_content = leader_report.analysis if isinstance(leader_report, AgentReport) else str(leader_report)
+                if hasattr(leader, "facilitate_discussion"):
+                    leader_content = await asyncio.to_thread(
+                        leader.facilitate_discussion, discussion_prompt
+                    )
+                else:
+                    leader_report = await asyncio.to_thread(leader.analyze, discussion_prompt)
+                    leader_content = (
+                        leader_report.analysis
+                        if isinstance(leader_report, AgentReport)
+                        else str(leader_report)
+                    )
 
                 leader_event = {
                     'round': 2,
@@ -754,25 +837,24 @@ async def generate_sse_events(stock_code: str, stock_name: str, force_refresh: b
                 
                 await asyncio.sleep(0.5)
                 
-                # 各Agent回应
+                # 各Agent回应（自然语言 discuss_reply，避免 JSON 套娃）
+                round2_lines: List[str] = []
                 for report in round1_reports:
                     role = report['agent_role']
                     agent = team.get(role)
                     if not agent:
                         continue
                     
-                    response_prompt = f"""作为 {report['agent_name']}，你收到了队长的讨论引导：
+                    response_prompt = f"""你是 {report['agent_name']}。队长讨论引导如下：
 
-{leader_content}
+{_clip_text(leader_content, 2000)}
 
-请基于你的专业角度，回应讨论并发表你的观点（100字以内）。
-"""
+请基于你的专业角度回应；若程序标出了分歧焦点，请明确表态是否认同、依据何在。"""
                     
                     try:
-                        agent_report = await asyncio.to_thread(agent.analyze, response_prompt)
-                        
-                        # 处理 AgentReport 返回值
-                        response_content = agent_report.analysis if isinstance(agent_report, AgentReport) else str(agent_report)
+                        response_content = await asyncio.to_thread(
+                            agent.discuss_reply, response_prompt
+                        )
 
                         response_event = {
                             'round': 2,
@@ -782,6 +864,9 @@ async def generate_sse_events(stock_code: str, stock_name: str, force_refresh: b
                             'type': 'response'
                         }
                         discussion_messages.append(response_event)
+                        round2_lines.append(
+                            f"- {response_event['agent_name']}: {_clip_text(response_content, 400)}"
+                        )
                         yield f"event: discussion\ndata: {json.dumps(response_event)}\n\n"
                         
                         await asyncio.sleep(0.3)
@@ -792,6 +877,36 @@ async def generate_sse_events(stock_code: str, stock_name: str, force_refresh: b
                             'error': str(e)
                         }
                         yield f"event: error\ndata: {json.dumps(error_payload)}\n\n"
+
+                # 队长收束：共识 / 未决分歧 / 待验证点（仍为非 JSON）
+                if round2_lines and hasattr(leader, "facilitate_discussion"):
+                    synthesis_prompt = f"""股票 {stock_name}({stock_code}) 第二轮讨论发言摘录：
+队长开场：
+{_clip_text(leader_content, 1200)}
+
+各成员回应：
+{chr(10).join(round2_lines)}
+
+请用纯中文、编号列表输出（非 JSON）：
+1) 共识要点（2～4 条）
+2) 仍存分歧（1～3 条）
+3) 决策前待验证点（1～2 条）
+每条不超过 60 字。"""
+                    try:
+                        closing_content = await asyncio.to_thread(
+                            leader.facilitate_discussion, synthesis_prompt
+                        )
+                        closing_event = {
+                            'round': 2,
+                            'agent_name': '👔 队长',
+                            'agent_role': 'leader',
+                            'content': closing_content,
+                            'type': 'synthesis'
+                        }
+                        discussion_messages.append(closing_event)
+                        yield f"event: discussion\ndata: {json.dumps(closing_event)}\n\n"
+                    except Exception:
+                        pass
                         
             except Exception as e:
                 yield f"event: error\ndata: {json.dumps({'error': f'Leader讨论失败: {str(e)}'})}\n\n"
@@ -808,7 +923,7 @@ async def generate_sse_events(stock_code: str, stock_name: str, force_refresh: b
 - 股票名称: {stock_name}
 
 第一轮独立分析：
-{chr(10).join([f"- {r['agent_name']}({r['agent_role']}): 评分 {r['score']:.1f}，摘要：{r['summary']}，分析：{r['analysis']}" for r in round1_reports])}
+{chr(10).join([f"- {r['agent_name']}({r['agent_role']}): 评分 {float(r.get('score') or 0):.1f}，摘要：{r['summary']}，分析：{r['analysis']}" for r in round1_reports])}
 
 第二轮讨论摘录：
 {chr(10).join([f"- {m['agent_name']}: {m['content']}" for m in discussion_messages]) if discussion_messages else "- 暂无讨论记录"}
@@ -838,16 +953,23 @@ async def generate_sse_events(stock_code: str, stock_name: str, force_refresh: b
                         rule_decision=rule_decision,
                         round1_reports=round1_reports,
                         leader_report=final_report,
+                        current_price=analysis_data.get("current_price"),
+                        data_uses_mock=uses_mock,
+                        data_gaps=analysis_data.get("data_gaps"),
                     )
             except Exception as e:
                 yield f"event: error\ndata: {json.dumps({'error': f'Leader最终决策失败: {str(e)}'})}\n\n"
 
         if final_decision is None:
-            fallback_score = sum(r['score'] for r in round1_reports) / len(round1_reports) if round1_reports else 0.0
+            raw_scores = [float(r.get("score") or 0) for r in round1_reports]
+            fallback_score = sum(raw_scores) / len(raw_scores) if raw_scores else 0.0
             fallback_action = _normalize_final_action(None, fallback_score)
             final_decision = {
                 'stock_code': stock_code,
                 'stock_name': stock_name,
+                'current_price': analysis_data.get("current_price"),
+                'data_uses_mock': uses_mock,
+                'data_gaps': analysis_data.get("data_gaps", []),
                 'final_action': fallback_action,
                 'action_text': _get_action_text(fallback_action, AgentReport(
                     agent_name='👔 队长',
@@ -879,7 +1001,9 @@ async def generate_sse_events(stock_code: str, stock_name: str, force_refresh: b
                     'risks': r.get('risks', []),
                     'opportunities': r.get('opportunities', []),
                     'weight': LLM_ROLE_WEIGHTS.get(r['agent_role'], 0),
-                    'weighted_score': round(r['score'] * LLM_ROLE_WEIGHTS.get(r['agent_role'], 0), 2),
+                    'weighted_score': round(
+                        (float(r.get("score") or 0)) * LLM_ROLE_WEIGHTS.get(r['agent_role'], 0), 2
+                    ),
                 } for r in round1_reports],
                 'buy_reasons': rule_decision.rationale.get('buy_reasons', [])[:3],
                 'risk_warnings': rule_decision.rationale.get('risk_warnings', [])[:3],

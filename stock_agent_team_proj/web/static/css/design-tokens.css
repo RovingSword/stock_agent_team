@@ -1,0 +1,108 @@
+/* ==========================================================================
+   设计令牌 (Design Tokens)
+   统一色板 / 字号 / 间距 / 圆角 / 阴影 / 动效 —— 整个系统的唯一变量源头。
+   风格参考：Linear / Notion —— 专业浅色、冷静、克制。
+   ========================================================================== */
+
+:root {
+    /* ------- 表面层 ------- */
+    --bg-app: #F7F8FA;
+    --bg-surface: #FFFFFF;
+    --bg-subtle: #F3F4F6;
+    --bg-sunken: #E9EBEF;
+
+    /* ------- 边框 ------- */
+    --border-default: #E5E7EB;
+    --border-strong: #D1D5DB;
+    --border-focus: #93C5FD;
+
+    /* ------- 文本 ------- */
+    --text-primary: #111827;
+    --text-secondary: #4B5563;
+    --text-muted: #9CA3AF;
+    --text-inverted: #FFFFFF;
+    --text-link: #1E40AF;
+
+    /* ------- 品牌主色（单一品牌） ------- */
+    --brand: #1E40AF;          /* 主按钮 / 链接 / 图表主色 */
+    --brand-hover: #1D4ED8;
+    --brand-active: #1E3A8A;
+    --brand-soft: #EFF4FF;     /* 浅色品牌背景 */
+    --brand-ring: rgba(30, 64, 175, 0.14);
+
+    /* ------- 语义色（A 股习惯：涨红跌绿） ------- */
+    --up: #DC2626;
+    --up-soft: #FEF2F2;
+    --down: #16A34A;
+    --down-soft: #F0FDF4;
+    --warn: #D97706;
+    --warn-soft: #FFFBEB;
+    --info: #0369A1;
+    --info-soft: #F0F9FF;
+    --danger: #DC2626;
+    --danger-soft: #FEF2F2;
+
+    /* ------- 图表配色 ------- */
+    --chart-grid: #E5E7EB;
+    --chart-axis: #9CA3AF;
+    --chart-text: #6B7280;
+    --chart-1: #1E40AF;
+    --chart-2: #7C3AED;
+    --chart-3: #059669;
+    --chart-4: #D97706;
+    --chart-5: #DC2626;
+
+    /* ------- 字号（rem 基于 16px） ------- */
+    --fs-xs: 0.75rem;      /* 12 */
+    --fs-sm: 0.8125rem;    /* 13 */
+    --fs-md: 0.875rem;     /* 14 —— 正文 */
+    --fs-lg: 1rem;         /* 16 */
+    --fs-xl: 1.25rem;      /* 20 */
+    --fs-2xl: 1.5rem;      /* 24 */
+    --fs-3xl: 2rem;        /* 32 */
+
+    /* ------- 字重 ------- */
+    --fw-regular: 400;
+    --fw-medium: 500;
+    --fw-semibold: 600;
+    --fw-bold: 700;
+
+    /* ------- 行高 ------- */
+    --lh-tight: 1.25;
+    --lh-base: 1.5;
+    --lh-relaxed: 1.6;
+
+    /* ------- 间距 ------- */
+    --sp-1: 4px;
+    --sp-2: 8px;
+    --sp-3: 12px;
+    --sp-4: 16px;
+    --sp-5: 24px;
+    --sp-6: 32px;
+    --sp-7: 48px;
+
+    /* ------- 圆角 ------- */
+    --r-sm: 6px;
+    --r-md: 10px;
+    --r-lg: 14px;
+    --r-pill: 9999px;
+
+    /* ------- 阴影（仅两级，避免视觉噪音） ------- */
+    --sh-1: 0 1px 2px rgba(16, 24, 40, 0.05);
+    --sh-2: 0 4px 12px rgba(16, 24, 40, 0.06), 0 1px 2px rgba(16, 24, 40, 0.04);
+
+    /* ------- 动效 ------- */
+    --motion: 160ms cubic-bezier(0.2, 0, 0, 1);
+    --motion-slow: 240ms cubic-bezier(0.2, 0, 0, 1);
+
+    /* ------- 布局容器 ------- */
+    --container-max: 1280px;
+    --topbar-height: 56px;
+
+    /* LLM 仪表盘 / 时间线：玻璃与强调色（在浅色主面上叠加，保持可读） */
+    --neon-cyan: #0891B2;
+    --glass-surface: rgba(255, 255, 255, 0.78);
+    --glass-border: rgba(8, 145, 178, 0.22);
+    --glass-shadow: 0 8px 32px rgba(16, 24, 40, 0.08);
+    --glass-blur: 20px;
+}

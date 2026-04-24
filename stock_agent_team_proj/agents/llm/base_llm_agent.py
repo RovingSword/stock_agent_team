@@ -170,7 +170,33 @@ class BaseLLMAgent(ABC):
         except Exception as e:
             self.logger.error(f"LLM 调用失败: {e}")
             return self._fallback_response(str(e))
-    
+
+    def discuss_reply(self, user_message: str, **kwargs) -> str:
+        """
+        圆桌讨论专用：单轮自然语言短答，不写入 JSON 分析范式，也不污染 chat 历史。
+        """
+        from llm.base_provider import ChatMessage
+
+        sys_prompt = (
+            f"你是投研团队中的「{self.role_description}」（{self.name}）。\n"
+            "当前为讨论环节：请用中文自然段落回答，2～6 句话；可引用输入中的数据与观点。\n"
+            "禁止输出 JSON、YAML、Markdown 代码块；避免生成长编号清单，以连贯叙述为主。"
+        )
+        messages = [
+            ChatMessage(role="system", content=sys_prompt),
+            ChatMessage(role="user", content=user_message),
+        ]
+        try:
+            response = self.llm.chat_with_history(
+                messages=messages,
+                temperature=kwargs.get("temperature", min(self.temperature, 0.65)),
+                max_tokens=kwargs.get("max_tokens", min(self.max_tokens, 600)),
+            )
+            return (response.content or "").strip()
+        except Exception as e:
+            self.logger.error(f"讨论回应失败: {e}")
+            return f"（讨论回应暂不可用：{e}）"
+
     def _fallback_response(self, error: str) -> str:
         """降级响应"""
         return json.dumps({

@@ -39,6 +39,14 @@ AGENT_WEIGHTS = {
     'fundamental': 0.15,      # 基本面分析师权重
 }
 
+# LLM路径统一使用相同基础权重（可在web/api/analyze.py中微调）
+LLM_ROLE_WEIGHTS = {
+    'technical': 0.25,
+    'intelligence': 0.25,
+    'risk': 0.25,
+    'fundamental': 0.25,
+}
+
 # 权重调整范围
 WEIGHT_RANGES = {
     'technical': (0.20, 0.50),

@@ -3,14 +3,15 @@ K线数据接口
 GET /api/kline/{stock_code} - 返回 ECharts 所需格式的日K线 + 均线 + 支撑阻力数据
 """
 import os
-import sys
 from typing import Optional
 
 import numpy as np
 import pandas as pd
 from fastapi import APIRouter, HTTPException, Query
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+from config.project_paths import ensure_project_root_on_path
+
+ensure_project_root_on_path()
 
 from utils.data_fetcher import data_fetcher
 

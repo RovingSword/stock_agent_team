@@ -191,15 +191,29 @@ class LeaderAgent(BaseAgent):
             self.worker_reports[report.agent_type] = report
     
     def calculate_composite_score(self) -> float:
-        """计算综合评分"""
+        """计算综合评分 - 改进版：处理部分Worker失败情况，保证决策完整性"""
         weights = self.get_current_weights()
         total_score = 0.0
+        expected_agents = {'technical', 'intelligence', 'fundamental', 'risk'}
+        missing_agents = []
         
         for agent_type, report in self.worker_reports.items():
-            weight = weights.get(agent_type, 0)
+            weight = weights.get(agent_type, 0.25)  # 默认权重兜底
             total_score += report.overall_score * weight
         
-        return total_score
+        # 处理缺失的Agent（失败或未报告），使用默认低分5.0
+        for agent_type in expected_agents:
+            if agent_type not in self.worker_reports:
+                missing_agents.append(agent_type)
+                default_score = 5.0  # 中性偏低
+                weight = weights.get(agent_type, 0.25)
+                total_score += default_score * weight
+                self.logger.warning(f"缺失 {agent_type} 报告，使用默认分 {default_score}")
+        
+        if missing_agents:
+            self.logger.warning(f"分析不完整，缺失报告: {missing_agents}。综合评分已调整。")
+        
+        return min(total_score, 10.0)  # 上限10分
     
     def make_decision(self, context: AgentContext, 
                        reports: List[AnalysisReportMessage]) -> TradeDecisionMessage:

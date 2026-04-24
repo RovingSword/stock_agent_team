@@ -83,8 +83,9 @@ class Leader(LeaderAgent):
         return decision
     
     def _run_workers_parallel(self, context: AgentContext) -> List[AnalysisReportMessage]:
-        """并行执行Worker分析"""
+        """并行执行Worker分析 - 改进版：失败时创建fallback报告，保证决策完整性"""
         reports = []
+        failed_workers = []
         
         with ThreadPoolExecutor(max_workers=4) as executor:
             # 提交任务
@@ -102,6 +103,34 @@ class Leader(LeaderAgent):
                     self.logger.info(f"{worker.name} 分析完成，评分: {report.overall_score:.1f}")
                 except Exception as e:
                     self.logger.error(f"{worker.name} 分析失败: {str(e)}")
+                    failed_workers.append(worker.name)
+                    # 创建完整的fallback低分报告，保证决策完整性
+                    header = MessageHeader()
+                    header.sender = {
+                        'agent_id': f"fallback_{worker.name.lower()}",
+                        'agent_name': worker.name
+                    }
+                    fallback_report = AnalysisReportMessage(
+                        header=header,
+                        task_id=context.task_id if hasattr(context, 'task_id') else "fallback",
+                        stock_code=context.stock_code,
+                        stock_name=context.stock_name,
+                        agent_type=worker.name.lower().replace("分析员", "").replace(" ", "_").strip(),
+                        weight=0.25,
+                        overall_score=2.0,  # 失败视为低分
+                        conclusion={
+                            "summary": f"分析失败: {str(e)[:80]}...",
+                            "action": "avoid",
+                            "reason": "Worker执行异常，系统自动使用降级分数"
+                        },
+                        key_points=["分析执行失败", "已应用默认低分处理"],
+                        risk_points=["潜在数据/网络问题"],
+                        raw_data={"error": str(e)}
+                    )
+                    reports.append(fallback_report)
+        
+        if failed_workers:
+            self.logger.warning(f"有 {len(failed_workers)} 个Worker失败: {failed_workers}。决策将包含降级处理。")
         
         return reports
     

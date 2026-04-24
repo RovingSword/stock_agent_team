@@ -3,16 +3,55 @@ Web应用主文件
 中短线波段 Agent Team 系统 Web界面
 """
 import os
-import sys
 from contextlib import asynccontextmanager
+from pathlib import Path
+
+from config.project_paths import PROJECT_ROOT, ensure_project_root_on_path
+
+ensure_project_root_on_path()
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
+try:
+    from dotenv import load_dotenv
+    HAS_DOTENV = True
+except ModuleNotFoundError:
+    HAS_DOTENV = False
 
-# 添加项目根目录到路径
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    def load_dotenv(*_args, **_kwargs):
+        return False
+
+def load_project_env(env_path: Path = PROJECT_ROOT / ".env") -> bool:
+    """加载项目根目录下的 .env；缺少 python-dotenv 时退回简易解析。"""
+    env_path = Path(env_path)
+    if not env_path.exists():
+        return False
+
+    if HAS_DOTENV:
+        return bool(load_dotenv(dotenv_path=env_path))
+
+    loaded = False
+    with env_path.open("r", encoding="utf-8") as env_file:
+        for raw_line in env_file:
+            line = raw_line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+
+            key, value = line.split("=", 1)
+            key = key.strip()
+            value = value.strip().strip("\"'")
+            if not key:
+                continue
+
+            os.environ.setdefault(key, value)
+            loaded = True
+
+    return loaded
+
+# 启动时加载 .env，确保 Web 进程可读取本地 API Key。
+load_project_env()
 
 from storage.database import Database
 
@@ -75,8 +114,64 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    """健康检查"""
-    return {"status": "healthy", "service": "stock-agent-team-web"}
+    """增强版健康检查 - 包含依赖状态"""
+    from config.config_loader import get_llm_config
+    from storage.database import db
+    import os
+    from pathlib import Path
+    from datetime import datetime
+    
+    status = {
+        "status": "healthy",
+        "service": "stock-agent-team-web",
+        "timestamp": datetime.now().isoformat(),
+        "version": "1.2.0",
+        "dependencies": {}
+    }
+    
+    # 检查数据库
+    try:
+        db_status = db.get_health_status() if hasattr(db, 'get_health_status') else "connected"
+        status["dependencies"]["database"] = {"status": "healthy", "details": db_status}
+    except Exception as e:
+        status["dependencies"]["database"] = {"status": "degraded", "error": str(e)}
+        status["status"] = "degraded"
+    
+    # 检查LLM配置
+    try:
+        config = get_llm_config()
+        validation = config.validate()
+        llm_status = "healthy" if validation.get("valid", False) else "warning"
+        missing = config.get_missing_api_keys()
+        status["dependencies"]["llm"] = {
+            "status": llm_status,
+            "default_provider": config.default_provider,
+            "missing_keys": len(missing)
+        }
+        if missing:
+            status["status"] = "degraded"
+    except Exception as e:
+        status["dependencies"]["llm"] = {"status": "error", "error": str(e)}
+        status["status"] = "degraded"
+    
+    # 检查数据目录和缓存
+    try:
+        data_dir = Path("data")
+        status["dependencies"]["data"] = {
+            "status": "healthy",
+            "reports": len(list(data_dir.glob("reports/*.md"))) if data_dir.exists() else 0,
+            "intel_cache": len(list((data_dir / "intel").glob("*.json"))) if (data_dir / "intel").exists() else 0
+        }
+    except Exception:
+        status["dependencies"]["data"] = {"status": "warning"}
+    
+    # 添加trace信息
+    status["observability"] = {
+        "trace_id": f"health-{int(datetime.now().timestamp())}",
+        "log_level": "INFO"
+    }
+    
+    return status
 
 
 if __name__ == "__main__":

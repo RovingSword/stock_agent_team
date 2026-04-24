@@ -3,10 +3,19 @@
 """
 import os
 import sys
+from pathlib import Path
 
-# 设置环境变量
-os.environ["OPENAI_API_KEY"] = "sk-mgzorsYLeEFnIJHrK2B1LQurNOn5VCj3nrSAtXymUGToTzcb"
-os.environ["OPENAI_BASE_URL"] = "https://www.dmxapi.cn/v1"
+# 加载 .env 配置（安全实践：不要硬编码密钥）
+try:
+    from dotenv import load_dotenv
+    env_path = Path(".env")
+    if env_path.exists():
+        load_dotenv(env_path)
+        print("✅ 已从 .env 文件加载配置")
+    else:
+        print("⚠️  未找到 .env 文件，请从 .env.example 复制并设置 OPENAI_API_KEY")
+except ImportError:
+    print("⚠️  未安装 python-dotenv，建议 pip install python-dotenv 并使用 .env 文件")
 
 # 添加项目路径
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

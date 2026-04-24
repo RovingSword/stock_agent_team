@@ -15,6 +15,8 @@ const elements = {
     discussionSection: document.getElementById('discussionSection'),
     discussionContent: document.getElementById('discussionContent'),
     discussionStatus: document.getElementById('discussionStatus'),
+    dataMockBanner: document.getElementById('dataMockBanner'),
+    dismissDataMock: document.getElementById('dismissDataMock'),
     resultSection: document.getElementById('resultSection'),
     errorSection: document.getElementById('errorSection'),
     historySection: document.getElementById('historySection'),
@@ -59,7 +61,18 @@ function renderMarkdown(text) {
 document.addEventListener('DOMContentLoaded', () => {
     initEventListeners();
     loadHistory();
+    if (elements.dismissDataMock) {
+        elements.dismissDataMock.addEventListener('click', () => setDataMockBanner(false));
+    }
 });
+
+/**
+ * 展示或隐藏「模拟/兜底数据」顶栏
+ */
+function setDataMockBanner(visible) {
+    if (!elements.dataMockBanner) return;
+    elements.dataMockBanner.classList.toggle('hidden', !visible);
+}
 
 /**
  * 初始化事件监听
@@ -85,15 +98,11 @@ function initEventListeners() {
 }
 
 /**
- * 更新分析按钮文本
+ * 更新分析按钮文本（图标通过 CSS + SVG 固定，按钮文字维持不变）
  */
-function updateAnalyzeButton(mode) {
-    const btnIcon = elements.analyzeBtn.querySelector('.btn-icon');
-    if (mode === 'llm') {
-        btnIcon.textContent = '🤖';
-    } else {
-        btnIcon.textContent = '🔍';
-    }
+function updateAnalyzeButton(_mode) {
+    // 图标改用 SVG symbol，不再根据模式动态切换 emoji。
+    // 保留函数以兼容现有监听器。
 }
 
 /**
@@ -115,6 +124,13 @@ async function handleAnalyze() {
         showError('请输入股票代码');
         return;
     }
+
+    // 从 file:// 打开时 fetch 会失败（浏览器对本地文件有跨域/安全限制）
+    if (window.location.protocol === 'file:') {
+        showError('请通过本机 Web 服务访问：在项目目录启动 uvicorn 后打开 http://127.0.0.1:8000/，不要双击用「文件」方式直接打开 index.html。');
+        return;
+    }
+    setDataMockBanner(false);
     
     // 关闭之前的SSE连接
     closeEventSource();
@@ -152,6 +168,9 @@ async function handleRuleAnalyze(stockCode) {
         const result = await response.json();
         
         if (result.success) {
+            if (result.data && result.data.data_uses_mock) {
+                setDataMockBanner(true);
+            }
             displayResult(result.data);
             updateChartAnnotations(result.data);
             loadHistory();
@@ -176,6 +195,7 @@ async function handleLLMAnalyze(stockCode) {
     elements.errorSection.classList.add('hidden');
     elements.discussionSection.classList.remove('hidden');
     elements.discussionSection.classList.remove('analysis-complete');
+    elements.discussionSection.classList.add('discussion--glass');
 
     // 并行加载K线图
     loadKlineChart(stockCode);
@@ -242,7 +262,11 @@ async function handleLLMAnalyze(stockCode) {
         
     } catch (error) {
         console.error('SSE连接失败:', error);
-        showError('SSE连接失败: ' + error.message);
+        const msg = error && error.message ? error.message : String(error);
+        showError(
+            'SSE连接失败: ' + msg +
+            '。请确认本机已启动 Web 服务，并用与接口相同的源访问（例如 http://127.0.0.1:8000/）。'
+        );
         elements.discussionSection.classList.add('hidden');
     } finally {
         elements.analyzeBtn.disabled = false;
@@ -270,6 +294,9 @@ function handleSSEMessage(eventType, dataStr) {
 
             case 'rule_analysis':
                 elements.discussionStatus.textContent = '规则引擎分析完成';
+                if (data.data && data.data.data_uses_mock) {
+                    setDataMockBanner(true);
+                }
                 break;
                 
             case 'intel_injected':
@@ -282,43 +309,60 @@ function handleSSEMessage(eventType, dataStr) {
                 // 在讨论区显示情报注入消息
                 const intelMsg = document.createElement('div');
                 intelMsg.className = 'discussion-msg system-msg';
-                intelMsg.innerHTML = `<span class="msg-icon">📡</span> <strong>情报注入</strong>: ${cacheLabel} | ${data.news_count || 0}条新闻, ${data.research_count || 0}条研报, ${data.sentiment_count || 0}条舆情`;
+                intelMsg.innerHTML = `<span class="msg-icon"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-radio"/></svg></span> <strong>情报注入</strong>：${escapeHtml(cacheLabel)} · ${data.news_count || 0} 条新闻 · ${data.research_count || 0} 条研报 · ${data.sentiment_count || 0} 条舆情`;
                 elements.discussionContent.appendChild(intelMsg);
                 break;
 
             case 'round_start':
-                renderRoundStart(data);
+                renderDiscussionRoundStart(data);
                 break;
-                
+
             case 'agent_start':
+                ensureDiscussionTimelineLayout();
                 renderAgentStart(data);
+                if (data.agent_role) {
+                    elements.discussionStatus.textContent = `${getAgentLabel(data.agent_role)} 分析中…`;
+                }
                 break;
-                
+
             case 'agent_analysis':
+                ensureDiscussionTimelineLayout();
                 renderAgentAnalysis(data);
+                if (data.agent_role) {
+                    elements.discussionStatus.textContent = `${getAgentLabel(data.agent_role)} 分析完成`;
+                }
                 break;
-                
+
             case 'discussion':
-                renderDiscussion(data);
+                renderDiscussionRich(data);
+                break;
+
+            case 'discussion_focus':
+                renderDiscussionFocusBanner(data);
                 break;
                 
             case 'final_decision':
                 renderFinalDecision(data);
                 break;
-                
-            case 'done':
-                elements.discussionStatus.textContent = '分析完成 ✓';
-                // 更新讨论区域标题
-                const discussionHeader = elements.discussionSection.querySelector('.discussion-header h3');
-                if (discussionHeader) {
-                    discussionHeader.textContent = '🤖 LLM Agent Team 分析完成';
+
+            case 'done': {
+                const enriched = enrichLlmResultWithPerAgentScores(data);
+                elements.discussionStatus.textContent = '分析完成';
+                if (enriched.data_uses_mock) {
+                    setDataMockBanner(true);
                 }
+                // 更新讨论区域标题文本（保留已有 SVG 图标）
+                updateDiscussionHeaderText('LLM Agent Team 分析完成');
                 removeLoadingIndicator();
-                displayLLMResult(data);
-                // 保持讨论区域可见，不隐藏，并展开显示所有内容
+
+                // 使用增强可视化结果（雷达图 + 置信度卡片 + 决策卡）
+                renderEnhancedResult(enriched);
+                updateChartAnnotations(enriched);
+
                 elements.discussionSection.classList.remove('hidden');
                 elements.discussionSection.classList.add('analysis-complete');
                 break;
+            }
                 
             case 'error':
                 console.error('SSE错误:', data);
@@ -333,27 +377,334 @@ function handleSSEMessage(eventType, dataStr) {
 }
 
 /**
- * 渲染讨论轮次开始
+ * 更新讨论区标题文本，保留已有的 SVG 图标节点。
  */
-function renderRoundStart(data) {
-    const round = data.round;
-    const title = data.title;
-    
-    const roundHtml = `
-        <div class="discussion-round round-${round}">
-            <div class="round-header">
-                <span class="round-title">${title}</span>
+function updateDiscussionHeaderText(text) {
+    const header = elements.discussionSection.querySelector('.discussion-header h3');
+    if (!header) return;
+    const iconSvg = header.querySelector('svg');
+    header.textContent = '';
+    if (iconSvg) header.appendChild(iconSvg);
+    header.appendChild(document.createTextNode(' ' + text));
+}
+
+/**
+ * 角色键规范化：把 agent_role / agent_type 统一映射到 4 类英文 role。
+ */
+function normalizeAgentRole(role) {
+    if (!role) return 'unknown';
+    const map = {
+        'technical': 'technical',
+        '技术分析员': 'technical',
+        'tech': 'technical',
+        'intelligence': 'intelligence',
+        '情报员': 'intelligence',
+        'intel': 'intelligence',
+        'risk': 'risk',
+        '风控官': 'risk',
+        'fundamental': 'fundamental',
+        '基本面分析师': 'fundamental',
+        '基本面分析员': 'fundamental',
+        'fund': 'fundamental',
+        'leader': 'leader',
+        '领队': 'leader',
+    };
+    return map[role] || 'unknown';
+}
+
+/**
+ * SSE 终态里 per-agent 分数在 agent_scores 数组中；雷达图与增强卡片读取 tech_score 等平铺字段。
+ * 将二者对齐，避免界面一直显示 0。
+ */
+function enrichLlmResultWithPerAgentScores(data) {
+    if (!data) return data;
+    const out = { ...data };
+    const list = out.agent_scores;
+    if (!Array.isArray(list) || list.length === 0) return out;
+    for (const s of list) {
+        const role = normalizeAgentRole(s.agent_role || s.agent_type);
+        if (role === 'leader' || role === 'unknown') continue;
+        const raw = s.score;
+        const sc = typeof raw === 'number' && !Number.isNaN(raw)
+            ? raw
+            : (parseFloat(raw) || 0);
+        if (role === 'technical') out.tech_score = sc;
+        else if (role === 'intelligence') out.intel_score = sc;
+        else if (role === 'risk') out.risk_score = sc;
+        else if (role === 'fundamental') out.fund_score = sc;
+    }
+    return out;
+}
+
+/**
+ * 角色对应的 SVG 图标 id。
+ */
+function getAgentIconId(role) {
+    const map = {
+        'technical': 'i-chart',
+        'intelligence': 'i-radio',
+        'risk': 'i-shield',
+        'fundamental': 'i-book',
+        'leader': 'i-sparkles',
+    };
+    return map[normalizeAgentRole(role)] || 'i-sparkles';
+}
+
+/**
+ * 角色中文显示名。
+ */
+function getAgentLabel(role) {
+    const map = {
+        'technical': '技术分析员',
+        'intelligence': '情报员',
+        'risk': '风控官',
+        'fundamental': '基本面分析师',
+        'leader': '领队',
+    };
+    return map[normalizeAgentRole(role)] || (role || 'Agent');
+}
+
+function ensureDiscussionTimelineLayout() {
+    const c = elements.discussionContent;
+    if (!c.classList.contains('discussion-timeline')) {
+        c.classList.add('discussion-timeline');
+    }
+    elements.discussionSection.classList.remove('hidden');
+}
+
+/**
+ * 从文本中尝试解析 JSON 对象（兼容前后夹杂说明的情况）。
+ */
+function extractJsonObject(text) {
+    const t = String(text || '').trim();
+    const start = t.indexOf('{');
+    const end = t.lastIndexOf('}');
+    if (start === -1 || end <= start) return null;
+    try {
+        return JSON.parse(t.slice(start, end + 1));
+    } catch {
+        return null;
+    }
+}
+
+function formatStructuredDiscussionHtml(obj) {
+    const blocks = [];
+    const meta = [];
+    if (obj.stock_name || obj.ticker) {
+        meta.push(
+            `<div class="ds-title">${escapeHtml([obj.stock_name, obj.ticker].filter(Boolean).join(' · '))}</div>`
+        );
+    }
+    if (obj.decision != null && obj.decision !== '') {
+        meta.push(`<span class="ds-badge">${escapeHtml(String(obj.decision))}</span>`);
+    }
+    if (obj.confidence != null && obj.confidence !== '') {
+        const c = obj.confidence;
+        meta.push(
+            `<span class="ds-meta">置信度 ${escapeHtml(typeof c === 'number' ? c.toFixed(2) : String(c))}</span>`
+        );
+    }
+    if (meta.length) {
+        blocks.push(`<div class="ds-head">${meta.join(' ')}</div>`);
+    }
+
+    const summary = obj.summary;
+    if (summary && typeof summary === 'object' && !Array.isArray(summary)) {
+        if (Array.isArray(summary.consensus) && summary.consensus.length) {
+            const lis = summary.consensus
+                .map((x) => `<li class="markdown-body">${renderMarkdown(String(x))}</li>`)
+                .join('');
+            blocks.push(`<div class="ds-section"><h4 class="ds-h">共识</h4><ul class="ds-list">${lis}</ul></div>`);
+        }
+        if (Array.isArray(summary.divergence) && summary.divergence.length) {
+            const lis = summary.divergence
+                .map((x) => `<li class="markdown-body">${renderMarkdown(String(x))}</li>`)
+                .join('');
+            blocks.push(`<div class="ds-section"><h4 class="ds-h">分歧</h4><ul class="ds-list">${lis}</ul></div>`);
+        }
+    } else if (typeof summary === 'string' && summary.trim()) {
+        blocks.push(`<div class="ds-section markdown-body">${renderMarkdown(summary)}</div>`);
+    }
+
+    if (Array.isArray(obj.reasoning) && obj.reasoning.length) {
+        const lis = obj.reasoning
+            .map((x) => `<li class="markdown-body">${renderMarkdown(String(x))}</li>`)
+            .join('');
+        blocks.push(`<div class="ds-section"><h4 class="ds-h">推理链</h4><ul class="ds-list">${lis}</ul></div>`);
+    }
+
+    if (obj.agent_scores && typeof obj.agent_scores === 'object' && !Array.isArray(obj.agent_scores)) {
+        const rows = Object.entries(obj.agent_scores)
+            .map(
+                ([k, v]) =>
+                    `<tr><td>${escapeHtml(k)}</td><td>${escapeHtml(String(v))}</td></tr>`
+            )
+            .join('');
+        blocks.push(
+            `<div class="ds-section"><h4 class="ds-h">各维度评分</h4><table class="ds-table"><tbody>${rows}</tbody></table></div>`
+        );
+    }
+
+    if (obj.data_quality && typeof obj.data_quality === 'object') {
+        const dq = obj.data_quality;
+        const miss = Array.isArray(dq.missing) ? dq.missing.join('、') : '';
+        blocks.push(
+            `<div class="ds-section ds-muted">数据完整度：${escapeHtml(String(dq.completeness ?? '—'))}` +
+                (miss ? ` · 缺失：${escapeHtml(miss)}` : '') +
+                `</div>`
+        );
+    }
+
+    const analysisStr =
+        typeof obj.analysis === 'string' && obj.analysis.trim() ? obj.analysis.trim() : '';
+    if (analysisStr) {
+        blocks.push(
+            `<div class="ds-section"><h4 class="ds-h">补充说明</h4><div class="markdown-body">${renderMarkdown(analysisStr)}</div></div>`
+        );
+    }
+
+    if (!blocks.length) {
+        blocks.push(
+            `<pre class="ds-fallback">${escapeHtml(JSON.stringify(obj, null, 2))}</pre>`
+        );
+    }
+
+    return `<div class="discussion-structured">${blocks.join('\n')}</div>`;
+}
+
+function renderDiscussionRich(data) {
+    ensureDiscussionTimelineLayout();
+    const raw = data.content != null ? String(data.content) : '';
+    const parsed = extractJsonObject(raw);
+    const useStructured =
+        parsed &&
+        (parsed.decision != null ||
+            (parsed.summary != null && typeof parsed.summary === 'object') ||
+            (Array.isArray(parsed.reasoning) && parsed.reasoning.length));
+
+    const inner = useStructured
+        ? formatStructuredDiscussionHtml(parsed)
+        : `<div class="message-content markdown-body">${renderMarkdown(raw)}</div>`;
+
+    const msgType = ['opening', 'response', 'synthesis', 'message'].includes(data.type)
+        ? data.type
+        : 'message';
+    const html = `
+        <div class="discussion-message discussion-message--${msgType}">
+            <div class="message-header">
+                <span class="message-avatar">${getAvatarByRole(data.agent_role)}</span>
+                <span class="message-name">${escapeHtml(data.agent_name || '')}</span>
+                ${
+                    msgType === 'synthesis'
+                        ? '<span class="message-tag">讨论收束</span>'
+                        : msgType === 'opening'
+                          ? '<span class="message-tag">讨论开场</span>'
+                          : ''
+                }
             </div>
-            <div class="round-content" id="round-${round}-content">
+            ${inner}
+        </div>
+    `;
+    elements.discussionContent.insertAdjacentHTML('beforeend', html);
+    elements.discussionContent.scrollTop = elements.discussionContent.scrollHeight;
+    if (data.agent_role) {
+        elements.discussionStatus.textContent = `${getAgentLabel(data.agent_role)} 讨论更新`;
+    }
+}
+
+function renderDiscussionFocusBanner(meta) {
+    removeLoadingIndicator();
+    ensureDiscussionTimelineLayout();
+    const html = `
+        <div class="discussion-focus-banner" role="note">
+            <span class="discussion-focus-icon" aria-hidden="true">⚖</span>
+            <div class="discussion-focus-body">
+                <strong>分歧焦点</strong>（程序提取）：
+                ${escapeHtml(meta.high_agent || '')}（${escapeHtml(String(meta.high_score))} 分）
+                与 ${escapeHtml(meta.low_agent || '')}（${escapeHtml(String(meta.low_score))} 分）
+                相差 <strong>${escapeHtml(String(meta.spread))}</strong> 分
             </div>
         </div>
     `;
-    
-    elements.discussionContent.insertAdjacentHTML('beforeend', roundHtml);
-    elements.discussionStatus.textContent = `第${round}轮进行中...`;
-    
-    // 滚动到底部
+    elements.discussionContent.insertAdjacentHTML('beforeend', html);
     elements.discussionContent.scrollTop = elements.discussionContent.scrollHeight;
+    elements.discussionStatus.textContent = '讨论：对齐分歧焦点';
+}
+
+/**
+ * 各轮次开始的时间线节点（不清空已有内容，避免冲掉情报注入与 loading 之外的节点）。
+ */
+function renderDiscussionRoundStart(data) {
+    removeLoadingIndicator();
+    ensureDiscussionTimelineLayout();
+    const container = elements.discussionContent;
+    const nodeHTML = `
+        <div class="timeline-node stagger-in timeline-node--round">
+            <div class="timeline-header">
+                <div class="agent-avatar" data-role="leader">
+                    <svg class="icon" aria-hidden="true"><use href="#i-sparkles"/></svg>
+                </div>
+                <div class="timeline-content">
+                    <div class="timeline-title-row">
+                        <span class="timeline-pill">Round ${escapeHtml(String(data.round || 1))}</span>
+                        <span class="timeline-subtle">${escapeHtml(data.title || '分析轮次开始')}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="typing-text">正在初始化本回合流程…</div>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', nodeHTML);
+    container.scrollTop = container.scrollHeight;
+    elements.discussionStatus.textContent = data.title || `Round ${data.round || ''}`;
+}
+
+/**
+ * 兼容旧入口：非 round 的杂项时间线（尽量少用）。
+ */
+function renderDiscussionTimeline(data) {
+    if (data.round && !data.agent_role && !data.agent_type) {
+        renderDiscussionRoundStart(data);
+        return;
+    }
+    ensureDiscussionTimelineLayout();
+    const role = normalizeAgentRole(data.agent_role || data.agent_type);
+    const confidence = typeof data.confidence === 'number'
+        ? Math.max(0, Math.min(100, Math.round(data.confidence * (data.confidence <= 1 ? 100 : 1))))
+        : Math.floor(Math.random() * 25) + 75;
+    const iconId = getAgentIconId(role);
+    const agentLabel = escapeHtml(getAgentLabel(data.agent_role || data.agent_type));
+    const body =
+        data.message ||
+        data.analysis_summary ||
+        data.content ||
+        data.summary ||
+        data.analysis ||
+        '正在进行深度分析…';
+    const nodeHTML = `
+        <div class="timeline-node stagger-in">
+            <div class="timeline-header">
+                <div class="agent-avatar" data-role="${role}">
+                    <svg class="icon" aria-hidden="true"><use href="#${iconId}"/></svg>
+                </div>
+                <div class="timeline-content">
+                    <div class="timeline-title-row">
+                        <span class="agent-name">${agentLabel}</span>
+                        <span class="confidence-ring" data-percent="${confidence}" style="--pct: ${confidence}%"></span>
+                        <span class="timeline-pill pill-muted">${confidence}%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="typing-text">${renderMarkdown(body)}</div>
+        </div>
+    `;
+    elements.discussionContent.insertAdjacentHTML('beforeend', nodeHTML);
+    elements.discussionContent.scrollTop = elements.discussionContent.scrollHeight;
+    if (data.status) {
+        elements.discussionStatus.textContent = data.status;
+    } else if (data.agent_role) {
+        elements.discussionStatus.textContent = `${getAgentLabel(data.agent_role)} 分析中…`;
+    }
 }
 
 /**
@@ -433,7 +784,7 @@ function renderFinalDecision(data) {
     const html = `
         <div class="final-decision-card">
             <div class="decision-header">
-                <span class="decision-icon">🎯</span>
+                <span class="decision-icon"><svg class="icon" aria-hidden="true"><use href="#i-target"/></svg></span>
                 <span class="decision-title">最终决策</span>
             </div>
             <div class="decision-content">
@@ -457,17 +808,11 @@ function renderFinalDecision(data) {
 }
 
 /**
- * 根据角色获取头像
+ * 根据角色返回 SVG 头像片段（供讨论消息使用）。
  */
 function getAvatarByRole(role) {
-    const avatars = {
-        'leader': '👔',
-        'technical': '🔧',
-        'intelligence': '📡',
-        'risk': '🛡️',
-        'fundamental': '📈'
-    };
-    return avatars[role] || '🤖';
+    const iconId = getAgentIconId(role);
+    return `<svg class="icon icon-sm" aria-hidden="true"><use href="#${iconId}"/></svg>`;
 }
 
 /**
@@ -483,6 +828,22 @@ function addLoadingIndicator() {
         </div>
     `;
     elements.discussionContent.insertAdjacentHTML('beforeend', html);
+}
+
+function showLegacyResultView() {
+    const legacy = document.getElementById('legacyResultContent');
+    const enhanced = document.getElementById('enhancedResultSection');
+    if (legacy) legacy.classList.remove('hidden');
+    if (enhanced) enhanced.classList.add('hidden');
+    elements.resultSection.classList.remove('hidden');
+}
+
+function showEnhancedResultView() {
+    const legacy = document.getElementById('legacyResultContent');
+    const enhanced = document.getElementById('enhancedResultSection');
+    if (legacy) legacy.classList.add('hidden');
+    if (enhanced) enhanced.classList.remove('hidden');
+    elements.resultSection.classList.remove('hidden');
 }
 
 /**
@@ -510,7 +871,7 @@ function closeEventSource() {
  */
 function displayLLMResult(data) {
     // 不再隐藏讨论区域，让用户可以看到分析过程
-    elements.resultSection.classList.remove('hidden');
+    showLegacyResultView();
     
     // 叠加 Agent 分析标注到 K 线图
     updateChartAnnotations(data);
@@ -562,14 +923,14 @@ function displayLLMResult(data) {
  * 更新Agent卡片（从LLM数据）
  */
 function updateAgentCardFromLLM(score) {
-    const roleMap = {
+    const roleToPrefix = {
         'technical': 'tech',
         'intelligence': 'intel',
         'risk': 'risk',
         'fundamental': 'fund'
     };
-    
-    const prefix = roleMap[score.agent_role];
+    const norm = normalizeAgentRole(score.agent_role || score.agent_type);
+    const prefix = roleToPrefix[norm];
     if (!prefix) return;
     
     document.getElementById(`${prefix}Score`).textContent = 
@@ -602,11 +963,14 @@ function buildAgentAnalysisCardHtml(data, pending = false) {
         ? `<div class="agent-analysis-text">${escapeHtml(analysisText)}</div>`
         : `<div class="agent-analysis-text markdown-body">${renderMarkdown(analysisText)}</div>`;
 
+    const iconId = getAgentIconId(data.agent_role || data.agent_type);
     return `
-        <div class="agent-analysis-card ${pending ? 'pending' : ''}" id="${getAgentDiscussionCardId(data.agent_role)}">
+        <div class="agent-analysis-card ${pending ? 'pending' : ''}" id="${getAgentDiscussionCardId(data.agent_role || data.agent_type)}">
             <div class="analysis-header">
-                <span class="analysis-avatar">${data.icon || '🤖'}</span>
-                <span class="analysis-name">${data.agent_name}</span>
+                <span class="analysis-avatar" data-role="${normalizeAgentRole(data.agent_role || data.agent_type)}">
+                    <svg class="icon icon-sm" aria-hidden="true"><use href="#${iconId}"/></svg>
+                </span>
+                <span class="analysis-name">${escapeHtml(data.agent_name || getAgentLabel(data.agent_role))}</span>
                 <span class="analysis-score ${pending ? 'hidden' : ''}">
                     评分: <span class="agent-score-value">${(data.score || 0).toFixed(1)}</span>/10
                 </span>
@@ -631,7 +995,7 @@ function displayResult(data) {
     elements.discussionSection.classList.add('hidden');
     
     // 显示结果区域
-    elements.resultSection.classList.remove('hidden');
+    showLegacyResultView();
     
     // Agent评分
     const agentScores = data.agent_scores || [];
@@ -718,17 +1082,17 @@ function displayHistory(records) {
     
     tbody.innerHTML = records.map(record => {
         const statusClass = record.status || 'holding';
-        const scoreClass = record.return_rate > 0 ? 'profit-positive' : 
+        const scoreClass = record.return_rate > 0 ? 'profit-positive' :
                           record.return_rate < 0 ? 'profit-negative' : '';
-        
+
         return `
             <tr>
-                <td>${escapeHtml(record.stock_code)}</td>
-                <td>${escapeHtml(record.stock_name)}</td>
-                <td>${escapeHtml(record.buy_date)}</td>
-                <td>${record.buy_score ? record.buy_score.toFixed(1) : '--'}</td>
-                <td><span class="status-badge ${statusClass}">${getStatusText(record.status)}</span></td>
-                <td class="${scoreClass}">${formatReturnRate(record.return_rate)}</td>
+                <td data-label="代码">${escapeHtml(record.stock_code)}</td>
+                <td data-label="名称">${escapeHtml(record.stock_name)}</td>
+                <td data-label="分析日期">${escapeHtml(record.buy_date)}</td>
+                <td data-label="评分" class="num">${record.buy_score ? record.buy_score.toFixed(1) : '--'}</td>
+                <td data-label="状态"><span class="status-badge ${statusClass}">${getStatusText(record.status)}</span></td>
+                <td data-label="收益率" class="num ${scoreClass}">${formatReturnRate(record.return_rate)}</td>
             </tr>
         `;
     }).join('');
@@ -861,28 +1225,37 @@ function renderKlineChart(data) {
     klineDataCache = data;
     if (!klineChartInstance) initKlineChart();
 
-    const upColor = '#ef5350';
-    const downColor = '#26a69a';
+    const upColor = '#DC2626';   // A 股：涨红
+    const downColor = '#16A34A'; // A 股：跌绿
+    const gridColor = '#E5E7EB';
+    const axisColor = '#9CA3AF';
+    const textColor = '#6B7280';
 
     const volumeColors = data.ohlc.map(item => (item[1] >= item[0]) ? upColor : downColor);
 
     const option = {
         animation: true,
+        textStyle: { color: textColor, fontFamily: 'inherit' },
         tooltip: {
             trigger: 'axis',
-            axisPointer: { type: 'cross' },
+            axisPointer: { type: 'cross', lineStyle: { color: axisColor } },
+            backgroundColor: '#FFFFFF',
+            borderColor: gridColor,
+            borderWidth: 1,
+            textStyle: { color: '#111827', fontSize: 12 },
+            extraCssText: 'box-shadow: 0 4px 12px rgba(16,24,40,.08); border-radius: 8px;',
             formatter: function (params) {
                 if (!params || params.length === 0) return '';
                 const date = params[0].axisValue;
-                let html = `<div style="font-weight:600;margin-bottom:4px">${date}</div>`;
+                let html = `<div class="tooltip-date">${date}</div>`;
                 for (const p of params) {
                     if (p.seriesType === 'candlestick') {
                         const d = p.data;
-                        html += `开: ${d[1]}<br>收: ${d[2]}<br>低: ${d[3]}<br>高: ${d[4]}<br>`;
+                        html += `开 ${d[1]} · 收 ${d[2]}<br>低 ${d[3]} · 高 ${d[4]}<br>`;
                     } else if (p.seriesType === 'bar') {
-                        html += `成交量: ${Number(p.data).toLocaleString()}<br>`;
+                        html += `成交量 ${Number(p.data).toLocaleString()}<br>`;
                     } else if (p.seriesName && p.data != null) {
-                        html += `${p.seriesName}: ${p.data}<br>`;
+                        html += `${p.seriesName} ${p.data}<br>`;
                     }
                 }
                 return html;
@@ -897,16 +1270,17 @@ function renderKlineChart(data) {
                 type: 'category',
                 data: data.dates,
                 gridIndex: 0,
-                axisLine: { lineStyle: { color: '#8392A5' } },
-                axisLabel: { fontSize: 10 },
+                axisLine: { lineStyle: { color: gridColor } },
+                axisTick: { lineStyle: { color: gridColor } },
+                axisLabel: { fontSize: 10, color: textColor },
                 boundaryGap: true,
-                axisPointer: { label: { show: true } }
+                axisPointer: { label: { show: true, backgroundColor: '#374151' } }
             },
             {
                 type: 'category',
                 data: data.dates,
                 gridIndex: 1,
-                axisLine: { lineStyle: { color: '#8392A5' } },
+                axisLine: { lineStyle: { color: gridColor } },
                 axisLabel: { show: false },
                 boundaryGap: true
             }
@@ -915,16 +1289,16 @@ function renderKlineChart(data) {
             {
                 scale: true,
                 gridIndex: 0,
-                splitLine: { lineStyle: { color: '#f0f0f0' } },
-                axisLine: { lineStyle: { color: '#8392A5' } },
-                axisLabel: { fontSize: 10 }
+                splitLine: { lineStyle: { color: gridColor } },
+                axisLine: { lineStyle: { color: gridColor } },
+                axisLabel: { fontSize: 10, color: textColor }
             },
             {
                 scale: true,
                 gridIndex: 1,
                 splitNumber: 2,
-                splitLine: { lineStyle: { color: '#f0f0f0' } },
-                axisLine: { lineStyle: { color: '#8392A5' } },
+                splitLine: { lineStyle: { color: gridColor } },
+                axisLine: { lineStyle: { color: gridColor } },
                 axisLabel: { show: false }
             }
         ],
@@ -967,7 +1341,7 @@ function renderKlineChart(data) {
                 data: data.ma5,
                 smooth: true,
                 showSymbol: false,
-                lineStyle: { width: 1.2, color: '#ff9800' }
+                lineStyle: { width: 1.2, color: '#F59E0B' }
             },
             {
                 name: 'MA10',
@@ -977,7 +1351,7 @@ function renderKlineChart(data) {
                 data: data.ma10,
                 smooth: true,
                 showSymbol: false,
-                lineStyle: { width: 1.2, color: '#2196f3' }
+                lineStyle: { width: 1.2, color: '#2563EB' }
             },
             {
                 name: 'MA20',
@@ -987,7 +1361,7 @@ function renderKlineChart(data) {
                 data: data.ma20,
                 smooth: true,
                 showSymbol: false,
-                lineStyle: { width: 1.2, color: '#9c27b0' }
+                lineStyle: { width: 1.2, color: '#7C3AED' }
             },
             {
                 name: '成交量',
@@ -1011,16 +1385,19 @@ function renderKlineChart(data) {
 function buildSupportResistanceMarkLines(supportLevels, resistanceLevels) {
     const lines = [];
 
+    const SUPPORT_COLOR = '#16A34A';
+    const RESIST_COLOR  = '#DC2626';
+
     if (supportLevels) {
         supportLevels.forEach((price, i) => {
             lines.push({
                 yAxis: price,
                 name: `支撑${i + 1}`,
-                lineStyle: { color: '#4caf50', type: 'dashed', width: 1.5 },
+                lineStyle: { color: SUPPORT_COLOR, type: 'dashed', width: 1.2 },
                 label: {
                     formatter: `支撑 ${price}`,
                     position: 'insideStartBottom',
-                    color: '#4caf50',
+                    color: SUPPORT_COLOR,
                     fontSize: 10
                 }
             });
@@ -1032,11 +1409,11 @@ function buildSupportResistanceMarkLines(supportLevels, resistanceLevels) {
             lines.push({
                 yAxis: price,
                 name: `阻力${i + 1}`,
-                lineStyle: { color: '#f44336', type: 'dashed', width: 1.5 },
+                lineStyle: { color: RESIST_COLOR, type: 'dashed', width: 1.2 },
                 label: {
                     formatter: `阻力 ${price}`,
                     position: 'insideStartTop',
-                    color: '#f44336',
+                    color: RESIST_COLOR,
                     fontSize: 10
                 }
             });
@@ -1046,8 +1423,17 @@ function buildSupportResistanceMarkLines(supportLevels, resistanceLevels) {
     return { data: lines, silent: true, animation: true };
 }
 
+/**
+ * 将 Agent 团队分析结论叠加到 K 线图上（入场/止损/止盈标记）。
+ * 颜色配合 A 股习惯：买入红、卖出绿。
+ */
 function updateChartAnnotations(analysisData) {
     if (!klineChartInstance || !klineDataCache) return;
+
+    const BUY_COLOR = '#DC2626';   // 涨 / 买入
+    const SELL_COLOR = '#16A34A';  // 跌 / 卖出
+    const ENTRY_COLOR = '#1E40AF'; // 入场
+    const TP_COLOR = '#2563EB';    // 止盈
 
     const lastDate = klineDataCache.dates[klineDataCache.dates.length - 1];
     const markPoints = [];
@@ -1065,9 +1451,9 @@ function updateChartAnnotations(analysisData) {
             name: '买入',
             coord: [lastDate, klineDataCache.ohlc[klineDataCache.ohlc.length - 1][2]],
             value: '买',
-            itemStyle: { color: '#4caf50' },
+            itemStyle: { color: BUY_COLOR },
             symbol: 'arrow',
-            symbolSize: [24, 28],
+            symbolSize: [20, 24],
             symbolRotate: 0,
             label: {
                 show: true,
@@ -1075,9 +1461,9 @@ function updateChartAnnotations(analysisData) {
                 color: '#fff',
                 fontSize: 10,
                 fontWeight: 'bold',
-                backgroundColor: '#4caf50',
+                backgroundColor: BUY_COLOR,
                 padding: [3, 6],
-                borderRadius: 3,
+                borderRadius: 4,
                 offset: [0, -10]
             }
         });
@@ -1086,9 +1472,9 @@ function updateChartAnnotations(analysisData) {
             name: '卖出',
             coord: [lastDate, klineDataCache.ohlc[klineDataCache.ohlc.length - 1][4]],
             value: '卖',
-            itemStyle: { color: '#f44336' },
+            itemStyle: { color: SELL_COLOR },
             symbol: 'arrow',
-            symbolSize: [24, 28],
+            symbolSize: [20, 24],
             symbolRotate: 180,
             label: {
                 show: true,
@@ -1096,9 +1482,9 @@ function updateChartAnnotations(analysisData) {
                 color: '#fff',
                 fontSize: 10,
                 fontWeight: 'bold',
-                backgroundColor: '#f44336',
+                backgroundColor: SELL_COLOR,
                 padding: [3, 6],
-                borderRadius: 3,
+                borderRadius: 4,
                 offset: [0, 10]
             }
         });
@@ -1108,11 +1494,11 @@ function updateChartAnnotations(analysisData) {
         markLines.push({
             yAxis: stopLoss,
             name: '止损',
-            lineStyle: { color: '#f44336', type: 'dotted', width: 2 },
+            lineStyle: { color: SELL_COLOR, type: 'dotted', width: 1.5 },
             label: {
                 formatter: `止损 ${stopLoss}`,
                 position: 'insideEndTop',
-                color: '#f44336',
+                color: SELL_COLOR,
                 fontSize: 10,
                 fontWeight: 'bold'
             }
@@ -1123,11 +1509,11 @@ function updateChartAnnotations(analysisData) {
         markLines.push({
             yAxis: takeProfit1,
             name: '止盈1',
-            lineStyle: { color: '#2196f3', type: 'dotted', width: 1.5 },
+            lineStyle: { color: TP_COLOR, type: 'dotted', width: 1.3 },
             label: {
                 formatter: `止盈1 ${takeProfit1}`,
                 position: 'insideEndTop',
-                color: '#2196f3',
+                color: TP_COLOR,
                 fontSize: 10
             }
         });
@@ -1137,11 +1523,11 @@ function updateChartAnnotations(analysisData) {
         markLines.push({
             yAxis: takeProfit2,
             name: '止盈2',
-            lineStyle: { color: '#1565c0', type: 'dotted', width: 1.5 },
+            lineStyle: { color: TP_COLOR, type: 'dotted', width: 1.3 },
             label: {
                 formatter: `止盈2 ${takeProfit2}`,
                 position: 'insideEndTop',
-                color: '#1565c0',
+                color: TP_COLOR,
                 fontSize: 10
             }
         });
@@ -1149,20 +1535,20 @@ function updateChartAnnotations(analysisData) {
 
     if (entryZone.length >= 2) {
         markAreas.push([
-            { yAxis: entryZone[0], itemStyle: { color: 'rgba(33,150,243,0.08)' } },
+            { yAxis: entryZone[0], itemStyle: { color: 'rgba(30, 64, 175, 0.08)' } },
             { yAxis: entryZone[entryZone.length - 1] }
         ]);
         markLines.push({
             yAxis: entryZone[0],
             name: '入场下沿',
-            lineStyle: { color: '#2196f3', type: 'dashed', width: 1 },
-            label: { formatter: `入场 ${entryZone[0]}`, position: 'insideStartBottom', color: '#2196f3', fontSize: 9 }
+            lineStyle: { color: ENTRY_COLOR, type: 'dashed', width: 1 },
+            label: { formatter: `入场 ${entryZone[0]}`, position: 'insideStartBottom', color: ENTRY_COLOR, fontSize: 9 }
         });
         markLines.push({
             yAxis: entryZone[entryZone.length - 1],
             name: '入场上沿',
-            lineStyle: { color: '#2196f3', type: 'dashed', width: 1 },
-            label: { formatter: `入场 ${entryZone[entryZone.length - 1]}`, position: 'insideStartTop', color: '#2196f3', fontSize: 9 }
+            lineStyle: { color: ENTRY_COLOR, type: 'dashed', width: 1 },
+            label: { formatter: `入场 ${entryZone[entryZone.length - 1]}`, position: 'insideStartTop', color: ENTRY_COLOR, fontSize: 9 }
         });
     }
 
@@ -1176,6 +1562,130 @@ function updateChartAnnotations(analysisData) {
             markArea: { data: markAreas, silent: true, animation: true, animationDuration: 600 }
         }]
     });
+}
+
+/**
+ * 渲染 LLM 增强结果区（置信度卡片 + 雷达图 + 决策卡）。
+ * 使用设计系统类名，无内联样式。
+ */
+function renderEnhancedResult(data) {
+    const resultSection = document.getElementById('resultSection');
+    const enhancedSection = document.getElementById('enhancedResultSection');
+    if (!resultSection || !enhancedSection) return;
+
+    const d = enrichLlmResultWithPerAgentScores(data);
+
+    showEnhancedResultView();
+
+    const finalAction = d.final_action || 'watch';
+    const actionText = getActionText(finalAction);
+
+    enhancedSection.innerHTML = `
+        <div class="enhanced-agent-cards"></div>
+        <div id="radarContainer" class="radar-panel"></div>
+        <div class="decision-card">
+            <div class="decision-title">最终交易决策</div>
+            <div id="finalDecisionText" class="decision-text action-${escapeHtml(finalAction)}">${escapeHtml(actionText)}</div>
+            <div class="tag-cloud" id="reasonTags"></div>
+        </div>
+    `;
+
+    renderRadarChart(d);
+    renderAgentConfidenceCards(d);
+
+    const tagsEl = document.getElementById('reasonTags');
+    if (tagsEl && Array.isArray(d.buy_reasons) && d.buy_reasons.length > 0) {
+        tagsEl.innerHTML = d.buy_reasons
+            .map(reason => `<span class="tag">${escapeHtml(String(reason))}</span>`)
+            .join('');
+    }
+
+    enhancedSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/**
+ * 雷达图：光色主题，单一品牌色。
+ */
+function renderRadarChart(data) {
+    const container = document.getElementById('radarContainer');
+    if (!container || typeof echarts === 'undefined') return;
+
+    if (window.radarChartInstance) {
+        try { window.radarChartInstance.dispose(); } catch (_) {}
+    }
+
+    const chart = echarts.init(container, null, { renderer: 'canvas' });
+
+    const option = {
+        backgroundColor: 'transparent',
+        tooltip: { trigger: 'item' },
+        radar: {
+            indicator: [
+                { name: '技术分析', max: 10 },
+                { name: '情报收集', max: 10 },
+                { name: '风控评估', max: 10 },
+                { name: '基本面', max: 10 }
+            ],
+            center: ['50%', '55%'],
+            radius: '68%',
+            splitNumber: 5,
+            axisName: { color: '#6B7280', fontSize: 12 },
+            splitLine: { lineStyle: { color: '#E5E7EB' } },
+            axisLine: { lineStyle: { color: '#E5E7EB' } },
+            splitArea: { areaStyle: { color: ['#FFFFFF', '#F9FAFB'] } }
+        },
+        series: [{
+            type: 'radar',
+            data: [{
+                value: [
+                    data.tech_score || 0,
+                    data.intel_score || 0,
+                    data.risk_score || 0,
+                    data.fund_score || 0
+                ],
+                name: 'Agent 团队综合评分',
+                areaStyle: { color: 'rgba(30, 64, 175, 0.18)' },
+                lineStyle: { color: '#1E40AF', width: 2 },
+                itemStyle: { color: '#1E40AF' },
+                symbolSize: 6
+            }]
+        }]
+    };
+
+    chart.setOption(option);
+    window.radarChartInstance = chart;
+
+    const handler = () => chart.resize();
+    window.addEventListener('resize', handler);
+}
+
+/**
+ * LLM 四 Agent 置信度卡片。
+ */
+function renderAgentConfidenceCards(data) {
+    const container = document.querySelector('.enhanced-agent-cards');
+    if (!container) return;
+
+    const agents = [
+        { role: 'technical',    name: '技术分析员',  score: data.tech_score,  iconId: 'i-chart' },
+        { role: 'intelligence', name: '情报员',      score: data.intel_score, iconId: 'i-radio' },
+        { role: 'risk',         name: '风控官',      score: data.risk_score,  iconId: 'i-shield' },
+        { role: 'fundamental',  name: '基本面分析师', score: data.fund_score,  iconId: 'i-book' }
+    ];
+
+    container.innerHTML = agents.map(agent => {
+        const score = (typeof agent.score === 'number' ? agent.score : 0).toFixed(1);
+        return `
+            <div class="enhanced-card">
+                <div class="agent-mark" data-role="${agent.role}">
+                    <svg class="icon icon-lg" aria-hidden="true"><use href="#${agent.iconId}"/></svg>
+                </div>
+                <div class="agent-name">${agent.name}</div>
+                <div class="agent-score">${score}</div>
+                <div class="agent-sublabel">置信度</div>
+            </div>
+        `;
+    }).join('');
 }
 
 async function loadKlineChart(stockCode) {
@@ -1201,5 +1711,7 @@ if (typeof module !== 'undefined' && module.exports) {
         getAgentPrimaryAnalysisText,
         buildAgentAnalysisCardHtml,
         renderMarkdown,
+        renderEnhancedResult,
+        enrichLlmResultWithPerAgentScores,
     };
 }

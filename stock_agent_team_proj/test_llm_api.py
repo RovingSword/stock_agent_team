@@ -3,16 +3,25 @@
 """
 import os
 import sys
+from pathlib import Path
 
-# 直接设置环境变量
-os.environ["OPENAI_API_KEY"] = "sk-mgzorsYLeEFnIJHrK2B1LQurNOn5VCj3nrSAtXymUGToTzcb"
-os.environ["OPENAI_BASE_URL"] = "https://www.dmxapi.cn/v1"
+# 加载 .env 文件（如果存在）
+try:
+    from dotenv import load_dotenv
+    env_path = Path(".env")
+    if env_path.exists():
+        load_dotenv(env_path)
+        print("已从 .env 文件加载配置")
+    else:
+        print("未找到 .env 文件，请复制 .env.example 并配置密钥")
+except ImportError:
+    print("未安装 python-dotenv 包，跳过自动加载 .env（推荐: pip install python-dotenv）")
 
+# 检查环境变量（不要在代码中硬编码真实密钥）
 print("=" * 60)
 print("LLM API 连接测试")
 print("=" * 60)
 
-# 检查环境变量
 api_key = os.getenv("OPENAI_API_KEY")
 base_url = os.getenv("OPENAI_BASE_URL")
 

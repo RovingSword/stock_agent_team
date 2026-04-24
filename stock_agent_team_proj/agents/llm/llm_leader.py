@@ -50,6 +50,19 @@ class LLMLeader(DiscussionAgent):
 - 不提供税务、法律、合规类建议
 - 不对未在输入上下文中出现的信息进行"推测性补全"
 """
+
+    FACILITATION_SYSTEM_PROMPT = """【身份定位】
+你是多智能体投研团队的决策队长，当前处于「讨论主持」环节（尚未做最终下单决策）。
+
+【本轮任务】
+- 用自然、可读的中文组织讨论：可先简要复述各方观点，再指出共识与分歧，必要时提出 1～2 个澄清问题。
+- 语气专业、克制，面向投资研究员同伴。
+
+【输出纪律（仅适用于本环节）】
+- 必须使用自然中文段落或简短分点（可用「•」或「-」起行），禁止输出 JSON、YAML、XML、代码块。
+- 不要给出最终仓位、目标价、止损价等可执行交易参数（留给后续「最终决策」环节）。
+- 不编造未出现在输入中的具体价格或财务数字。
+"""
     
     AGENT_ROLE = "leader"
     ROLE_DESCRIPTION = "投资决策队长，综合各方意见做出最终决策"
@@ -73,6 +86,28 @@ class LLMLeader(DiscussionAgent):
         
         # 决策历史
         self.decision_history: List[Dict[str, Any]] = []
+
+    def facilitate_discussion(self, user_prompt: str, **kwargs) -> str:
+        """
+        讨论主持模式：自然语言输出，不污染 JSON 决策范式，也不写入实例的 chat 历史。
+        """
+        from llm.base_provider import ChatMessage
+
+        messages = [
+            ChatMessage(role="system", content=self.FACILITATION_SYSTEM_PROMPT),
+            ChatMessage(role="user", content=user_prompt),
+        ]
+        try:
+            response = self.llm.chat_with_history(
+                messages=messages,
+                temperature=kwargs.get("temperature", min(self.temperature, 0.7)),
+                max_tokens=kwargs.get("max_tokens", min(self.max_tokens, 1200)),
+            )
+            text = (response.content or "").strip()
+            return text if text else "（队长暂未生成讨论引导，请查看各分析师首轮报告。）"
+        except Exception as e:
+            self.logger.error(f"讨论主持失败: {e}")
+            return f"（讨论主持暂不可用：{e}）"
     
     def analyze(self, context) -> AgentReport:
         """

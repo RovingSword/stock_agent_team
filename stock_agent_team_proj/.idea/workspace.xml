@@ -5,13 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a52f1baa-f3d7-4bab-a2d5-a0b3ecf59e11" name="Changes" comment="feat:情报">
-      <change afterPath="$PROJECT_DIR$/analyze_002202.log" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/analyze_002202.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/data/logs/agent_team_20260415.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config/data/database.db" beforeDir="false" afterPath="$PROJECT_DIR$/config/data/database.db" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config/data/logs/agent_team_20260419.log" beforeDir="false" afterPath="$PROJECT_DIR$/config/data/logs/agent_team_20260419.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/intel/600406.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/intel/600406.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/watchlist.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/watchlist.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/logs/agent_team_20260420.log" beforeDir="false" afterPath="$PROJECT_DIR$/data/logs/agent_team_20260420.log" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -48,7 +43,7 @@
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "git-widget-placeholder": "main",
     "last_opened_file_path": "/Users/jian/Documents/AI/stock_agent_team/stock_agent_team_proj",
-    "mcopilot_agent_context_state_agent_view_container_tabs": "[{\"id\":\"545bea80-4d63-420a-900b-77c928b86db0\",\"displayName\":\"我现在貌似看...\",\"createdAt\":1776598941663,\"closeable\":true,\"conversationId\":\"cc0fe594-ed8f-43dd-a983-757893a24fdb\",\"tabType\":\"AGENT\",\"isActive\":false},{\"id\":\"98695ca2-9178-4328-912e-ddc945e916a0\",\"displayName\":\"Agent评分规...\",\"createdAt\":1776599746546,\"closeable\":true,\"conversationId\":\"11c53ee2-2c84-4c01-86c4-73b4e1a17363\",\"tabType\":\"AGENT\",\"isActive\":true}]",
+    "mcopilot_agent_context_state_agent_view_container_tabs": "[{\"id\":\"545bea80-4d63-420a-900b-77c928b86db0\",\"displayName\":\"我现在貌似看...\",\"createdAt\":1776695338218,\"closeable\":true,\"conversationId\":\"cc0fe594-ed8f-43dd-a983-757893a24fdb\",\"tabType\":\"AGENT\",\"isActive\":false},{\"id\":\"98695ca2-9178-4328-912e-ddc945e916a0\",\"displayName\":\"Agent评分规...\",\"createdAt\":1776695338225,\"closeable\":true,\"conversationId\":\"11c53ee2-2c84-4c01-86c4-73b4e1a17363\",\"tabType\":\"AGENT\",\"isActive\":true}]",
     "mcopilot_agent_context_state_deleteFileProtection": "false",
     "mcopilot_agent_context_state_mc.agent.selectedModelType": "51.0"
   }
@@ -132,7 +127,15 @@
       <option name="project" value="LOCAL" />
       <updated>1776611316202</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="feat:情报">
+      <option name="closed" value="true" />
+      <created>1776671543291</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1776671543291</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">

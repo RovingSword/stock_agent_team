@@ -3,15 +3,15 @@
 GET /api/history - 获取历史分析记录
 """
 import os
-import sys
 from datetime import datetime, timedelta
 from typing import List, Optional
 
+from config.project_paths import ensure_project_root_on_path
+
+ensure_project_root_on_path()
+
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
-
-# 添加项目根目录到路径
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from storage.database import Database
 

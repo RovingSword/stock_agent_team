@@ -3,16 +3,16 @@
 提供定时任务状态查看和控制功能
 """
 
-import sys
 import os
 from datetime import datetime
 from typing import Optional, Dict, Any, List
 
+from config.project_paths import ensure_project_root_on_path
+
+ensure_project_root_on_path()
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
-
-# 添加项目根目录到路径
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from watchlist import AutoScheduler, WatchlistManager, DataCollector
 

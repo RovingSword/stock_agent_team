@@ -4,15 +4,15 @@
 """
 
 import os
-import sys
 from datetime import datetime
 from typing import Optional, Dict, Any
 
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
-# 添加项目根目录到路径
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+from config.project_paths import ensure_project_root_on_path
+
+ensure_project_root_on_path()
 
 from watchlist import WatchlistManager, StockCandidate
 

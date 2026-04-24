@@ -16,25 +16,33 @@
 
 ## 项目概述
 
-### 项目结构
+### 项目结构（已更新）
 
 ```
-stock_agent_team/
-├── agents/              # Agent 核心模块
-│   ├── leader.py        # 团队领导
-│   ├── technical_analyst.py    # 技术分析师
-│   ├── intelligence_officer.py # 情报员
-│   ├── risk_controller.py       # 风控官
-│   └── fundamental_analyst.py   # 基本面分析师
-├── storage/             # 数据存储
-│   └── database.py      # SQLite 数据库操作
-├── utils/               # 工具模块
-│   ├── logger.py        # 日志模块
-│   └── data_fetcher.py  # 数据获取
-├── config.py            # 系统配置
-├── main.py              # 程序入口
-└── requirements.txt     # 依赖清单
+stock_agent_team_proj/
+├── main.py                  # CLI 和 StockAgentTeam 入口
+├── requirements.txt         # 依赖（含 python-dotenv, fastapi 等）
+├── .env.example / .env      # API Key 配置（.env 已 gitignore）
+├── config/                  # 配置（llm_config.yaml, settings.py, config_loader.py）
+├── agents/                  # Agent（规则引擎 + agents/llm/ + web_intelligence/）
+├── llm/                     # LLM工厂和多Provider适配
+├── web/                     # FastAPI Web应用和API路由
+├── watchlist/               # 完整观察池系统（采集、筛选、性能跟踪、调度）
+├── conversation/            # 多轮LLM讨论管理
+├── utils/data_fetcher.py    # 核心数据获取（多源、缓存、mock）
+├── storage/database.py      # SQLite
+├── deploy/docker-compose.yml # Docker部署
+└── docs/ + tests/
 ```
+
+**重要安全更新**：所有API Key必须放在 `.env` 中，通过 `OPENAI_API_KEY` 等环境变量加载。`config/llm_config.yaml` 已完全迁移到 `api_key_env` 模式。`pip install -r requirements.txt` 会安装 `python-dotenv`。
+```
+
+**新增特性**：
+- Web界面：`uvicorn web.app:app --reload`
+- Watchlist：`python run_watchlist.py watchlist` 或 Web API
+- LLM团队：支持多厂商讨论式分析
+- 文档已同步更新
 
 ### 核心依赖
 
