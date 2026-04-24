@@ -4,3 +4,6 @@
 *.py[cod]
 stock_agent_team_proj/logs/*.log
 stock_agent_team_proj/data/*.db
+
+# Local backup exports (large binaries)
+stock_agent_team_proj_V*.zip
