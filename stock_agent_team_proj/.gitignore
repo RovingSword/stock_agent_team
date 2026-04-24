@@ -29,6 +29,9 @@ data/database.db
 data/logs/*.log
 *.log
 
+# Intel search / brief / LLM interpret cache (regenerated locally)
+data/intel/
+
 # IDE
 .idea/
 .vscode/
