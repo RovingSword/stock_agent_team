@@ -6,7 +6,7 @@ import random
 import threading
 import time
 from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -42,6 +42,49 @@ def _suppress_efinance_thread_exception(args):
         _original_excepthook(args)
 
 threading.excepthook = _suppress_efinance_thread_exception
+
+
+def compute_rule_based_support_resistance(
+    highs: List[float],
+    lows: List[float],
+    closes: List[float],
+) -> Tuple[List[float], List[float]]:
+    """
+    与 get_technical_indicators 一致的规则化支撑/阻力位（非交易所官方数据）：
+    近 20 日最低价 + 最新 MA20（不足 20 根时用简单均价，MA 不可用则收盘价×0.95）；
+    阻力位：收盘价×1.05 + 近 20 日最高价。
+    """
+    n = len(closes)
+    if n < 2 or not highs or not lows:
+        return [], []
+
+    tail = min(20, n)
+    start = n - tail
+    recent_highs = [float(x) for x in highs[start:n] if x is not None]
+    recent_lows = [float(x) for x in lows[start:n] if x is not None]
+    if not recent_highs or not recent_lows:
+        return [], []
+
+    last_close = float(closes[-1])
+    ma20: Optional[float] = None
+    if n >= 20:
+        ma20 = sum(float(c) for c in closes[n - 20 : n]) / 20.0
+    else:
+        ma20 = sum(float(c) for c in closes) / float(n)
+
+    support_levels = [
+        min(recent_lows),
+        ma20 if ma20 is not None else last_close * 0.95,
+    ]
+    resistance_levels = [
+        last_close * 1.05,
+        max(recent_highs),
+    ]
+
+    return (
+        [round(float(x), 3) for x in support_levels],
+        [round(float(x), 3) for x in resistance_levels],
+    )
 
 
 class DataFetcher:
@@ -619,16 +662,14 @@ class DataFetcher:
             # 计算涨跌幅
             change_pct = ((latest['close'] - prev['close']) / prev['close'] * 100) if prev['close'] > 0 else 0
             
-            # 计算支撑压力位
+            # 计算支撑压力位（与 compute_rule_based_support_resistance 同源）
+            highs_list = df['high'].tolist()
+            lows_list = df['low'].tolist()
+            closes_list = df['close'].tolist()
+            support_levels, resistance_levels = compute_rule_based_support_resistance(
+                highs_list, lows_list, closes_list
+            )
             recent_20 = df.tail(20)
-            support_levels = [
-                float(recent_20['low'].min()),
-                float(latest['ma20']) if pd.notna(latest['ma20']) else float(latest['close'] * 0.95)
-            ]
-            resistance_levels = [
-                float(latest['close'] * 1.05),
-                float(recent_20['high'].max())
-            ]
             
             # 获取周K数据判断中期趋势
             weekly_df = self.get_weekly_kline(stock_code)

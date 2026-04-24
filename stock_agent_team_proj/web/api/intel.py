@@ -16,6 +16,8 @@ from pydantic import BaseModel, Field
 
 from watchlist import DataCollector, StockScreener, WatchlistManager
 from utils.intel_cache import get_intel
+from utils.intel_pipeline import prepare_intel_package_for_analysis
+from utils.intel_llm_interpret import get_or_create_llm_interpretation
 
 router = APIRouter()
 
@@ -46,6 +48,10 @@ class TrackStockRequest(BaseModel):
     stock_name: Optional[str] = Field(None, description="股票名称")
     days: int = Field(7, description="追踪天数")
     force_refresh: bool = Field(False, description="是否强制刷新（跳过缓存）")
+    with_llm_interpretation: bool = Field(
+        False,
+        description="是否在规则型 IntelBrief 之外生成 LLM 简要解读（额外调用大模型，带磁盘缓存）",
+    )
 
 
 class TrackSectorRequest(BaseModel):
@@ -94,6 +100,40 @@ async def track_stock(request: TrackStockRequest):
         total_research = len(intel_data.get("research", []))
         total_sentiment = len(intel_data.get("sentiment", []))
 
+        # 结构化报告 + 规则型 IntelBrief（与 SSE/CLI 对齐）
+        intel_report: Optional[dict] = None
+        intel_brief: Optional[dict] = None
+        llm_interpretation: Optional[dict] = None
+        tracked_at = intel_data.get("tracked_at") or ""
+        try:
+            pkg = prepare_intel_package_for_analysis(
+                request.stock_code,
+                stock_name,
+                intel_data,
+                tracked_at=tracked_at,
+                user_request="",
+            )
+            if pkg:
+                intel_report, intel_brief = pkg
+        except Exception:
+            pass
+
+        if request.with_llm_interpretation and intel_brief:
+            try:
+                rep = intel_report
+                gtime = (rep or {}).get("gather_time") or ""
+                llm_interpretation = get_or_create_llm_interpretation(
+                    intel_brief,
+                    rep,
+                    request.stock_code,
+                    stock_name,
+                    tracked_at=tracked_at,
+                    gather_time=gtime,
+                    force_refresh=request.force_refresh,
+                )
+            except Exception:
+                llm_interpretation = None
+
         # 构建返回消息（含缓存状态）
         if cache_meta.get('is_fresh'):
             cache_status = f"(使用{cache_meta.get('age_days', 0)}天前缓存)"
@@ -102,11 +142,20 @@ async def track_stock(request: TrackStockRequest):
         else:
             cache_status = "(全新搜索)"
 
+        extra = ""
+        if intel_brief and intel_brief.get("core_thesis"):
+            extra = "，已生成情报摘要"
+        if llm_interpretation and llm_interpretation.get("summary_text"):
+            extra += " 与LLM解读"
+
         return {
             "success": True,
-            "message": f"已追踪 {stock_name}({request.stock_code}) 情报: {total_news}条新闻, {total_research}条研报, {total_sentiment}条舆情 {cache_status}",
+            "message": f"已追踪 {stock_name}({request.stock_code}) 情报: {total_news}条新闻, {total_research}条研报, {total_sentiment}条舆情 {cache_status}{extra}",
             "data": intel_data,
-            "cache_meta": cache_meta
+            "cache_meta": cache_meta,
+            "intel_report": intel_report,
+            "intel_brief": intel_brief,
+            "llm_interpretation": llm_interpretation,
         }
         
     except Exception as e:

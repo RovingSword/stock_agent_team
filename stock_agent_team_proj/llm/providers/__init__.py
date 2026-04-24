@@ -103,6 +103,20 @@ class MockProvider(BaseLLMProvider):
     def _generate_mock_response(self, user_message: str) -> str:
         """生成 Mock 响应内容"""
         msg_lower = user_message.lower()
+
+        if "【网络情报简要解读任务】" in user_message or "llm_interpret_v1" in user_message:
+            return json.dumps({
+                "schema_version": "llm_interpret_v1",
+                "summary_text": "（Mock）当前仅基于已抓取条目的结构归纳；真实环境请配置 LLM 以获取完整叙事解读。",
+                "bullets": [
+                    "Mock 未连接真实大模型",
+                    "规则型 Brief 仍可在界面上方查看",
+                    "可配置 default_provider 与 API Key 后重试",
+                ],
+                "stance": "信息不足",
+                "confidence": 0.35,
+                "disclaimer": "本段为 Mock 回显，不构成投资建议。",
+            }, ensure_ascii=False)
         
         if "技术分析" in user_message or "technical" in msg_lower:
             return json.dumps({

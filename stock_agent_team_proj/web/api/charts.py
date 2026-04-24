@@ -15,7 +15,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from watchlist import WatchlistManager, PerformanceTracker
-from utils.data_fetcher import data_fetcher
+from utils.data_fetcher import data_fetcher, compute_rule_based_support_resistance
 
 router = APIRouter()
 
@@ -71,8 +71,10 @@ async def get_kline_chart(code: str, days: int = 60):
         ma10 = calculate_ma(formatted["closes"], 10)
         ma20 = calculate_ma(formatted["closes"], 20)
         
-        # 识别支撑位和阻力位
-        support, resistance = identify_support_resistance(formatted["highs"], formatted["lows"])
+        # 识别支撑位和阻力位（与 /api/kline、get_technical_indicators 规则一致）
+        support, resistance = compute_rule_based_support_resistance(
+            formatted["highs"], formatted["lows"], formatted["closes"]
+        )
         
         return {
             "success": True,
@@ -115,21 +117,6 @@ def calculate_ma(closes: List[float], period: int) -> List[float]:
             avg = sum(closes[i - period + 1:i + 1]) / period
             ma.append(round(avg, 2))
     return ma
-
-
-def identify_support_resistance(highs: List[float], lows: List[float]) -> tuple:
-    """识别支撑位和阻力位"""
-    if len(highs) < 20:
-        return [], []
-    
-    # 取最近20天的数据
-    recent_highs = sorted(highs[-20:])[-5:]
-    recent_lows = sorted(lows[-20:])[:5]
-    
-    resistance = [round(h, 2) for h in recent_highs[-2:]]
-    support = [round(l, 2) for l in recent_lows[:2]]
-    
-    return support, resistance
 
 
 @router.get("/charts/watchlist")

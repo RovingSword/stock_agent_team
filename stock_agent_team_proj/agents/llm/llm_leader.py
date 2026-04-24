@@ -134,6 +134,7 @@ class LLMLeader(DiscussionAgent):
                     "target_price": result.get("target_price"),
                     "stop_loss": result.get("stop_loss"),
                     "position_ratio": result.get("position_ratio", 0),
+                    "chart_key_levels": result.get("chart_key_levels") or [],
                 }
             )
         
@@ -165,6 +166,7 @@ class LLMLeader(DiscussionAgent):
                 "target_price": result.get("target_price"),
                 "stop_loss": result.get("stop_loss"),
                 "position_ratio": result.get("position_ratio", 0),
+                "chart_key_levels": result.get("chart_key_levels") or [],
             }
         )
         
@@ -192,7 +194,8 @@ class LLMLeader(DiscussionAgent):
                 "action": result.get("action", "观望"),
                 "target_price": result.get("target_price"),
                 "stop_loss": result.get("stop_loss"),
-                "position_ratio": result.get("position_ratio", 0)
+                "position_ratio": result.get("position_ratio", 0),
+                "chart_key_levels": result.get("chart_key_levels") or [],
             }
         )
 
@@ -348,8 +351,10 @@ class LLMLeader(DiscussionAgent):
   "reasoning_steps": ["第1步结论", "第2步结论", "第3步结论", "第4步结论", "第5步结论"],
   "evidence": ["引用自 Agent 报告或上下文的关键证据"],
   "data_quality": {{"completeness": "high" | "medium" | "low", "missing": ["缺失字段"]}},
-  "confidence_rationale": "置信度给分依据"
+  "confidence_rationale": "置信度给分依据",
+  "chart_key_levels": [{{"kind": "support"|"resistance"|"pivot"|"other", "price": 数字, "label": "简短说明"}}]
 }}
+chart_key_levels 可选，最多 6 条，须可从技术/基本面报告溯源；无则 []。
 """
     
     def collect_worker_report(self, report: AgentReport):

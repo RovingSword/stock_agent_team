@@ -4,6 +4,7 @@ POST /api/analyze - 执行规则引擎股票分析
 POST /api/analyze_llm - 执行 LLM Agent Team 分析（支持SSE）
 """
 import asyncio
+import copy
 import json
 import os
 from datetime import datetime
@@ -20,6 +21,12 @@ from pydantic import BaseModel, Field
 from main import StockAgentTeam
 from agents.llm import create_team, AgentReport
 from utils.data_fetcher import data_fetcher
+from utils.intel_pipeline import (
+    cache_intel_has_search_lists,
+    format_brief_for_prompt,
+    prepare_intel_package_for_analysis,
+    slice_brief_for_agent_role,
+)
 from utils.logger import get_logger
 
 router = APIRouter()
@@ -65,6 +72,44 @@ def get_team() -> StockAgentTeam:
     return get_team._instance
 
 
+def _trim_role_payload_for_llm(
+    role: str, raw_data: Dict[str, Any], use_intel_brief: bool
+) -> Dict[str, Any]:
+    """有 IntelBrief 时压缩部分 raw JSON，腾出 token 给摘要层。"""
+    data = copy.deepcopy(raw_data)
+    if not use_intel_brief:
+        return data
+    if role == "intelligence":
+        news = data.get("news")
+        if isinstance(news, list) and len(news) > 3:
+            data["news"] = news[:3]
+    elif role == "fundamental":
+        fin = data.get("financial")
+        if isinstance(fin, dict) and len(fin) > 28:
+            keys = sorted(fin.keys())[:28]
+            data["financial"] = {k: fin[k] for k in keys}
+    elif role == "technical":
+        tech = data.get("technical")
+        if isinstance(tech, dict):
+            preferred = (
+                "current_price",
+                "change_pct",
+                "rsi",
+                "macd",
+                "volume",
+                "volume_ratio",
+                "support_levels",
+                "resistance_levels",
+                "ma5",
+                "ma10",
+                "ma20",
+                "ma60",
+                "boll",
+            )
+            data["technical"] = {k: tech[k] for k in preferred if k in tech}
+    return data
+
+
 def _build_llm_agent_prompt(
     agent_name: str,
     role_name: str,
@@ -74,6 +119,8 @@ def _build_llm_agent_prompt(
     raw_data: Dict[str, Any],
     rule_reference: Dict[str, Any],
     web_intelligence: Optional[Dict[str, Any]] = None,
+    agent_role: str = "",
+    intel_brief_slice: Optional[Dict[str, Any]] = None,
 ) -> str:
     missing_fields = [
         field_name
@@ -82,25 +129,71 @@ def _build_llm_agent_prompt(
     ]
     missing_text = "无" if not missing_fields else ", ".join(missing_fields)
 
-    # 构建网络情报部分（仅情报分析员角色使用）
+    brief_section = ""
+    if intel_brief_slice:
+        brief_section = "\n\n" + format_brief_for_prompt(intel_brief_slice)
+
+    # 结构化网络情报明细仅给情报员（与 CLI build_report 一致）；其他角色依赖 Brief 切片以免注意力分散
     intel_section = ""
-    if web_intelligence:
+    if web_intelligence and agent_role == "intelligence":
         intel_items = []
-        for intel_type, items in web_intelligence.items():
+        list_keys = ("news", "research", "sentiment", "industry", "macro")
+        for intel_type in list_keys:
+            items = web_intelligence.get(intel_type)
             if items and isinstance(items, list):
-                type_label = {"news": "最新新闻", "research": "研报", "sentiment": "舆情", "industry": "行业动态", "macro": "宏观信息"}.get(intel_type, intel_type)
-                for item in items[:5]:  # 最多5条
+                type_label = {
+                    "news": "最新新闻",
+                    "research": "研报",
+                    "sentiment": "舆情",
+                    "industry": "行业动态",
+                    "macro": "宏观信息",
+                }.get(intel_type, intel_type)
+                cap = 8
+                for item in items[:cap]:
                     if isinstance(item, dict):
                         title = item.get("title", "")
                         summary = item.get("summary", item.get("snippet", ""))
                         time_str = item.get("time", item.get("date", ""))
-                        intel_items.append(f"  [{type_label}] {title} {'(' + time_str + ')' if time_str else ''}\n    {summary}")
+                        cred = item.get("credibility") or {}
+                        cred_note = ""
+                        if isinstance(cred, dict) and cred.get("score") is not None:
+                            cred_note = f" [可信度{cred.get('score')}]"
+                        warn = item.get("warning")
+                        wnote = f" ⚠{warn}" if warn else ""
+                        intel_items.append(
+                            f"  [{type_label}]{cred_note}{wnote} {title} "
+                            f"{'(' + str(time_str) + ')' if time_str else ''}\n    {summary}"
+                        )
                     else:
                         intel_items.append(f"  [{type_label}] {item}")
+        summary_bits = []
+        if web_intelligence.get("overall_sentiment"):
+            summary_bits.append(f"整体情绪: {web_intelligence.get('overall_sentiment')}")
+        if web_intelligence.get("key_positive"):
+            summary_bits.append("利好要点: " + "；".join(str(x) for x in (web_intelligence.get("key_positive") or [])[:3]))
+        if web_intelligence.get("key_negative"):
+            summary_bits.append("利空要点: " + "；".join(str(x) for x in (web_intelligence.get("key_negative") or [])[:3]))
+        head = "\n".join(summary_bits) if summary_bits else ""
         if intel_items:
-            intel_section = f"\n\n网络情报（已通过搜索引擎获取的真实数据）：\n" + "\n".join(intel_items)
+            intel_section = (
+                f"\n\n网络情报结构化报告（已做时效/可信度过滤，条目明细如下）：\n{head}\n"
+                + "\n".join(intel_items)
+            )
+        elif head:
+            intel_section = f"\n\n网络情报结构化报告：\n{head}"
+
+    role_focus = ""
+    if agent_role == "intelligence":
+        role_focus = "\n你是情报员：请重点把「Brief 叙事」与「资金流向/北向/新闻明细」交叉验证，在 analysis 中写明依据类型（盘面/舆情/研报）。"
+    elif agent_role == "technical":
+        role_focus = "\n你是技术分析员：Brief 仅辅助事件与情绪背景，交易结论须以量价结构为主。"
+    elif agent_role == "fundamental":
+        role_focus = "\n你是基本面分析员：Brief 中的研报数字须与财报/估值原始数据核对，不得单独采信。"
+    elif agent_role == "risk":
+        role_focus = "\n你是风控官：优先审视 Brief 风险标记与规则引擎红线，给出可执行风控结论。"
 
     return f"""你是 {agent_name}，负责{role_name}。
+{role_focus}
 
 请基于以下股票信息输出结构化 JSON，不要输出额外解释。
 
@@ -108,6 +201,7 @@ def _build_llm_agent_prompt(
 - 股票代码: {stock_code}
 - 股票名称: {stock_name}
 - 当前价格: {current_price}
+{brief_section}
 
 真实原始数据（以下字段为空表示当前未获取到真实数据）：
 {json.dumps(raw_data, ensure_ascii=False, indent=2)}
@@ -249,6 +343,51 @@ def _list_llm_data_gaps(full_data: Dict[str, Any], current_price: Any) -> List[s
     return gaps
 
 
+def _normalize_chart_key_levels(raw: Any) -> List[Dict[str, Any]]:
+    """统一关键价位结构，供 K 线图 markLine 与前端药丸使用。"""
+    out: List[Dict[str, Any]] = []
+    if not isinstance(raw, list):
+        return out
+    kind_alias = {"支撑": "support", "阻力": "resistance", "压力": "resistance"}
+    for item in raw[:8]:
+        if not isinstance(item, dict):
+            continue
+        try:
+            pf = float(item.get("price"))
+        except (TypeError, ValueError):
+            continue
+        if pf <= 0:
+            continue
+        kind = str(item.get("kind") or item.get("type") or "other").lower()
+        if kind in kind_alias:
+            kind = kind_alias[kind]
+        label = item.get("label") or item.get("name") or kind
+        out.append({"kind": kind, "price": round(pf, 4), "label": str(label)[:48]})
+    return out
+
+
+def _chart_key_levels_from_technical(technical: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """从规则引擎技术指标生成关键价位（与 K 线支撑阻力同源）。"""
+    out: List[Dict[str, Any]] = []
+    if not technical:
+        return out
+    for i, p in enumerate(technical.get("support_levels") or []):
+        try:
+            pf = float(p)
+            if pf > 0:
+                out.append({"kind": "support", "price": round(pf, 4), "label": f"规则支撑{i + 1}"})
+        except (TypeError, ValueError):
+            pass
+    for i, p in enumerate(technical.get("resistance_levels") or []):
+        try:
+            pf = float(p)
+            if pf > 0:
+                out.append({"kind": "resistance", "price": round(pf, 4), "label": f"规则阻力{i + 1}"})
+        except (TypeError, ValueError):
+            pass
+    return out[:8]
+
+
 def _build_llm_analysis_data(stock_code: str, rule_decision) -> Dict[str, Any]:
     execution = getattr(rule_decision, "execution", {}) or {}
     full_data = data_fetcher.get_full_data(stock_code) or {}
@@ -373,12 +512,17 @@ def _build_final_decision(
     current_price: Any = None,
     data_uses_mock: bool = False,
     data_gaps: Optional[List[str]] = None,
+    fallback_chart_key_levels: Optional[List[Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
     leader_score = leader_report.score if leader_report.score is not None else 0.0
     final_action = _normalize_final_action(
         leader_report.metadata.get("decision") if leader_report.metadata else None,
         leader_score,
     )
+    meta_levels = _normalize_chart_key_levels(
+        (leader_report.metadata or {}).get("chart_key_levels")
+    )
+    chart_key_levels = meta_levels if meta_levels else (fallback_chart_key_levels or [])
 
     return {
         "stock_code": stock_code,
@@ -403,6 +547,7 @@ def _build_final_decision(
             if leader_report.metadata and leader_report.metadata.get("position_ratio") not in (None, "")
             else rule_decision.execution.get("position_size", 0)
         ),
+        "chart_key_levels": chart_key_levels,
         "agent_scores": [
             {
                 "agent_name": r["agent_name"],
@@ -537,6 +682,10 @@ async def analyze_stock(request: AnalyzeRequest):
         result_data['current_price'] = _resolve_current_price(post_fd, ex)
         result_data['data_uses_mock'] = data_fetcher.is_mock_data(stock_code)
         result_data['data_gaps'] = _list_llm_data_gaps(post_fd, result_data['current_price'])
+        tech_fd = post_fd.get("technical") or {}
+        result_data["chart_key_levels"] = _chart_key_levels_from_technical(
+            tech_fd if isinstance(tech_fd, dict) else {}
+        )
         
         return AnalyzeResponse(
             success=True,
@@ -592,7 +741,12 @@ def get_llm_config():
     }
 
 
-async def generate_sse_events(stock_code: str, stock_name: str, force_refresh: bool = False):
+async def generate_sse_events(
+    stock_code: str,
+    stock_name: str,
+    force_refresh: bool = False,
+    user_request: str = "",
+):
     """
     生成SSE事件流
     
@@ -626,7 +780,7 @@ async def generate_sse_events(stock_code: str, stock_name: str, force_refresh: b
             base_url=llm_config["base_url"],
             model=llm_config["model"],
             temperature=0.7,
-            max_tokens=1500
+            max_tokens=2000,
         )
         
         # 获取规则引擎的分析数据作为上下文
@@ -661,37 +815,63 @@ async def generate_sse_events(stock_code: str, stock_name: str, force_refresh: b
         
         await asyncio.sleep(0.5)
         
-        # ===== 注入缓存情报 =====
+        # ===== 注入缓存情报（与 CLI 对齐：build_report + IntelBrief）=====
         cached_intel_data = None
         intel_cache_meta = None
         try:
             from utils.intel_cache import get_intel
+
             raw_intel = get_intel(
                 stock_code=stock_code,
                 stock_name=stock_name,
-                force_refresh=force_refresh
+                force_refresh=force_refresh,
             )
-            intel_cache_meta = raw_intel.pop('_cache_meta', None)
+            intel_cache_meta = raw_intel.pop("_cache_meta", None)
+            tracked_at = str(raw_intel.get("tracked_at") or "")
 
-            # 检查是否有实质内容
-            has_content = any(raw_intel.get(k) for k in ['news', 'research', 'sentiment', 'industry', 'macro'])
-            if has_content:
+            has_lists = cache_intel_has_search_lists(raw_intel)
+            has_legacy = any(
+                raw_intel.get(k) for k in ["news", "research", "sentiment", "industry", "macro"]
+            )
+            if has_lists:
+                pkg = prepare_intel_package_for_analysis(
+                    stock_code,
+                    stock_name,
+                    raw_intel,
+                    tracked_at=tracked_at,
+                    user_request=user_request or "中短线波段交易分析",
+                )
+                if pkg:
+                    intel_report_dict, intel_brief = pkg
+                    analysis_data["web_intelligence"] = intel_report_dict
+                    analysis_data["intel_brief"] = intel_brief
+                    cached_intel_data = raw_intel
+                else:
+                    analysis_data["web_intelligence"] = raw_intel
+                    cached_intel_data = raw_intel
+            elif has_legacy:
+                analysis_data["web_intelligence"] = raw_intel
                 cached_intel_data = raw_intel
-                # 注入到分析数据中，供情报分析员使用
-                analysis_data['web_intelligence'] = raw_intel
         except Exception:
             pass
 
         # 发送情报注入事件
         if cached_intel_data and intel_cache_meta:
+            wr = analysis_data.get("web_intelligence") or {}
             intel_summary = {
                 "stock_code": stock_code,
-                "news_count": len(cached_intel_data.get('news', [])),
-                "research_count": len(cached_intel_data.get('research', [])),
-                "sentiment_count": len(cached_intel_data.get('sentiment', [])),
-                "cache_status": "fresh" if intel_cache_meta.get('is_fresh') else
-                               "stale" if intel_cache_meta.get('is_stale') else "expired",
-                "cache_age_days": intel_cache_meta.get('age_days'),
+                "news_count": len(cached_intel_data.get("news", [])),
+                "research_count": len(cached_intel_data.get("research", [])),
+                "sentiment_count": len(cached_intel_data.get("sentiment", [])),
+                "cache_status": "fresh"
+                if intel_cache_meta.get("is_fresh")
+                else "stale"
+                if intel_cache_meta.get("is_stale")
+                else "expired",
+                "cache_age_days": intel_cache_meta.get("age_days"),
+                "intel_report": bool(wr.get("gather_time")),
+                "overall_sentiment": wr.get("overall_sentiment"),
+                "intel_brief": bool(analysis_data.get("intel_brief")),
             }
             yield f"event: intel_injected\ndata: {json.dumps(intel_summary)}\n\n"
             await asyncio.sleep(0.3)
@@ -733,20 +913,28 @@ async def generate_sse_events(stock_code: str, stock_name: str, force_refresh: b
 
             await asyncio.sleep(0.3)  # 模拟思考时间
             
-            # 准备分析提示词
+            # 准备分析提示词（Brief 分角色裁剪 + 结构化情报仅给情报员）
+            ib_full = analysis_data.get("intel_brief")
+            intel_brief_slice = (
+                slice_brief_for_agent_role(ib_full, role) if ib_full else None
+            )
             raw_data = analysis_data["role_payloads"].get(role, {})
+            raw_data = _trim_role_payload_for_llm(role, raw_data, bool(intel_brief_slice))
             rule_reference = analysis_data["rule_reference"].get(role, {})
-            # 情报分析员角色注入缓存情报
-            web_intel_for_prompt = analysis_data.get('web_intelligence') if role == 'intelligence' else None
+            web_intel_for_prompt = (
+                analysis_data.get("web_intelligence") if role == "intelligence" else None
+            )
             prompt = _build_llm_agent_prompt(
                 agent_name=agent.name,
-                role_name=agent_configs.get(role, {}).get('name', role),
+                role_name=agent_configs.get(role, {}).get("name", role),
                 stock_code=stock_code,
                 stock_name=stock_name,
-                current_price=analysis_data.get('current_price', 'N/A'),
+                current_price=analysis_data.get("current_price", "N/A"),
                 raw_data=raw_data,
                 rule_reference=rule_reference,
                 web_intelligence=web_intel_for_prompt,
+                agent_role=role,
+                intel_brief_slice=intel_brief_slice,
             )
             
             try:
@@ -916,11 +1104,21 @@ async def generate_sse_events(stock_code: str, stock_name: str, force_refresh: b
         # ===== 第三轮：达成共识 =====
         yield f"event: round_start\ndata: {json.dumps({'round': 3, 'type': 'consensus', 'title': '🤝 第三轮：达成共识'})}\n\n"
         
+        ib = analysis_data.get("intel_brief")
+        brief_json = ""
+        if ib:
+            brief_json = json.dumps(ib, ensure_ascii=False, indent=2)
+            if len(brief_json) > 12000:
+                brief_json = brief_json[:12000] + "\n…(IntelBrief 已截断)"
+
         final_prompt = f"""你是投资决策队长，请基于以下信息输出最终 JSON 决策，不要输出额外解释。
 
 股票信息：
 - 股票代码: {stock_code}
 - 股票名称: {stock_name}
+
+情报共识摘要（IntelBrief，全队共享，须与各专业分析交叉验证）：
+{brief_json if brief_json else "- 本轮无结构化情报摘要"}
 
 第一轮独立分析：
 {chr(10).join([f"- {r['agent_name']}({r['agent_role']}): 评分 {float(r.get('score') or 0):.1f}，摘要：{r['summary']}，分析：{r['analysis']}" for r in round1_reports])}
@@ -939,14 +1137,22 @@ async def generate_sse_events(stock_code: str, stock_name: str, force_refresh: b
   "decision": "buy/sell/watch/hold/avoid",
   "action": "展示给用户的中文动作",
   "stop_loss": 止损价,
-  "position_ratio": 建议仓位百分比
-}}"""
+  "position_ratio": 建议仓位百分比,
+  "chart_key_levels": [
+    {{"kind": "support", "price": 数字, "label": "如前低/MA20 等简短说明"}},
+    {{"kind": "resistance", "price": 数字, "label": "如前高/缺口上沿等"}}
+  ]
+}}
+chart_key_levels 为可选，最多 6 条，价格须与技术分析员支撑/压力或基本面估值可追溯；无明确价位时填 []。"""
 
         final_decision = None
         if leader:
             try:
                 final_report = await asyncio.to_thread(leader.analyze, final_prompt)
                 if isinstance(final_report, AgentReport):
+                    fb_lv = _chart_key_levels_from_technical(
+                        _as_dict((analysis_data.get("full_data") or {}).get("technical"))
+                    )
                     final_decision = _build_final_decision(
                         stock_code=stock_code,
                         stock_name=stock_name,
@@ -956,6 +1162,7 @@ async def generate_sse_events(stock_code: str, stock_name: str, force_refresh: b
                         current_price=analysis_data.get("current_price"),
                         data_uses_mock=uses_mock,
                         data_gaps=analysis_data.get("data_gaps"),
+                        fallback_chart_key_levels=fb_lv,
                     )
             except Exception as e:
                 yield f"event: error\ndata: {json.dumps({'error': f'Leader最终决策失败: {str(e)}'})}\n\n"
@@ -964,6 +1171,9 @@ async def generate_sse_events(stock_code: str, stock_name: str, force_refresh: b
             raw_scores = [float(r.get("score") or 0) for r in round1_reports]
             fallback_score = sum(raw_scores) / len(raw_scores) if raw_scores else 0.0
             fallback_action = _normalize_final_action(None, fallback_score)
+            fb_chart_levels = _chart_key_levels_from_technical(
+                _as_dict((analysis_data.get("full_data") or {}).get("technical"))
+            )
             final_decision = {
                 'stock_code': stock_code,
                 'stock_name': stock_name,
@@ -990,6 +1200,7 @@ async def generate_sse_events(stock_code: str, stock_name: str, force_refresh: b
                 'take_profit_1': rule_decision.execution.get('take_profit_1', 0),
                 'take_profit_2': rule_decision.execution.get('take_profit_2', 0),
                 'position_size': rule_decision.execution.get('position_size', 0),
+                'chart_key_levels': fb_chart_levels,
                 'agent_scores': [{
                     'agent_name': r['agent_name'],
                     'agent_role': r['agent_role'],
@@ -1036,7 +1247,12 @@ async def analyze_stock_llm(request: AnalyzeRequest):
         
         # 返回SSE流
         return StreamingResponse(
-            generate_sse_events(stock_code, stock_name, force_refresh=request.force_refresh),
+            generate_sse_events(
+                stock_code,
+                stock_name,
+                force_refresh=request.force_refresh,
+                user_request=request.user_request or "",
+            ),
             media_type="text/event-stream",
             headers={
                 "Cache-Control": "no-cache",

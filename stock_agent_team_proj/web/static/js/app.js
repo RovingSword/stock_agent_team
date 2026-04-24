@@ -32,6 +32,11 @@ let eventSource = null;
 // K线图 ECharts 实例与缓存数据
 let klineChartInstance = null;
 let klineDataCache = null;
+/** 最近一次用于图层标注的分析结果（规则 / LLM） */
+let lastAnalysisForChart = null;
+/** 分析给出的关键价位，供药丸按钮与加粗线使用 */
+let lastChartKeyLevels = [];
+let klineHighlightedAgentPrice = null;
 
 let markedMarkdownConfigured = false;
 
@@ -60,6 +65,7 @@ function renderMarkdown(text) {
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
     initEventListeners();
+    initKlineAgentPillsDelegation();
     loadHistory();
     if (elements.dismissDataMock) {
         elements.dismissDataMock.addEventListener('click', () => setDataMockBanner(false));
@@ -1221,9 +1227,90 @@ function initKlineChart() {
     });
 }
 
+function alignIndicatorSeries(arr, n) {
+    if (!Array.isArray(arr) || arr.length !== n) {
+        return Array.from({ length: n }, () => null);
+    }
+    return arr;
+}
+
+function initKlineAgentPillsDelegation() {
+    const el = document.getElementById('klineAgentLevelPills');
+    if (!el || el.dataset.delegationBound === '1') return;
+    el.dataset.delegationBound = '1';
+    el.addEventListener('click', (e) => {
+        const btn = e.target.closest('.kline-level-pill');
+        if (!btn || !el.contains(btn)) return;
+        const p = parseFloat(btn.getAttribute('data-price'), 10);
+        if (!Number.isFinite(p)) return;
+        klineHighlightedAgentPrice = (klineHighlightedAgentPrice === p) ? null : p;
+        renderAgentLevelPills(lastChartKeyLevels);
+        if (lastAnalysisForChart) {
+            updateChartAnnotations(lastAnalysisForChart);
+        }
+    });
+}
+
+function renderAgentLevelPills(levels) {
+    const el = document.getElementById('klineAgentLevelPills');
+    if (!el) return;
+    if (!Array.isArray(levels) || levels.length === 0) {
+        el.classList.add('hidden');
+        el.innerHTML = '';
+        return;
+    }
+    el.classList.remove('hidden');
+    el.innerHTML = levels.map((lv) => {
+        const price = Number(lv.price);
+        if (!Number.isFinite(price)) return '';
+        const label = escapeHtml(String(lv.label || lv.kind || '关键位'));
+        const active = klineHighlightedAgentPrice != null && Math.abs(klineHighlightedAgentPrice - price) < 1e-6;
+        const cls = active ? 'kline-level-pill is-active' : 'kline-level-pill';
+        return `<button type="button" class="${cls}" data-price="${price}">${label} ${price}</button>`;
+    }).filter(Boolean).join('');
+}
+
+function buildAgentLevelMarkLines(levels, highlightPrice) {
+    const AGENT_LEVEL_COLOR = '#D97706';
+    if (!Array.isArray(levels)) return [];
+    const hp = highlightPrice != null && Number.isFinite(highlightPrice) ? highlightPrice : null;
+    return levels.map((lv, i) => {
+        const price = Number(lv.price);
+        if (!Number.isFinite(price) || price <= 0) return null;
+        const thick = hp != null && Math.abs(hp - price) < 1e-6;
+        const lab = lv.label || lv.kind || '关键位';
+        return {
+            yAxis: price,
+            name: `Agent关键${i + 1}`,
+            lineStyle: { color: AGENT_LEVEL_COLOR, type: 'dashed', width: thick ? 2.8 : 1.2 },
+            label: {
+                formatter: `${lab} ${price}`,
+                position: 'insideMiddle',
+                color: AGENT_LEVEL_COLOR,
+                fontSize: 10
+            }
+        };
+    }).filter(Boolean);
+}
+
 function renderKlineChart(data) {
     klineDataCache = data;
+    klineHighlightedAgentPrice = null;
+    lastChartKeyLevels = [];
+    const pillsEl = document.getElementById('klineAgentLevelPills');
+    if (pillsEl) {
+        pillsEl.classList.add('hidden');
+        pillsEl.innerHTML = '';
+    }
     if (!klineChartInstance) initKlineChart();
+
+    const n = (data.dates && data.dates.length) ? data.dates.length : 0;
+    const macdDif = alignIndicatorSeries(data.macd_dif, n);
+    const macdDea = alignIndicatorSeries(data.macd_dea, n);
+    const macdHist = alignIndicatorSeries(data.macd_hist, n);
+    const rsi12 = alignIndicatorSeries(data.rsi12, n);
+    const volMa5 = alignIndicatorSeries(data.vol_ma5, n);
+    const volMa10 = alignIndicatorSeries(data.vol_ma10, n);
 
     const upColor = '#DC2626';   // A 股：涨红
     const downColor = '#16A34A'; // A 股：跌绿
@@ -1231,7 +1318,7 @@ function renderKlineChart(data) {
     const axisColor = '#9CA3AF';
     const textColor = '#6B7280';
 
-    const volumeColors = data.ohlc.map(item => (item[1] >= item[0]) ? upColor : downColor);
+    const volumeColors = (data.ohlc || []).map(item => (item[1] >= item[0]) ? upColor : downColor);
 
     const option = {
         animation: true,
@@ -1252,8 +1339,10 @@ function renderKlineChart(data) {
                     if (p.seriesType === 'candlestick') {
                         const d = p.data;
                         html += `开 ${d[1]} · 收 ${d[2]}<br>低 ${d[3]} · 高 ${d[4]}<br>`;
-                    } else if (p.seriesType === 'bar') {
+                    } else if (p.seriesType === 'bar' && p.seriesName === '成交量') {
                         html += `成交量 ${Number(p.data).toLocaleString()}<br>`;
+                    } else if (p.seriesType === 'bar' && p.data != null) {
+                        html += `${p.seriesName} ${p.data}<br>`;
                     } else if (p.seriesName && p.data != null) {
                         html += `${p.seriesName} ${p.data}<br>`;
                     }
@@ -1261,9 +1350,12 @@ function renderKlineChart(data) {
                 return html;
             }
         },
+        axisPointer: { link: [{ xAxisIndex: [0, 1, 2, 3] }] },
         grid: [
-            { left: '8%', right: '3%', top: '6%', height: '58%' },
-            { left: '8%', right: '3%', top: '70%', height: '20%' }
+            { left: '8%', right: '3%', top: '7%', height: '34%' },
+            { left: '8%', right: '3%', top: '44%', height: '14%' },
+            { left: '8%', right: '3%', top: '60%', height: '14%' },
+            { left: '8%', right: '3%', top: '76%', height: '11%' }
         ],
         xAxis: [
             {
@@ -1283,6 +1375,22 @@ function renderKlineChart(data) {
                 axisLine: { lineStyle: { color: gridColor } },
                 axisLabel: { show: false },
                 boundaryGap: true
+            },
+            {
+                type: 'category',
+                data: data.dates,
+                gridIndex: 2,
+                axisLine: { lineStyle: { color: gridColor } },
+                axisLabel: { show: false },
+                boundaryGap: true
+            },
+            {
+                type: 'category',
+                data: data.dates,
+                gridIndex: 3,
+                axisLine: { lineStyle: { color: gridColor } },
+                axisLabel: { fontSize: 10, color: textColor },
+                boundaryGap: true
             }
         ],
         yAxis: [
@@ -1300,20 +1408,37 @@ function renderKlineChart(data) {
                 splitLine: { lineStyle: { color: gridColor } },
                 axisLine: { lineStyle: { color: gridColor } },
                 axisLabel: { show: false }
+            },
+            {
+                scale: true,
+                gridIndex: 2,
+                splitNumber: 2,
+                splitLine: { lineStyle: { color: gridColor } },
+                axisLine: { lineStyle: { color: gridColor } },
+                axisLabel: { fontSize: 9, color: textColor }
+            },
+            {
+                min: 0,
+                max: 100,
+                gridIndex: 3,
+                splitNumber: 2,
+                splitLine: { lineStyle: { color: gridColor } },
+                axisLine: { lineStyle: { color: gridColor } },
+                axisLabel: { fontSize: 9, color: textColor }
             }
         ],
         dataZoom: [
             {
                 type: 'inside',
-                xAxisIndex: [0, 1],
+                xAxisIndex: [0, 1, 2, 3],
                 start: 0,
                 end: 100
             },
             {
                 type: 'slider',
-                xAxisIndex: [0, 1],
-                bottom: '2%',
-                height: 20,
+                xAxisIndex: [0, 1, 2, 3],
+                bottom: '1%',
+                height: 18,
                 start: 0,
                 end: 100
             }
@@ -1374,12 +1499,88 @@ function renderKlineChart(data) {
                         return volumeColors[params.dataIndex] || '#999';
                     }
                 }
+            },
+            {
+                name: 'VOL MA5',
+                type: 'line',
+                xAxisIndex: 1,
+                yAxisIndex: 1,
+                data: volMa5,
+                smooth: true,
+                showSymbol: false,
+                lineStyle: { width: 1, color: '#94A3B8' }
+            },
+            {
+                name: 'VOL MA10',
+                type: 'line',
+                xAxisIndex: 1,
+                yAxisIndex: 1,
+                data: volMa10,
+                smooth: true,
+                showSymbol: false,
+                lineStyle: { width: 1, color: '#64748B', type: 'dashed' }
+            },
+            {
+                name: 'MACD DIF',
+                type: 'line',
+                xAxisIndex: 2,
+                yAxisIndex: 2,
+                data: macdDif,
+                smooth: true,
+                showSymbol: false,
+                lineStyle: { width: 1.2, color: '#0D9488' }
+            },
+            {
+                name: 'MACD DEA',
+                type: 'line',
+                xAxisIndex: 2,
+                yAxisIndex: 2,
+                data: macdDea,
+                smooth: true,
+                showSymbol: false,
+                lineStyle: { width: 1.2, color: '#F97316' }
+            },
+            {
+                name: 'MACD柱',
+                type: 'bar',
+                xAxisIndex: 2,
+                yAxisIndex: 2,
+                data: macdHist,
+                itemStyle: {
+                    color: function (params) {
+                        const v = params.data;
+                        if (v == null || Number.isNaN(Number(v))) return '#CBD5E1';
+                        return Number(v) >= 0 ? '#F87171' : '#4ADE80';
+                    }
+                }
+            },
+            {
+                name: 'RSI12',
+                type: 'line',
+                xAxisIndex: 3,
+                yAxisIndex: 3,
+                data: rsi12,
+                smooth: true,
+                showSymbol: false,
+                lineStyle: { width: 1.2, color: '#6366F1' },
+                markLine: {
+                    silent: true,
+                    symbol: 'none',
+                    data: [
+                        { yAxis: 30, lineStyle: { color: '#94A3B8', type: 'dotted' }, label: { show: true, formatter: '30', fontSize: 9 } },
+                        { yAxis: 70, lineStyle: { color: '#94A3B8', type: 'dotted' }, label: { show: true, formatter: '70', fontSize: 9 } }
+                    ]
+                }
             }
         ]
     };
 
     klineChartInstance.setOption(option, true);
-    elements.klineStatus.textContent = `近${data.dates.length}个交易日`;
+    let status = `近${n}个交易日`;
+    if (data.data_uses_mock) {
+        status += ' · 指标曾使用模拟/兜底数据';
+    }
+    elements.klineStatus.textContent = status;
 }
 
 function buildSupportResistanceMarkLines(supportLevels, resistanceLevels) {
@@ -1429,6 +1630,10 @@ function buildSupportResistanceMarkLines(supportLevels, resistanceLevels) {
  */
 function updateChartAnnotations(analysisData) {
     if (!klineChartInstance || !klineDataCache) return;
+
+    lastAnalysisForChart = analysisData;
+    lastChartKeyLevels = Array.isArray(analysisData.chart_key_levels) ? analysisData.chart_key_levels : [];
+    renderAgentLevelPills(lastChartKeyLevels);
 
     const BUY_COLOR = '#DC2626';   // 涨 / 买入
     const SELL_COLOR = '#16A34A';  // 跌 / 卖出
@@ -1552,13 +1757,18 @@ function updateChartAnnotations(analysisData) {
         });
     }
 
-    const existingLines = (klineChartInstance.getOption().series[0].markLine || {}).data || [];
+    const srData = buildSupportResistanceMarkLines(
+        klineDataCache.support_levels,
+        klineDataCache.resistance_levels
+    ).data || [];
+    const agentLevelLines = buildAgentLevelMarkLines(lastChartKeyLevels, klineHighlightedAgentPrice);
+    const mergedMarkLines = [...srData, ...agentLevelLines, ...markLines];
 
     klineChartInstance.setOption({
         series: [{
             name: 'K线',
             markPoint: { data: markPoints, animation: true, animationDuration: 600 },
-            markLine: { data: [...existingLines, ...markLines], silent: true, animation: true, animationDuration: 600 },
+            markLine: { data: mergedMarkLines, silent: true, animation: true, animationDuration: 600 },
             markArea: { data: markAreas, silent: true, animation: true, animationDuration: 600 }
         }]
     });

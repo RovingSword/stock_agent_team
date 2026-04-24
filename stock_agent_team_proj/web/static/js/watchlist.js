@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initWatchlistEvents();
     initPerformanceEvents();
     loadWatchlistStatus();
+    loadSchedulerStatus();
     loadPerformanceStats();
 });
 
@@ -43,6 +44,7 @@ function initTabNav() {
             if (tabId === 'watchlist') {
                 loadWatchlistStatus();
                 loadWatchlistList();
+                loadSchedulerStatus();
             } else if (tabId === 'performance') {
                 loadPerformanceStats();
                 loadPositions();
@@ -366,6 +368,41 @@ async function handleCollectIntel() {
     }
 }
 
+/** 防止「追踪情报」重复提交（含 LLM 解读） */
+let _intelTrackInFlight = false;
+
+function _setIntelTrackUiLocked(locked) {
+    const form = document.querySelector('.intel-form');
+    const trackBtn = document.getElementById('intelTrackBtn');
+    const refreshBtn = document.getElementById('intelRefreshBtn');
+    const codeInput = document.getElementById('intelStockCode');
+    const llmChk = document.getElementById('intelLlmInterpret');
+    if (form) {
+        form.classList.toggle('intel-form--busy', locked);
+        form.setAttribute('aria-busy', locked ? 'true' : 'false');
+    }
+    if (codeInput) {
+        codeInput.disabled = locked;
+    }
+    if (trackBtn) {
+        trackBtn.disabled = locked;
+        if (locked) {
+            if (!trackBtn.dataset.defaultHtml) {
+                trackBtn.dataset.defaultHtml = trackBtn.innerHTML;
+            }
+            trackBtn.innerHTML = '<svg class="icon icon-sm" aria-hidden="true"><use href="#i-search"/></svg> 分析中…';
+        } else if (trackBtn.dataset.defaultHtml) {
+            trackBtn.innerHTML = trackBtn.dataset.defaultHtml;
+        }
+    }
+    if (refreshBtn) {
+        refreshBtn.disabled = locked;
+    }
+    if (llmChk) {
+        llmChk.disabled = locked;
+    }
+}
+
 // 追踪情报
 async function handleTrackIntel(forceRefresh = false) {
     // 防御：确保 forceRefresh 是布尔值（addEventListener 可能传入 Event 对象）
@@ -376,14 +413,23 @@ async function handleTrackIntel(forceRefresh = false) {
         alert('请输入股票代码');
         return;
     }
+
+    if (_intelTrackInFlight) {
+        return;
+    }
     
+    _intelTrackInFlight = true;
+    _setIntelTrackUiLocked(true);
     try {
+        const llmChk = document.getElementById('intelLlmInterpret');
+        const withLlm = llmChk ? llmChk.checked : true;
         const response = await fetch(`${API_BASE}/api/intel/track`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 stock_code: code,
-                force_refresh: forceRefresh
+                force_refresh: forceRefresh,
+                with_llm_interpretation: withLlm
             })
         });
         
@@ -450,18 +496,88 @@ async function handleTrackIntel(forceRefresh = false) {
                 return `<div class="intel-group">${header}<ul class="intel-list">${listItems}</ul></div>`;
             };
 
+            const bre = result.intel_brief;
+            const llm = result.llm_interpretation;
+
+            const esc = (t) => (typeof escapeHtml === 'function' ? escapeHtml(String(t)) : String(t));
+            const renderRuleBrief = (brief) => {
+                if (!brief || !brief.core_thesis) {
+                    return '';
+                }
+                const sent = brief.overall_sentiment || '—';
+                const cats = (brief.catalysts || []).slice(0, 6);
+                const risks = (brief.risk_flags || []).slice(0, 5);
+                const oq = (brief.open_questions || []).slice(0, 3);
+                const catHtml = cats.length
+                    ? `<ul class="intel-list intel-list--compact">${cats.map(c => `<li>${esc(c)}</li>`).join('')}</ul>`
+                    : '';
+                const riskHtml = risks.length
+                    ? `<ul class="intel-list intel-list--compact">${risks.map(c => `<li>${esc(c)}</li>`).join('')}</ul>`
+                    : '';
+                const oqHtml = oq.length
+                    ? `<ul class="intel-list intel-list--compact">${oq.map(c => `<li>${esc(c)}</li>`).join('')}</ul>`
+                    : '';
+                return `
+                <div class="intel-summary-card">
+                    <h5>
+                        <svg class="icon icon-sm" aria-hidden="true"><use href="#i-chart"/></svg>
+                        规则型情报摘要
+                        <span class="badge badge-brand">${esc(String(sent))}</span>
+                    </h5>
+                    <p class="intel-summary-thesis intel-snippet">${esc(String(brief.core_thesis || ''))}</p>
+                    ${cats.length ? `<div class="intel-subblock"><span class="label">催化剂 / 热点</span>${catHtml}</div>` : ''}
+                    ${risks.length ? `<div class="intel-subblock"><span class="label">风险标记</span>${riskHtml}</div>` : ''}
+                    ${oq.length ? `<div class="intel-subblock"><span class="label">待澄清</span>${oqHtml}</div>` : ''}
+                </div>`;
+            };
+
+            const stanceClass = (stance) => {
+                if (!stance) return 'badge-brand';
+                if (stance.includes('偏多')) return 'badge-success';
+                if (stance.includes('偏空')) return 'badge-danger';
+                if (stance.includes('观望') || stance.includes('信息不足')) return 'badge-warn';
+                return 'badge-brand';
+            };
+
+            const renderLlm = (x) => {
+                if (!x || !x.summary_text) return '';
+                const st = String(x.stance || '');
+                const src = x.source === 'llm_v1' ? '模型生成' : (x.source === 'rule_fallback' ? '规则整理' : '—');
+                const conf = typeof x.confidence === 'number' ? x.confidence.toFixed(2) : '—';
+                const bl = Array.isArray(x.bullets) ? x.bullets : [];
+                const bullets = bl.length
+                    ? `<ul class="intel-list intel-list--compact">${bl.map(b => `<li>${esc(String(b))}</li>`).join('')}</ul>`
+                    : '';
+                return `
+                <div class="intel-interpret">
+                    <h5>
+                        <svg class="icon icon-sm" aria-hidden="true"><use href="#i-radio"/></svg>
+                        情报员 · 简要解读
+                        <span class="badge ${stanceClass(st)}">${esc(st || '—')}</span>
+                        <span class="intel-interpret-meta">置信 ${esc(String(conf))} · ${esc(src)}</span>
+                    </h5>
+                    <p class="intel-interpret-body intel-snippet">${esc(String(x.summary_text))}</p>
+                    ${bullets}
+                    <p class="intel-interpret-disclaimer">${esc(String(x.disclaimer || '本解读基于当前抓取与规则摘要，不构成投资建议。'))}</p>
+                </div>`;
+            };
+
             const groupsHtml =
                 renderGroup('i-news', '新闻', data.news) +
                 renderGroup('i-book', '研报', data.research) +
                 renderGroup('i-msg',  '舆情', data.sentiment);
 
-            document.getElementById('intelBriefContent').innerHTML = metaHtml + groupsHtml;
+            document.getElementById('intelBriefContent').innerHTML =
+                metaHtml + renderRuleBrief(bre) + renderLlm(llm) + groupsHtml;
         } else {
             alert(result.message);
         }
     } catch (error) {
         console.error('追踪情报失败:', error);
         alert('追踪失败，请重试');
+    } finally {
+        _intelTrackInFlight = false;
+        _setIntelTrackUiLocked(false);
     }
 }
 
@@ -488,23 +604,46 @@ async function handleRunScheduler() {
     }
 }
 
+/** 在定时任务区域展示最近一次手动执行的返回 data（JSON，安全文本） */
+function renderSchedulerLastRun(data) {
+    const el = document.getElementById('schedulerLastRun');
+    if (!el || data == null) return;
+    el.classList.remove('hidden');
+    el.innerHTML = '<h4 class="scheduler-run-heading">最近一次执行结果</h4>';
+    const pre = document.createElement('pre');
+    pre.className = 'scheduler-run-json';
+    pre.textContent = JSON.stringify(data, null, 2);
+    el.appendChild(pre);
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
 // 加载定时任务状态
 async function loadSchedulerStatus() {
+    const statusDiv = document.getElementById('schedulerStatus');
+    const tasksDiv = document.getElementById('schedulerTasks');
     try {
         const response = await fetch(`${API_BASE}/api/scheduler/status`);
         const result = await response.json();
         
         if (result.success) {
-            const statusDiv = document.getElementById('schedulerStatus');
-            const tasksDiv = document.getElementById('schedulerTasks');
-            
             const running = result.data.scheduler_running;
+            const nextRuns = result.data.next_runs || [];
+            const nextRunsHtml = nextRuns.length
+                ? `<div class="scheduler-next-runs">
+                    <p class="timeline-subtle">计划下次运行（进程内调度器）</p>
+                    <ul>${nextRuns.map(
+                        (n) =>
+                            `<li><strong>${n.task_name}</strong> · ${n.next_run}</li>`
+                    ).join('')}</ul>
+                </div>`
+                : '';
+
             statusDiv.innerHTML = `
                 <p>调度器：<span class="badge ${running ? 'badge-success' : ''}">${running ? '运行中' : '已停止'}</span>
                 <span class="timeline-subtle">最后检查 ${result.data.last_check || '--'}</span></p>
+                ${nextRunsHtml}
             `;
 
-            // 渲染任务列表
             const tasks = result.data.predefined_tasks || {};
             tasksDiv.innerHTML = Object.values(tasks).map(task => `
                 <div class="task-item">
@@ -514,9 +653,14 @@ async function loadSchedulerStatus() {
                     <button class="btn-tiny" onclick="handleRunTask('${task.name}')">立即执行</button>
                 </div>
             `).join('');
+        } else {
+            statusDiv.innerHTML = `<p class="timeline-subtle">${result.message || '无法获取调度状态'}</p>`;
         }
     } catch (error) {
         console.error('加载定时任务状态失败:', error);
+        if (statusDiv) {
+            statusDiv.innerHTML = '<p class="timeline-subtle">加载定时任务状态失败</p>';
+        }
     }
 }
 
@@ -535,6 +679,14 @@ async function handleRunTask(taskName) {
         
         if (result.success) {
             alert(result.message);
+            if (result.data) {
+                renderSchedulerLastRun(result.data);
+            }
+            loadSchedulerStatus();
+            if (taskName === 'weekly_analysis' || taskName === 'daily_update') {
+                loadWatchlistList();
+                loadWatchlistStatus();
+            }
         } else {
             alert(result.message);
         }

@@ -1,4 +1,14 @@
 {
-  "update_time": "2026-04-19T21:37:42.615853",
-  "data": []
+  "update_time": "2026-04-24T21:58:13.877879",
+  "data": [
+    {
+      "date": "2026年04月17日",
+      "stock_code": "589100",
+      "stock_name": "国泰",
+      "org_name": "机构投资者",
+      "org_count": 1,
+      "topic": null,
+      "source_url": "https://cj.sina.com.cn/articles/view/7857201856/1d45362c001904fhny?froms=ggmp"
+    }
+  ]
 }

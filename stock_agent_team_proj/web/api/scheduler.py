@@ -3,7 +3,6 @@
 提供定时任务状态查看和控制功能
 """
 
-import os
 from datetime import datetime
 from typing import Optional, Dict, Any, List
 
@@ -11,15 +10,23 @@ from config.project_paths import ensure_project_root_on_path
 
 ensure_project_root_on_path()
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
-from watchlist import AutoScheduler, WatchlistManager, DataCollector
+from watchlist import AutoScheduler
 
 router = APIRouter()
 
 # 获取调度器实例
 _scheduler_instance = None
+
+# Web 预定义任务 ID -> AutoScheduler 持久化任务 ID
+WEB_TASK_TO_INTERNAL = {
+    "daily_collect": AutoScheduler.TASK_DAILY_COLLECT,
+    "daily_update": AutoScheduler.TASK_DAILY_PRICE_UPDATE,
+    "weekly_analysis": AutoScheduler.TASK_WEEKLY_UPDATE,
+}
+
 
 def get_scheduler() -> Optional[AutoScheduler]:
     """获取调度器实例（延迟初始化）"""
@@ -97,20 +104,12 @@ async def get_scheduler_status():
                 "message": "调度器未初始化"
             }
         
-        # 获取调度器状态
-        is_running = scheduler.is_running if hasattr(scheduler, 'is_running') else False
-        
-        # 获取下次执行时间
-        next_runs = []
-        if hasattr(scheduler, 'get_next_run_times'):
-            next_runs = scheduler.get_next_run_times()
-        
         return {
             "success": True,
             "data": {
-                "scheduler_running": is_running,
+                "scheduler_running": scheduler.is_running,
                 "predefined_tasks": PREDEFINED_TASKS,
-                "next_runs": next_runs,
+                "next_runs": scheduler.get_next_run_times(),
                 "last_check": datetime.now().isoformat()
             }
         }
@@ -127,17 +126,28 @@ async def get_task_list():
     """获取任务列表"""
     try:
         scheduler = get_scheduler()
+        next_by_id: Dict[str, str] = {}
+        if scheduler:
+            for item in scheduler.get_next_run_times():
+                next_by_id[item["task_id"]] = item["next_run"]
         
         tasks = []
         for task_id, task_info in PREDEFINED_TASKS.items():
-            tasks.append({
+            row: Dict[str, Any] = {
                 "id": task_id,
                 **task_info,
-                "enabled": True,  # 默认启用
+                "enabled": True,
                 "last_run": None,
                 "next_run": None,
                 "status": "idle"
-            })
+            }
+            internal = WEB_TASK_TO_INTERNAL.get(task_id)
+            if scheduler and internal and internal in scheduler.tasks:
+                st = scheduler.tasks[internal]
+                row["enabled"] = st.enabled
+                row["last_run"] = st.last_run
+                row["next_run"] = next_by_id.get(internal)
+            tasks.append(row)
         
         return {
             "success": True,
@@ -159,112 +169,78 @@ async def run_task(request: RunTaskRequest):
     """手动执行任务"""
     try:
         task_name = request.task_name
+        scheduler = get_scheduler()
+        executed_at = datetime.now().isoformat()
         
-        # 根据任务类型执行
         if task_name == "daily_collect":
-            # 执行数据采集
-            collector = DataCollector()
-            
-            results = {}
-            
-            try:
-                dragon_data = collector.collect_dragon_rank()
-                results["dragon_rank"] = {"count": len(dragon_data), "success": True}
-            except Exception as e:
-                results["dragon_rank"] = {"error": str(e), "success": False}
-            
-            try:
-                hot_sectors = collector.collect_hot_sectors()
-                results["hot_sectors"] = {"count": len(hot_sectors), "success": True}
-            except Exception as e:
-                results["hot_sectors"] = {"error": str(e), "success": False}
-            
-            try:
-                research = collector.collect_research()
-                results["research"] = {"count": len(research), "success": True}
-            except Exception as e:
-                results["research"] = {"error": str(e), "success": False}
-            
+            if scheduler is None:
+                return {"success": False, "message": "调度器未初始化"}
+            counts = scheduler.run_daily_collect()
             return {
                 "success": True,
-                "message": f"数据采集任务完成",
+                "message": "数据采集任务完成",
                 "data": {
                     "task": task_name,
-                    "executed_at": datetime.now().isoformat(),
-                    "results": results
+                    "executed_at": executed_at,
+                    "results": {
+                        "dragon_rank": {"count": counts["dragon_tiger_count"], "success": True},
+                        "hot_sectors": {"count": counts["sector_count"], "success": True},
+                        "research": {"count": counts["research_count"], "success": True},
+                    },
+                    "collect_summary": counts,
                 }
             }
             
         elif task_name == "daily_update":
-            # 更新观察池股票价格
-            manager = WatchlistManager()
-            candidates = manager.get_all_candidates()
-            
-            updated_count = 0
-            for candidate in candidates:
-                # 模拟更新价格（实际需要调用数据接口）
-                try:
-                    # 这里应该调用真实的价格更新接口
-                    # manager.update_price(candidate.code)
-                    updated_count += 1
-                except Exception:
-                    pass
-            
+            if scheduler is None:
+                return {"success": False, "message": "调度器未初始化"}
+            price_result = scheduler.run_price_update()
+            ok = price_result.get("success", 0)
+            fail = price_result.get("failed", 0)
             return {
                 "success": True,
-                "message": f"价格更新完成，更新了 {updated_count} 只股票",
+                "message": f"价格更新完成，成功 {ok} 只，失败 {fail} 只",
                 "data": {
                     "task": task_name,
-                    "executed_at": datetime.now().isoformat(),
-                    "updated_count": updated_count
+                    "executed_at": executed_at,
+                    **price_result,
                 }
             }
             
         elif task_name == "weekly_analysis":
-            # 执行观察池全面分析
-            manager = WatchlistManager()
-            candidates = manager.get_all_candidates()
-            
-            analyzed = []
-            for candidate in candidates[:10]:  # 限制每次分析数量
-                try:
-                    manager.update_analysis_result(
-                        code=candidate.code,
-                        analysis_result={"auto_analyzed": True},
-                        composite_score=75.0,
-                        is_buy_recommended=True
-                    )
-                    analyzed.append(candidate.code)
-                except Exception:
-                    pass
-            
+            if scheduler is None:
+                return {"success": False, "message": "调度器未初始化"}
+            pipeline = scheduler.run_full_pipeline(force=False)
+            an = pipeline.get("analyze") or {}
+            tot = an.get("total", 0)
+            suc = an.get("success", 0)
+            msg = (
+                f"周度流程完成：分析成功 {suc}/{tot}"
+                if tot
+                else "周度流程完成：无待分析股票"
+            )
             return {
                 "success": True,
-                "message": f"周度分析完成，分析了 {len(analyzed)} 只股票",
+                "message": msg,
                 "data": {
                     "task": task_name,
-                    "executed_at": datetime.now().isoformat(),
-                    "analyzed": analyzed
+                    "executed_at": executed_at,
+                    "pipeline": pipeline,
                 }
             }
             
         elif task_name == "performance_report":
-            # 生成表现报告
             from watchlist import PerformanceReporter
             reporter = PerformanceReporter()
-            
-            end_date = datetime.now()
-            start_date = end_date - timedelta(days=7)
-            
-            report = reporter.generate_weekly_report(start_date, end_date)
+            report = reporter.generate_weekly_report()
             
             return {
                 "success": True,
                 "message": "表现报告生成完成",
                 "data": {
                     "task": task_name,
-                    "executed_at": datetime.now().isoformat(),
-                    "report": report
+                    "executed_at": executed_at,
+                    "report": report,
                 }
             }
             
@@ -293,8 +269,7 @@ async def start_scheduler():
                 "message": "调度器初始化失败"
             }
         
-        if hasattr(scheduler, 'start'):
-            scheduler.start()
+        scheduler.start()
         
         return {
             "success": True,
@@ -314,7 +289,7 @@ async def stop_scheduler():
     try:
         scheduler = get_scheduler()
         
-        if scheduler and hasattr(scheduler, 'stop'):
+        if scheduler:
             scheduler.stop()
         
         return {
@@ -327,7 +302,3 @@ async def stop_scheduler():
             "success": False,
             "message": f"停止调度器失败: {str(e)}"
         }
-
-
-# 导入 timedelta 用于日期计算
-from datetime import timedelta

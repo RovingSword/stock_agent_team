@@ -317,7 +317,32 @@ class BaseLLMAgent(ABC):
             if value is not None and not isinstance(value, str):
                 normalized[field] = str(value)
 
+        if "chart_key_levels" in normalized:
+            normalized["chart_key_levels"] = self._normalize_chart_key_levels(
+                normalized.get("chart_key_levels")
+            )
+
         return normalized
+
+    @staticmethod
+    def _normalize_chart_key_levels(raw: Any) -> List[Dict[str, Any]]:
+        """K 线图关键价位：kind + price + label，与 web.api.analyze 约定一致。"""
+        out: List[Dict[str, Any]] = []
+        if not isinstance(raw, list):
+            return out
+        kind_alias = {"支撑": "support", "阻力": "resistance", "压力": "resistance"}
+        for item in raw[:8]:
+            if not isinstance(item, dict):
+                continue
+            price = BaseLLMAgent._safe_float(item.get("price"))
+            if price is None or price <= 0:
+                continue
+            kind = str(item.get("kind") or item.get("type") or "other").lower()
+            if kind in kind_alias:
+                kind = kind_alias[kind]
+            label = item.get("label") or item.get("name") or kind
+            out.append({"kind": kind, "price": round(price, 4), "label": str(label)[:48]})
+        return out
 
     @staticmethod
     def _safe_float(value: Any) -> Optional[float]:

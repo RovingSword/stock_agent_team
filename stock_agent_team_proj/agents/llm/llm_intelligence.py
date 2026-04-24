@@ -2,7 +2,7 @@
 LLM 情报员
 职责：资金流向、北向资金、市场情绪
 """
-from typing import Dict, Any
+from typing import Any, Dict, Optional
 from .base_llm_agent import BaseLLMAgent
 from .models import AgentReport, StockAnalysisContext
 
@@ -214,6 +214,29 @@ class LLMIntelligence(BaseLLMAgent):
 }}
 """
         return prompt
+
+    @staticmethod
+    def interpret_from_intel_package(
+        intel_brief: Dict[str, Any],
+        intel_report: Optional[Dict[str, Any]],
+        stock_code: str,
+        stock_name: str,
+        tracked_at: str = "",
+        gather_time: str = "",
+        force_refresh: bool = False,
+    ) -> Dict[str, Any]:
+        """对「规则型 IntelBrief + 结构化报告」做网络情报简要解读（委托 utils 层，带缓存）。"""
+        from utils.intel_llm_interpret import get_or_create_llm_interpretation
+
+        return get_or_create_llm_interpretation(
+            intel_brief,
+            intel_report,
+            stock_code,
+            stock_name,
+            tracked_at=tracked_at,
+            gather_time=gather_time,
+            force_refresh=force_refresh,
+        )
 
 
 __all__ = ['LLMIntelligence']

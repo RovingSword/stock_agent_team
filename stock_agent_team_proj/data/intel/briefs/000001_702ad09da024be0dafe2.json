@@ -1,0 +1,54 @@
+{
+  "schema_version": "intel_brief_v1",
+  "stock_code": "000001",
+  "stock_name": "平安银行",
+  "source": "rule_based_v1",
+  "core_thesis": "平安银行(000001) 情报面整体偏neutral；热点：公司发布业绩预告",
+  "overall_sentiment": "neutral",
+  "bull_case": [],
+  "bear_case": [],
+  "key_numbers": [],
+  "catalysts": [
+    "公司发布业绩预告"
+  ],
+  "risk_flags": [],
+  "open_questions": [],
+  "role_hints": {
+    "technical": [
+      "舆情与题材：公司发布业绩预告",
+      "事件驱动若密集，注意波动放大与假突破"
+    ],
+    "fundamental": [
+      "将研报目标价/盈利预测与当前估值、财报数据交叉验证",
+      "机构观点有限，避免单条消息过度外推"
+    ],
+    "risk": [
+      "舆情风险未显著暴露，仍须核对规则引擎红线",
+      "关注监管公告、减持、诉讼类硬风险是否被舆情掩盖"
+    ],
+    "intelligence": [
+      "核对资金流向、北向与舆情方向是否一致",
+      "整体情绪 neutral，重点跟踪 catalysts 是否已被定价"
+    ],
+    "leader": [
+      "对齐四路 Agent 与 Brief 中的多空证据，明确主导逻辑",
+      "分歧大时优先 watch，并要求各侧给出可溯源依据"
+    ]
+  },
+  "institutional_one_liners": [],
+  "credibility_summary": {
+    "total_items": 1,
+    "high_credibility": 0,
+    "low_credibility": 0,
+    "institutional_views": 0,
+    "high_ratio": 0.0,
+    "institutional_ratio": 0.0
+  },
+  "freshness_summary": {
+    "news": {
+      "total": 1,
+      "valid": 1,
+      "filtered": 0
+    }
+  }
+}

@@ -13,7 +13,7 @@ from config.project_paths import ensure_project_root_on_path
 
 ensure_project_root_on_path()
 
-from utils.data_fetcher import data_fetcher
+from utils.data_fetcher import data_fetcher, compute_rule_based_support_resistance
 
 router = APIRouter()
 
@@ -48,6 +48,10 @@ async def get_kline(
           "ma20": [...],
           "support_levels":  [价格, ...],
           "resistance_levels": [价格, ...],
+          "macd_dif", "macd_dea", "macd_hist": MACD 序列,
+          "rsi12": RSI(12) 序列,
+          "vol_ma5", "vol_ma10": 成交量均线,
+          "data_uses_mock": 是否使用模拟/兜底数据,
         }
     """
     code = stock_code.strip()
@@ -66,6 +70,23 @@ async def get_kline(
     df["ma10"] = df["close"].rolling(window=10).mean()
     df["ma20"] = df["close"].rolling(window=20).mean()
 
+    ema12 = df["close"].ewm(span=12, adjust=False).mean()
+    ema26 = df["close"].ewm(span=26, adjust=False).mean()
+    df["macd_dif"] = ema12 - ema26
+    df["macd_dea"] = df["macd_dif"].ewm(span=9, adjust=False).mean()
+    df["macd_hist"] = (df["macd_dif"] - df["macd_dea"]) * 2.0
+
+    def _calc_rsi(series: pd.Series, period: int = 12) -> pd.Series:
+        delta = series.diff()
+        gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
+        rs = gain / loss.replace(0, np.inf)
+        return 100 - (100 / (1 + rs))
+
+    df["rsi12"] = _calc_rsi(df["close"], 12)
+    df["vol_ma5"] = df["volume"].rolling(window=5).mean()
+    df["vol_ma10"] = df["volume"].rolling(window=10).mean()
+
     dates = df["date"].astype(str).tolist()
 
     ohlc = []
@@ -81,13 +102,19 @@ async def get_kline(
     ma5 = [_safe_float(v) for v in df["ma5"]]
     ma10 = [_safe_float(v) for v in df["ma10"]]
     ma20 = [_safe_float(v) for v in df["ma20"]]
+    macd_dif = [_safe_float(v) for v in df["macd_dif"]]
+    macd_dea = [_safe_float(v) for v in df["macd_dea"]]
+    macd_hist = [_safe_float(v) for v in df["macd_hist"]]
+    rsi12 = [_safe_float(v) for v in df["rsi12"]]
+    vol_ma5 = [_safe_float(v) for v in df["vol_ma5"]]
+    vol_ma10 = [_safe_float(v) for v in df["vol_ma10"]]
 
-    indicators = data_fetcher.get_technical_indicators(code)
-    support_levels = []
-    resistance_levels = []
-    if indicators:
-        support_levels = [_safe_float(v) for v in indicators.get("support_levels", []) if _safe_float(v) is not None]
-        resistance_levels = [_safe_float(v) for v in indicators.get("resistance_levels", []) if _safe_float(v) is not None]
+    highs_s = df["high"].tolist()
+    lows_s = df["low"].tolist()
+    closes_s = df["close"].tolist()
+    support_raw, resistance_raw = compute_rule_based_support_resistance(highs_s, lows_s, closes_s)
+    support_levels = [_safe_float(v) for v in support_raw if _safe_float(v) is not None]
+    resistance_levels = [_safe_float(v) for v in resistance_raw if _safe_float(v) is not None]
 
     return {
         "dates": dates,
@@ -96,6 +123,13 @@ async def get_kline(
         "ma5": ma5,
         "ma10": ma10,
         "ma20": ma20,
+        "macd_dif": macd_dif,
+        "macd_dea": macd_dea,
+        "macd_hist": macd_hist,
+        "rsi12": rsi12,
+        "vol_ma5": vol_ma5,
+        "vol_ma10": vol_ma10,
         "support_levels": support_levels,
         "resistance_levels": resistance_levels,
+        "data_uses_mock": data_fetcher.is_mock_data(code),
     }

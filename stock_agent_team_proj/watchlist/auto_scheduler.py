@@ -7,10 +7,8 @@ import os
 import json
 import time
 import threading
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time as dt_time
 from typing import Dict, Any, List, Optional, Callable
-from dataclasses import asdict
-
 from .config import config
 from .models import ScheduledTask
 
@@ -36,6 +34,11 @@ class AutoScheduler:
         
         # 注册默认任务
         self._register_default_tasks()
+        self._normalize_task_weekdays()
+    
+    @property
+    def is_running(self) -> bool:
+        return self._running
     
     def _load_tasks(self):
         """加载任务配置"""
@@ -73,6 +76,7 @@ class AutoScheduler:
                 task_type='collect',
                 schedule_time=self.config.daily_collect_time,
                 enabled=True,
+                run_weekdays=[1, 2, 3, 4, 5],
             )
         
         if self.TASK_WEEKLY_UPDATE not in self.tasks:
@@ -82,6 +86,7 @@ class AutoScheduler:
                 task_type='full',
                 schedule_time=self.config.weekly_update_time,
                 enabled=True,
+                run_weekdays=[6],
             )
         
         if self.TASK_DAILY_PRICE_UPDATE not in self.tasks:
@@ -91,7 +96,24 @@ class AutoScheduler:
                 task_type='price_update',
                 schedule_time='17:00',
                 enabled=True,
+                run_weekdays=[1, 2, 3, 4, 5],
             )
+    
+    def _normalize_task_weekdays(self):
+        """为旧版持久化任务补全 run_weekdays，与 Web 预定义一致。"""
+        defaults = {
+            self.TASK_DAILY_COLLECT: [1, 2, 3, 4, 5],
+            self.TASK_DAILY_PRICE_UPDATE: [1, 2, 3, 4, 5],
+            self.TASK_WEEKLY_UPDATE: [6],
+        }
+        changed = False
+        for tid, days in defaults.items():
+            t = self.tasks.get(tid)
+            if t and t.run_weekdays is None:
+                t.run_weekdays = days
+                changed = True
+        if changed:
+            self._save_tasks()
     
     def register_callback(self, task_id: str, callback: Callable):
         """
@@ -109,7 +131,8 @@ class AutoScheduler:
         task_name: str,
         task_type: str,
         schedule_time: str,
-        enabled: bool = True
+        enabled: bool = True,
+        run_weekdays: Optional[List[int]] = None,
     ) -> ScheduledTask:
         """
         注册新任务
@@ -130,6 +153,7 @@ class AutoScheduler:
             task_type=task_type,
             schedule_time=schedule_time,
             enabled=enabled,
+            run_weekdays=run_weekdays,
         )
         
         self.tasks[task_id] = task
@@ -180,38 +204,75 @@ class AutoScheduler:
         """获取已启用的任务"""
         return [t for t in self.tasks.values() if t.enabled]
     
-    def _parse_time(self, time_str: str) -> datetime:
-        """解析时间字符串"""
-        now = datetime.now()
-        parts = time_str.split(':')
-        
-        if len(parts) == 2:
-            hour, minute = int(parts[0]), int(parts[1])
-            target = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
-            
-            # 如果已过时间，设置为明天
-            if target <= now:
-                target += timedelta(days=1)
-            
-            return target
-        else:
-            # 默认时间
-            return now + timedelta(hours=1)
+    @staticmethod
+    def _js_weekday(dt: datetime) -> int:
+        """与前端一致：0=周日 … 6=周六。"""
+        return (dt.weekday() + 1) % 7
+    
+    def _time_hm(self, task: ScheduledTask) -> tuple:
+        parts = task.schedule_time.split(':')
+        if len(parts) >= 2:
+            return int(parts[0]), int(parts[1])
+        return 0, 0
+    
+    def _next_run_after(self, now: datetime, task: ScheduledTask) -> datetime:
+        """下次触发时刻（严格晚于 now）。"""
+        h, m = self._time_hm(task)
+        for day_offset in range(0, 8):
+            day = (now + timedelta(days=day_offset)).date()
+            cand = datetime.combine(day, dt_time(hour=h, minute=m))
+            if cand <= now:
+                continue
+            if task.run_weekdays is not None:
+                if self._js_weekday(cand) not in task.run_weekdays:
+                    continue
+            return cand
+        return now + timedelta(days=7)
     
     def _calculate_next_run(self, task: ScheduledTask) -> datetime:
-        """计算下次执行时间"""
-        return self._parse_time(task.schedule_time)
+        """计算下次执行时间（用于展示）。"""
+        return self._next_run_after(datetime.now(), task)
     
     def _should_run_now(self, task: ScheduledTask) -> bool:
-        """检查是否应该立即执行"""
+        """检查是否处于当日计划触发的 ±60 秒窗口内。"""
         if not task.enabled:
             return False
-        
-        next_run = self._calculate_next_run(task)
         now = datetime.now()
-        
-        # 在执行时间点的前后1分钟内执行
-        return abs((now - next_run).total_seconds()) < 60
+        if task.run_weekdays is not None:
+            if self._js_weekday(now) not in task.run_weekdays:
+                return False
+        h, m = self._time_hm(task)
+        slot = now.replace(hour=h, minute=m, second=0, microsecond=0)
+        return abs((now - slot).total_seconds()) < 60
+    
+    def get_next_run_times(self) -> List[Dict[str, Any]]:
+        """供 Web 展示各任务下次运行时间。"""
+        out: List[Dict[str, Any]] = []
+        now = datetime.now()
+        for task in self.tasks.values():
+            if not task.enabled:
+                continue
+            nxt = self._next_run_after(now, task)
+            out.append({
+                "task_id": task.task_id,
+                "task_name": task.task_name,
+                "next_run": nxt.isoformat(timespec="seconds"),
+                "schedule_time": task.schedule_time,
+                "run_weekdays": task.run_weekdays,
+            })
+        out.sort(key=lambda x: x["next_run"])
+        return out
+    
+    def run_daily_collect(self) -> Dict[str, Any]:
+        """执行数据采集并返回统计（与 _execute_task collect 共用逻辑）。"""
+        from .data_collector import DataCollector
+        collector = DataCollector()
+        collect_results = collector.collect_all()
+        return {
+            "dragon_tiger_count": len(collect_results.get("dragon_tiger", [])),
+            "sector_count": len(collect_results.get("sector_hot", [])),
+            "research_count": len(collect_results.get("research", [])),
+        }
     
     def start(self, check_interval: int = 60):
         """
@@ -272,9 +333,7 @@ class AutoScheduler:
         if task.task_type == 'price_update':
             self.run_price_update()
         elif task.task_type == 'collect':
-            from .data_collector import DataCollector
-            collector = DataCollector()
-            collector.collect_all()
+            self.run_daily_collect()
         elif task.task_type == 'full':
             self.run_full_pipeline()
         
@@ -390,7 +449,7 @@ class AutoScheduler:
                 for candidate in to_analyze:
                     try:
                         # 导入分析模块
-                        from stock_agent_team.main import StockAgentTeam
+                        from main import StockAgentTeam
                         
                         team = StockAgentTeam()
                         decision = team.analyze(

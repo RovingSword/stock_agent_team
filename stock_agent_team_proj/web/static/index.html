@@ -195,7 +195,21 @@
                     <span class="legend-item"><span class="legend-dot legend-ma20"></span>MA20</span>
                     <span class="legend-item"><span class="legend-dot legend-support"></span>支撑位</span>
                     <span class="legend-item"><span class="legend-dot legend-resistance"></span>阻力位</span>
+                    <span class="legend-item"><span class="legend-dot legend-macd-dif"></span>MACD DIF</span>
+                    <span class="legend-item"><span class="legend-dot legend-macd-dea"></span>MACD DEA</span>
+                    <span class="legend-item"><span class="legend-dot legend-rsi"></span>RSI12</span>
+                    <span class="legend-item"><span class="legend-dot legend-vol-ma"></span>量均线</span>
                 </div>
+                <details class="kline-lineage">
+                    <summary class="kline-lineage-summary">图上数字从哪里来？</summary>
+                    <div class="kline-lineage-body">
+                        <p><strong>日K、成交量与均线</strong>由行情数据源拉取后在服务端计算。</p>
+                        <p><strong>绿色/红色虚线（支撑、阻力）</strong>为<strong>本地规则</strong>估算：近20日最低价、MA20、收盘价±约5%、近20日最高价等，<em>不是</em>交易所官方档位。</p>
+                        <p><strong>止损、止盈、入场区</strong>在分析完成后由<strong>本次 Agent / 规则引擎结论</strong>叠加到图上。</p>
+                        <p><strong>琥珀色虚线</strong>为分析给出的<strong>关键价位</strong>（可点击下列按钮在图中加粗对应线）。</p>
+                    </div>
+                </details>
+                <div id="klineAgentLevelPills" class="kline-agent-levels hidden" aria-label="分析关键价位"></div>
             </section>
 
             <!-- 结果区（规则引擎静态结构 / LLM 动态覆写） -->
@@ -485,14 +499,18 @@
                         <label for="intelStockCode">股票代码</label>
                         <input type="text" id="intelStockCode" placeholder="输入股票代码追踪情报">
                     </div>
-                    <button id="intelTrackBtn" class="btn btn-primary">
+                    <button id="intelTrackBtn" type="button" class="btn btn-primary">
                         <svg class="icon icon-sm" aria-hidden="true"><use href="#i-search"/></svg>
                         追踪情报
                     </button>
-                    <button class="btn btn-secondary" onclick="handleTrackIntel(true)" title="忽略缓存，重新搜索最新情报">
+                    <button id="intelRefreshBtn" type="button" class="btn btn-secondary" onclick="handleTrackIntel(true)" title="忽略缓存，重新搜索最新情报">
                         <svg class="icon icon-sm" aria-hidden="true"><use href="#i-refresh"/></svg>
                         强制刷新
                     </button>
+                    <label class="check-inline" title="勾选后由「情报员」基于当前情报生成 LLM 简要解读（有缓存，可能产生 API 费用）">
+                        <input type="checkbox" id="intelLlmInterpret" checked>
+                        LLM 简要解读
+                    </label>
                 </div>
                 <div id="intelBriefSection" class="intel-brief hidden">
                     <h4>情报简报</h4>
@@ -516,6 +534,7 @@
                     <p>加载中…</p>
                 </div>
                 <div class="scheduler-tasks" id="schedulerTasks"></div>
+                <div id="schedulerLastRun" class="scheduler-last-run hidden" aria-live="polite"></div>
             </section>
         </div>
 

@@ -1,0 +1,13 @@
+{
+  "schema_version": "llm_interpret_v1",
+  "summary_text": "测试叙事",
+  "bullets": [
+    "测试叙事",
+    "A",
+    "B"
+  ],
+  "stance": "观望",
+  "confidence": 0.25,
+  "disclaimer": "本段为规则摘要的机械整理，非模型生成；不构成投资建议。",
+  "source": "rule_fallback"
+}

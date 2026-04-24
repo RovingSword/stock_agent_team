@@ -3,7 +3,7 @@
 定义候选股票、观察池数据等数据结构
 """
 
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field, asdict, fields
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 from enum import Enum
@@ -217,13 +217,16 @@ class ScheduledTask:
     last_run: Optional[str] = None
     next_run: Optional[str] = None
     run_count: int = 0
+    # 0=周日 … 6=周六，与 Web default_days 一致；None 表示不限制星期
+    run_weekdays: Optional[List[int]] = None
     
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
     
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'ScheduledTask':
-        return cls(**data)
+        valid = {f.name for f in fields(cls)}
+        return cls(**{k: v for k, v in data.items() if k in valid})
 
 
 import os  # 用于WatchlistData.load
