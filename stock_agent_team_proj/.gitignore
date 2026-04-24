@@ -26,11 +26,19 @@ wheels/
 
 # Data and logs
 data/database.db
-data/logs/*.log
 *.log
 
-# Intel search / brief / LLM interpret cache (regenerated locally)
+# Runtime / fetched data & caches (regenerated locally)
 data/intel/
+data/dragon_tiger.json
+data/research.json
+data/sector.json
+data/sector_hot.json
+data/watchlist.json
+data/logs/*
+!data/logs/.gitkeep
+data/reports/*
+!data/reports/.gitkeep
 
 # IDE
 .idea/
