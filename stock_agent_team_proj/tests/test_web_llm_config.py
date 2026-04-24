@@ -125,7 +125,9 @@ class TestWebAppDotenvLoading(unittest.TestCase):
             )
 
             with patch.dict(os.environ, {}, clear=True):
-                loaded = web.app.load_project_env(env_path)
+                from config.load_env import load_project_env
+
+                loaded = load_project_env(env_path)
                 self.assertTrue(loaded)
                 self.assertEqual(os.environ["TEST_PROJECT_ENV_KEY"], "test-key")
                 self.assertEqual(os.environ["TEST_PROJECT_ENV_URL"], "https://example.com/v1")
